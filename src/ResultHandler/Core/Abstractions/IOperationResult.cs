@@ -23,4 +23,7 @@ public interface IOperationResult
 
     /// <summary>Optional list of individual error messages (e.g. validation failures).</summary>
     IReadOnlyList<string> Errors { get; }
+
+    /// <summary>Optional per-field validation errors, keyed by property name.</summary>
+    IReadOnlyDictionary<string, IReadOnlyList<string>> FieldErrors { get; }
 }

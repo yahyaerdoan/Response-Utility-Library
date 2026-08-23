@@ -16,7 +16,6 @@ ResultHandler.Core.Abstractions.IResultFailureFactory<TSelf>.Failure(System.Coll
 ResultHandler.Core.Abstractions.IResultFailureFactory<TSelf>.Failure(string! title, string! detail, ResultHandler.Core.Enums.ResultStatus status) -> TSelf
 ResultHandler.Core.Base.OperationDataResult<T>
 ResultHandler.Core.Base.OperationDataResult<T>.Data.get -> T
-ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null) -> void
 ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T resultData, bool isSuccessful) -> void
 ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T resultData, bool isSuccessful, string! statusMessage, System.Net.HttpStatusCode statusCode) -> void
 ResultHandler.Core.Base.OperationDataResult<T>.ResultData.get -> T
@@ -24,7 +23,6 @@ ResultHandler.Core.Base.OperationResult
 ResultHandler.Core.Base.OperationResult.Detail.get -> string?
 ResultHandler.Core.Base.OperationResult.Errors.get -> System.Collections.Generic.IReadOnlyList<string!>!
 ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful) -> void
-ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null) -> void
 ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, string! statusMessage, System.Net.HttpStatusCode statusCode) -> void
 ResultHandler.Core.Base.OperationResult.Status.get -> ResultHandler.Core.Enums.ResultStatus
 ResultHandler.Core.Base.OperationResult.StatusCode.get -> System.Net.HttpStatusCode

@@ -26,4 +26,11 @@ public class ErrorResult : OperationResult
         : base(false, status, title, null, errors)
     {
     }
+
+    /// <summary><see cref="OperationResult.Errors"/> is populated with the flattened messages, for
+    /// callers that only read the flat list.</summary>
+    public ErrorResult(string title, ResultStatus status, IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
+        : base(false, status, title, null, [.. fieldErrors.SelectMany(pair => pair.Value)], fieldErrors)
+    {
+    }
 }
