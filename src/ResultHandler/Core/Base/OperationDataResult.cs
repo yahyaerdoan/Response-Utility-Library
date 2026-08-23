@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Enums;
@@ -17,11 +18,19 @@ namespace ResultHandler.Core.Base;
 /// <param name="title">A short summary of the result.</param>
 /// <param name="detail">Optional additional context.</param>
 /// <param name="errors">Optional list of individual error messages.</param>
-/// <param name="fieldErrors">Optional per-field validation errors, keyed by property name.</param>
-[method: JsonConstructor]
-public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors = null)
-    : OperationResult(isSuccessful, status, title, detail, errors, fieldErrors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>, IFieldFailureFactory<OperationDataResult<T>>
+public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
+    : OperationResult(isSuccessful, status, title, detail, errors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>, IFieldFailureFactory<OperationDataResult<T>>
 {
+    /// <summary>Carries per-field validation errors alongside the flat list - see the matching
+    /// constructor on <see cref="OperationResult"/> for why this is internal rather than a second
+    /// public overload.</summary>
+    [JsonConstructor]
+    internal OperationDataResult([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
+        : this(data, isSuccessful, status, title, detail, errors)
+    {
+        FieldErrors = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
+    }
+
     /// <inheritdoc cref="IOperationResult{T}.Data"/>
     [MaybeNull]
     [JsonPropertyName("resultData")]

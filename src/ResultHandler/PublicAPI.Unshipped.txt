@@ -48,10 +48,6 @@ static ResultHandler.Functional.ResultExtensions.OnSuccessAsync<T>(this System.T
 *REMOVED*ResultHandler.Implementations.Error.ErrorResult.ErrorResult(string! statusMessage, System.Net.HttpStatusCode statusCode, string! detail) -> void
 *REMOVED*ResultHandler.Implementations.Success.SuccessDataResult<T>.SuccessDataResult(T data, string! statusMessage, System.Net.HttpStatusCode statusCode) -> void
 *REMOVED*ResultHandler.Implementations.Success.SuccessResult.SuccessResult(string! statusMessage, System.Net.HttpStatusCode statusCode) -> void
-*REMOVED*ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null) -> void
-*REMOVED*ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null) -> void
-ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors = null) -> void
-ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors = null) -> void
 ResultHandler.Implementations.Error.ErrorDataResult<T>.ErrorDataResult(string! title, ResultHandler.Core.Enums.ResultStatus status, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> void
 ResultHandler.Implementations.Error.ErrorResult.ErrorResult(string! title, ResultHandler.Core.Enums.ResultStatus status, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> void
 static ResultHandler.Core.Base.OperationDataResult<T>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> ResultHandler.Core.Base.OperationDataResult<T>!
@@ -61,3 +57,4 @@ ResultHandler.Core.Abstractions.IFieldFailureFactory<TSelf>.Failure(System.Colle
 ResultHandler.Core.Abstractions.IHasFieldErrors
 ResultHandler.Core.Abstractions.IHasFieldErrors.FieldErrors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
 ResultHandler.Core.Base.OperationResult.FieldErrors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
+ResultHandler.Core.Base.OperationResult.FieldErrors.set -> void
