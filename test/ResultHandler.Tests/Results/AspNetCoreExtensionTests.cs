@@ -145,6 +145,31 @@ public class AspNetCoreExtensionTests
     }
 
     [Fact]
+    public void ToProblemDetails_WithFieldErrors_AddsFieldErrorsExtension()
+    {
+        var fieldErrors = new Dictionary<string, IReadOnlyList<string>>
+        {
+            ["UserNameOrEmail"] = ["'User Name Or Email' must not be empty."],
+        };
+        var result = new ErrorResult("Validation Failed", ResultStatus.UnprocessableContent, fieldErrors);
+
+        var problemDetails = result.ToProblemDetails();
+
+        Assert.True(problemDetails.Extensions.TryGetValue("fieldErrors", out var fieldErrorsExtension));
+        Assert.Equal(fieldErrors, fieldErrorsExtension);
+    }
+
+    [Fact]
+    public void ToProblemDetails_WithoutFieldErrors_OmitsFieldErrorsExtension()
+    {
+        var result = new ErrorResult("Not found.", ResultStatus.NotFound, "The user does not exist.");
+
+        var problemDetails = result.ToProblemDetails();
+
+        Assert.False(problemDetails.Extensions.ContainsKey("fieldErrors"));
+    }
+
+    [Fact]
     public void ToProblemDetails_UnmappedStatus_FallsBackToAboutBlank()
     {
         var result = new SuccessResult("Ok.", ResultStatus.Ok);
