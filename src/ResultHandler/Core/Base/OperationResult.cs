@@ -21,7 +21,7 @@ namespace ResultHandler.Core.Base;
 /// <param name="fieldErrors">Optional per-field validation errors, keyed by property name.</param>
 [method: JsonConstructor]
 public class OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors = null)
-    : IOperationResult, IResultFailureFactory<OperationResult>
+    : IOperationResult, IResultFailureFactory<OperationResult>, IFieldFailureFactory<OperationResult>, IHasFieldErrors
 {
     [JsonPropertyName("isSuccessful")]
     public virtual bool IsSuccessful { get; } = isSuccessful;

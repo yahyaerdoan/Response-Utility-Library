@@ -20,7 +20,7 @@ namespace ResultHandler.Core.Base;
 /// <param name="fieldErrors">Optional per-field validation errors, keyed by property name.</param>
 [method: JsonConstructor]
 public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors = null)
-    : OperationResult(isSuccessful, status, title, detail, errors, fieldErrors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
+    : OperationResult(isSuccessful, status, title, detail, errors, fieldErrors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>, IFieldFailureFactory<OperationDataResult<T>>
 {
     /// <inheritdoc cref="IOperationResult{T}.Data"/>
     [MaybeNull]
