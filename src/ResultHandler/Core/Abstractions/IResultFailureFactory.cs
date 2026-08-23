@@ -9,11 +9,12 @@ namespace ResultHandler.Core.Abstractions;
 /// <c>return</c>-based short-circuiting instead of throwing.
 /// </summary>
 /// <remarks>
-/// One name, <c>Failure</c>, overloaded for the two irreducible failure shapes:
-/// <see cref="Failure(IReadOnlyList{string})"/> for a validation message list, and
-/// <see cref="Failure(string, string, ResultStatus)"/> for a title/detail/status triple. Named,
-/// per-status shortcuts (<c>BadRequest</c>, <c>NotFound</c>, ...) are generic helpers over the
-/// latter in <see cref="ResultHandler.Functional.ResultFailureFactory"/> — written once there for every
+/// One name, <c>Failure</c>, overloaded for the three irreducible failure shapes:
+/// <see cref="Failure(IReadOnlyList{string})"/> for a flat validation message list,
+/// <see cref="Failure(IReadOnlyDictionary{string, IReadOnlyList{string}})"/> for messages keyed by
+/// field, and <see cref="Failure(string, string, ResultStatus)"/> for a title/detail/status triple.
+/// Named, per-status shortcuts (<c>BadRequest</c>, <c>NotFound</c>, ...) are generic helpers over the
+/// last one in <see cref="ResultHandler.Functional.ResultFailureFactory"/> — written once there for every
 /// implementer, instead of being redeclared as interface members on each one.
 /// </remarks>
 /// <typeparam name="TSelf">The implementing result type itself (CRTP).</typeparam>
@@ -36,6 +37,22 @@ public interface IResultFailureFactory<TSelf>
     /// </code>
     /// </example>
     static abstract TSelf Failure(IReadOnlyList<string> errors);
+
+    /// <summary>Builds a failed <typeparamref name="TSelf"/> for one or more per-field validation errors.</summary>
+    /// <param name="fieldErrors">The error messages, keyed by the invalid field's property name.</param>
+    /// <returns>A failed result with <see cref="IOperationResult.FieldErrors"/> set to <paramref name="fieldErrors"/>
+    /// and <see cref="IOperationResult.Errors"/> set to the flattened messages, for callers that only read the flat list.</returns>
+    /// <example>
+    /// <code>
+    /// where TResponse : IOperationResult, IResultFailureFactory&lt;TResponse&gt;
+    /// ...
+    /// if (fieldErrors.Count > 0)
+    /// {
+    ///     return TResponse.Failure(fieldErrors);
+    /// }
+    /// </code>
+    /// </example>
+    static abstract TSelf Failure(IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors);
 
     /// <summary>Builds a failed <typeparamref name="TSelf"/> for an arbitrary <paramref name="status"/>.</summary>
     /// <param name="title">A short, human-readable summary of the failure.</param>

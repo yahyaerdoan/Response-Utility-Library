@@ -120,6 +120,11 @@ public static partial class AspNetCoreResultExtensions
             problem.Extensions["errors"] = result.Errors;
         }
 
+        if (result.FieldErrors.Count > 0)
+        {
+            problem.Extensions["fieldErrors"] = result.FieldErrors;
+        }
+
         return problem;
     }
 

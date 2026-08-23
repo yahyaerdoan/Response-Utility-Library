@@ -17,9 +17,10 @@ namespace ResultHandler.Core.Base;
 /// <param name="title">A short summary of the result.</param>
 /// <param name="detail">Optional additional context.</param>
 /// <param name="errors">Optional list of individual error messages.</param>
+/// <param name="fieldErrors">Optional per-field validation errors, keyed by property name.</param>
 [method: JsonConstructor]
-public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
-    : OperationResult(isSuccessful, status, title, detail, errors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
+public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors = null)
+    : OperationResult(isSuccessful, status, title, detail, errors, fieldErrors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
 {
     /// <inheritdoc cref="IOperationResult{T}.Data"/>
     [MaybeNull]
@@ -34,6 +35,10 @@ public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, Resul
     /// <inheritdoc />
     public static new OperationDataResult<T> Failure(IReadOnlyList<string> errors)
         => new ErrorDataResult<T>(OperationResultDefaults.ValidationFailedTitle, ResultStatus.UnprocessableContent, errors);
+
+    /// <inheritdoc />
+    public static new OperationDataResult<T> Failure(IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
+        => new ErrorDataResult<T>(OperationResultDefaults.ValidationFailedTitle, ResultStatus.UnprocessableContent, fieldErrors);
 
     /// <inheritdoc />
     public static new OperationDataResult<T> Failure(string title, string detail, ResultStatus status)
