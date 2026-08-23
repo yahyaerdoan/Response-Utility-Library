@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Enums;
@@ -18,11 +18,23 @@ namespace ResultHandler.Core.Base;
 /// <param name="title">A short summary of the result.</param>
 /// <param name="detail">Optional additional context.</param>
 /// <param name="errors">Optional list of individual error messages.</param>
-/// <param name="fieldErrors">Optional per-field validation errors, keyed by property name.</param>
-[method: JsonConstructor]
-public class OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors = null)
+public class OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
     : IOperationResult, IResultFailureFactory<OperationResult>, IFieldFailureFactory<OperationResult>, IHasFieldErrors
 {
+    /// <summary>Carries per-field validation errors alongside the flat list. Kept internal (not a
+    /// second public overload) so it doesn't collide with the primary constructor's optional
+    /// parameters, and doesn't touch the primary constructor's signature, which is part of this
+    /// package's binary-compatibility baseline (<c>PackageValidationBaselineVersion</c>). External
+    /// callers reach this through <see cref="Failure(IReadOnlyDictionary{string, IReadOnlyList{string}})"/>
+    /// instead; <see cref="JsonConstructorAttribute"/> works on non-public constructors, so
+    /// deserialization is unaffected.</summary>
+    [JsonConstructor]
+    internal OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
+        : this(isSuccessful, status, title, detail, errors)
+    {
+        FieldErrors = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
+    }
+
     [JsonPropertyName("isSuccessful")]
     public virtual bool IsSuccessful { get; } = isSuccessful;
 
@@ -41,7 +53,7 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
     public IReadOnlyList<string> Errors { get; } = errors ?? [];
 
     [JsonPropertyName("fieldErrors")]
-    public IReadOnlyDictionary<string, IReadOnlyList<string>> FieldErrors { get; } = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> FieldErrors { get; protected set; } = ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
 
     /// <inheritdoc />
     public static OperationResult Failure(IReadOnlyList<string> errors)
