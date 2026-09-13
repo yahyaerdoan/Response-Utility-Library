@@ -8,22 +8,18 @@ using ResultHandler.Serialization;
 
 namespace ResultHandler.Core.Base;
 
-/// <summary>
-/// Base implementation of <see cref="IOperationResult"/>. Immutable; prefer the
-/// <see cref="Implementations.Success.SuccessResult"/>/<see cref="Implementations.Error.ErrorResult"/>
-/// subclasses or the <see cref="ResultHandler.Facade.Result"/> facade over constructing this directly.
-/// </summary>
+/// <summary>Immutable base implementation of <see cref="IOperationResult"/>. Prefer <see cref="Implementations.Success.SuccessResult"/>/<see cref="Implementations.Error.ErrorResult"/> or the <see cref="ResultHandler.Facade.Result"/> facade over constructing this directly.</summary>
 /// <param name="isSuccessful">Whether the operation succeeded.</param>
 /// <param name="status">The outcome status.</param>
 /// <param name="title">A short summary of the result.</param>
 /// <param name="detail">Optional additional context.</param>
 /// <param name="errors">Optional list of individual error messages.</param>
 public class OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
-    : IOperationResult, IResultFailureFactory<OperationResult>, IFieldFailureFactory<OperationResult>, IHasFieldErrors
+    : IOperationResult, IResultFailureFactory<OperationResult>, IHasFieldErrors
 {
-    /// <summary>Carries <see cref="FieldErrors"/> alongside the flat list. Internal — doesn't collide with the primary constructor's optional parameters or touch its binary-compatibility baseline; external callers go through <see cref="Failure(IReadOnlyDictionary{string, IReadOnlyList{string}})"/> instead.</summary>
+    /// <summary>Sets <paramref name="errors"/> and <paramref name="fieldErrors"/> independently. Public so AOT source-generated JSON deserializers can call it; prefer <see cref="Failure(IReadOnlyDictionary{string, IReadOnlyList{string}})"/> for everyday use.</summary>
     [JsonConstructor]
-    internal OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
+    public OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
         : this(isSuccessful, status, title, detail, errors)
     {
         FieldErrors = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;

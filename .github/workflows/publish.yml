@@ -30,15 +30,10 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          # <Version> in ResultHandler.csproj is the source of truth for major.minor only (bump it
-          # by hand for a real API change); both packages are bumped in lockstep and built with the
-          # same -p:Version= below, so reading it from this one project is sufficient. The patch
-          # number always comes from run_number instead of the csproj, so every publish gets a
-          # version nobody has used before — no more manual patch bumps, no more collisions with an
-          # already-published version silently no-op'd by --skip-duplicate.
-          $csprojVersion = (dotnet msbuild src/ResultHandler/ResultHandler.csproj -getProperty:Version).Trim()
-          $majorMinor = ($csprojVersion -split '\.')[0..1] -join '.'
-          $version = "$majorMinor.${{ github.run_number }}"
+          # <Version> in ResultHandler.csproj is the full target version - bump it by hand per release.
+          # beta appends -beta.<run_number> to preview that same version (12.2.0-beta.5 < 12.2.0).
+          # Bump <Version> BEFORE the first beta of a release, not after.
+          $version = (dotnet msbuild src/ResultHandler/ResultHandler.csproj -getProperty:Version).Trim()
           if ("${{ github.ref_name }}" -eq "beta") {
             $version = "$version-beta.${{ github.run_number }}"
           }

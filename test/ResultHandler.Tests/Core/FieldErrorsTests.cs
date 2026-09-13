@@ -51,6 +51,22 @@ public class FieldErrorsTests
     }
 
     [Fact]
+    public void OperationResult_Failure_WithNullFieldErrorValue_SkipsItInsteadOfThrowing()
+    {
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type - deliberately building a malformed dictionary to test the guard.
+        var fieldErrors = new Dictionary<string, IReadOnlyList<string>>
+        {
+            ["Name"] = ["Name is required."],
+            ["Price"] = null,
+        };
+#pragma warning restore CS8625
+
+        var failure = OperationResult.Failure(fieldErrors);
+
+        Assert.Equal(["Name is required."], failure.Errors);
+    }
+
+    [Fact]
     public void OperationDataResult_Failure_WithFieldErrors_BehavesLikeOperationResult()
     {
         var failure = OperationDataResult<string>.Failure(SampleFieldErrors);
@@ -69,8 +85,6 @@ public class FieldErrorsTests
     {
         var failure = OperationResult.Failure(["A plain error."]);
 
-        // Still implements IHasFieldErrors (inherited from OperationResult), but with an empty map -
-        // this is what ToProblemDetails checks before adding the "fieldErrors" extension.
         var withFieldErrors = Assert.IsAssignableFrom<IHasFieldErrors>(failure);
         Assert.Empty(withFieldErrors.FieldErrors);
     }
@@ -170,6 +184,24 @@ public class FieldErrorsTests
     }
 
     [Fact]
+    public void ToErrorDataResult_WhenErrorsDifferFromFlattenedFieldErrors_PreservesOriginalErrors()
+    {
+        var failure = new OperationResult(
+            false,
+            ResultStatus.UnprocessableContent,
+            "Validation Failed",
+            null,
+            ["A summary message not tied to any field."],
+            SampleFieldErrors);
+
+        var projected = failure.ToErrorDataResult<string>();
+
+        Assert.Equal(["A summary message not tied to any field."], projected.Errors);
+        var withFieldErrors = Assert.IsAssignableFrom<IHasFieldErrors>(projected);
+        Assert.Equal(2, withFieldErrors.FieldErrors.Count);
+    }
+
+    [Fact]
     public void Map_OnFailureWithFieldErrors_PreservesFieldErrors()
     {
         var failure = OperationDataResult<int>.Failure(SampleFieldErrors);
@@ -194,12 +226,6 @@ public class FieldErrorsTests
     [Fact]
     public void TwoFailures_WithSameFieldErrorsInDifferentInsertionOrder_AreEqualAndHaveSameHashCode()
     {
-        // Same flattened Errors list on both (so Equals()'s Errors.SequenceEqual comparison passes
-        // regardless of FieldErrors order) but the FieldErrors dictionaries themselves are built with
-        // their keys inserted in opposite order - reachable in practice via deserialization, where
-        // `errors` and `fieldErrors` are independent JSON properties. This isolates FieldErrorsEqual's
-        // order-independent comparison (Equals) from GetHashCode's per-pair hashing (must also be
-        // order-independent for the two to stay consistent).
         IReadOnlyList<string> flattenedErrors =
         [
             "'User Name Or Email' must not be empty.",
@@ -235,6 +261,6 @@ public class FieldErrorsTests
     }
 
     private static TSelf CallFieldFailure<TSelf>(IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
-        where TSelf : IOperationResult, IFieldFailureFactory<TSelf>
+        where TSelf : IOperationResult, IResultFailureFactory<TSelf>
         => TSelf.Failure(fieldErrors);
 }

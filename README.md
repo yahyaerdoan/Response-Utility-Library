@@ -21,6 +21,16 @@ See [`CHANGELOG.md`](CHANGELOG.md) for what changed between versions.
 Everything below is demonstrated through one running example: a `ProductService` that looks up a
 product by id, and a `ProductsController` that exposes it over HTTP.
 
+**Contents:** [1. Core contract](#1-the-core-contract) · [2. ResultStatus](#2-resultstatus) ·
+[3. Building results directly](#3-building-results-directly) · [4. `Result` facade](#4-the-result-facade--the-recommended-way) ·
+[5. ASP.NET Core (`IActionResult`)](#5-resulthandleraspnetcore--converting-to-iactionresult) ·
+[6. Minimal APIs](#6-minimal-apis) · [7. Functional composition](#7-functional-composition) ·
+[8. `Result.Combine`](#8-combining-independent-checks--resultcombine) · [9. Async composition](#9-async-composition) ·
+[10. Generic short-circuiting](#10-generic-short-circuiting--iresultfailurefactorytself--resultfailurefactory) ·
+[11. Per-field validation errors](#11-per-field-validation-errors--ihasfielderrors--iresultfailurefactorytself) ·
+[12. Serialization](#12-serialization) · [13. Equality & debugging](#13-equality--debugging) ·
+[14. Migrating to v12](#14-migrating-to-v12)
+
 ---
 ## 1. The core contract
 
@@ -197,12 +207,10 @@ A failed `GetById(999)` call above produces:
 ---
 ## 6. Minimal APIs
 
-Minimal API endpoint delegates *can* return `IActionResult` — ASP.NET Core has run it through an MVC
-compatibility shim since .NET 7 — but don't. That path triggers analyzer warning `ASP0004` and, more
-importantly, `IActionResult` is opaque to the endpoint metadata pipeline: the compile-time
-`IEndpointMetadataProvider` machinery that Swashbuckle/`Microsoft.AspNetCore.OpenApi` rely on to infer
-response types and status codes can't see through it, so your OpenAPI/Swagger document ends up
-missing or wrong for those endpoints.
+Minimal API endpoint delegates *can* return `IActionResult` (via an MVC compatibility shim), but
+don't — it triggers analyzer warning `ASP0004`, and it's opaque to the endpoint metadata pipeline that
+Swashbuckle/`Microsoft.AspNetCore.OpenApi` use to infer response types, so your OpenAPI document ends
+up missing or wrong for those endpoints.
 
 Use the `IResult`-returning siblings instead — same shapes, same status-code-preserving behavior, but
 native to Minimal APIs and fully visible to OpenAPI generation:
@@ -307,6 +315,9 @@ If both checks fail, `combined.Errors` contains **both** messages — `["Name is
 — not just the first one. Every failed result's `Errors` (or `Detail`/`Title` when it carries none) are
 concatenated in order; if every result succeeds, `Combine` returns `Result.Success()`.
 
+When the combined results carry `FieldErrors` (§11), `Combine` merges them by key instead of dropping
+them — combining a `"Name"` failure and a `"Price"` failure gives you both keys back in one result.
+
 When the independent checks each carry data you actually need afterward, the 2–4 arity generic
 overloads combine both the outcome *and* the payloads into a named tuple:
 
@@ -365,11 +376,10 @@ public async Task<IActionResult> Activate(int id)
 ---
 ## 10. Generic short-circuiting — `IResultFailureFactory<TSelf>` / `ResultFailureFactory`
 
-Everything above assumes the calling code knows the concrete result type (`IOperationResult<ProductDto>`,
-`ErrorResult`, ...). Generic infrastructure often doesn't — a MediatR `IPipelineBehavior<TRequest, TResponse>`,
-a gRPC interceptor, any short-circuiting middleware only has `TResponse` as a type parameter. Today that
-usually gets solved by throwing an exception to unwind the pipeline, because you can't `new TResponse(...)`
-without knowing what `TResponse` actually is.
+Everything above assumes the calling code knows the concrete result type. Generic infrastructure often
+doesn't — a MediatR `IPipelineBehavior<TRequest, TResponse>`, a gRPC interceptor, any short-circuiting
+middleware only has `TResponse` as a type parameter, and you can't `new TResponse(...)` without knowing
+what it actually is. Without this, the usual fix is throwing an exception just to unwind the pipeline.
 
 `IResultFailureFactory<TSelf>` (`ResultHandler.Core.Abstractions`) solves this with a C# 11 static-abstract-interface
 CRTP: it lets `TSelf` build its own failure instance. `OperationResult` and `OperationDataResult<T>` already
@@ -477,7 +487,7 @@ public async Task<IActionResult> Create(CreateProductCommand command)
 ```
 
 ---
-## 11. Per-field validation errors — `IHasFieldErrors` / `IFieldFailureFactory<TSelf>`
+## 11. Per-field validation errors — `IHasFieldErrors` / `IResultFailureFactory<TSelf>`
 
 §3's plain `IReadOnlyList<string> Errors` is a flat list — fine for "here are the problems" messages,
 but a form UI usually needs to know *which* input each message belongs to. `OperationResult`/
@@ -492,7 +502,7 @@ public interface IHasFieldErrors
 ```
 
 Build one with `OperationResult.Failure(fieldErrors)` / `OperationDataResult<T>.Failure(fieldErrors)`,
-or the generic `IFieldFailureFactory<TSelf>.Failure(fieldErrors)` (implemented by the same types, for
+or the generic `IResultFailureFactory<TSelf>.Failure(fieldErrors)` (implemented by the same types, for
 the same CRTP reason as §10) — keyed by property name, valued by that property's messages:
 
 ```csharp
@@ -517,7 +527,7 @@ A generic pipeline behavior (mirrors §10's `ValidationBehavior`, keyed per fiel
 public class FieldValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
-    where TResponse : IOperationResult, IFieldFailureFactory<TResponse>
+    where TResponse : IOperationResult, IResultFailureFactory<TResponse>
 {
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
@@ -533,7 +543,8 @@ public class FieldValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator
 ```
 
 `ToErrorDataResult<T>()`, `Map`, and `Bind` (§7/§10) carry `FieldErrors` through when re-projecting a
-failure into a different result type, same as they carry `Title`/`Status`/`Detail`/`Errors`.
+failure into a different result type, same as they carry `Title`/`Status`/`Detail`/`Errors`;
+`Result.Combine` (§8) merges `FieldErrors` from every combined failure instead.
 
 `ResultHandler.AspNetCore`'s `ToProblemDetails()` (§5/§6) adds a failed result's `FieldErrors` to the
 Problem Details body as a `"fieldErrors"` extension when non-empty:

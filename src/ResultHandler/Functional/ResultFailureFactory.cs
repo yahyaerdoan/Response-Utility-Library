@@ -4,19 +4,9 @@ using ResultHandler.Implementations.Error;
 
 namespace ResultHandler.Functional;
 
-/// <summary>
-/// Named, per-status shortcuts over <see cref="IResultFailureFactory{TSelf}.Failure(string, string, ResultHandler.Core.Enums.ResultStatus)"/> —
-/// written once, generically, for every implementer of <see cref="IResultFailureFactory{TSelf}"/>.
-/// </summary>
-/// <remarks>
-/// Each shortcut delegates to the matching <see cref="Result"/> facade method and re-projects its
-/// <see cref="ErrorResult"/> into the caller's generic result type, so titles and default messages
-/// have exactly one source of truth: <see cref="Result"/> itself.
-/// </remarks>
+/// <summary>Named, per-status shortcuts over <see cref="IResultFailureFactory{TSelf}.Failure(string, string, ResultHandler.Core.Enums.ResultStatus)"/>, for generic code that only has a type parameter to work with. Each delegates to the matching <see cref="Result"/> method, so titles/messages have one source of truth.</summary>
 /// <example>
-/// Use these from generic code that only has a type parameter to work with (a MediatR pipeline
-/// behavior, in this example) — everyday code with a concrete result type should call
-/// <see cref="Result"/> directly instead (see its own documentation):
+/// A MediatR pipeline behavior — everyday code with a concrete result type should call <see cref="Result"/> directly instead:
 /// <code>
 /// public class AuthorizationBehavior&lt;TRequest, TResponse&gt;(ICurrentUser user)
 ///     : IPipelineBehavior&lt;TRequest, TResponse&gt;
