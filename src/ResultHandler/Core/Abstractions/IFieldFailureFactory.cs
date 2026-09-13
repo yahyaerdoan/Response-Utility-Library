@@ -9,21 +9,6 @@
 public interface IFieldFailureFactory<TSelf>
     where TSelf : IOperationResult
 {
-    /// <summary>Builds a failed <typeparamref name="TSelf"/> for one or more per-field validation errors.</summary>
-    /// <param name="fieldErrors">The error messages, keyed by the invalid field's property name.</param>
-    /// <returns>A failed result whose <see cref="IHasFieldErrors.FieldErrors"/> is set to
-    /// <paramref name="fieldErrors"/> and whose <see cref="IOperationResult.Errors"/> is set to the
-    /// flattened messages, for callers that only read the flat list.</returns>
-    /// <example>
-    /// Short-circuiting a MediatR pipeline behavior once per-field validation fails:
-    /// <code>
-    /// where TResponse : IOperationResult, IFieldFailureFactory&lt;TResponse&gt;
-    /// ...
-    /// if (fieldErrors.Count > 0)
-    /// {
-    ///     return TResponse.Failure(fieldErrors);
-    /// }
-    /// </code>
-    /// </example>
+    /// <summary>Builds a failed <typeparamref name="TSelf"/> from per-field validation errors, keyed by property name. Also populates <see cref="IOperationResult.Errors"/> with the flattened messages.</summary>
     static abstract TSelf Failure(IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors);
 }

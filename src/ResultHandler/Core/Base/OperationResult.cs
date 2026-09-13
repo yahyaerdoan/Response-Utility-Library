@@ -21,13 +21,7 @@ namespace ResultHandler.Core.Base;
 public class OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
     : IOperationResult, IResultFailureFactory<OperationResult>, IFieldFailureFactory<OperationResult>, IHasFieldErrors
 {
-    /// <summary>Carries per-field validation errors alongside the flat list. Kept internal (not a
-    /// second public overload) so it doesn't collide with the primary constructor's optional
-    /// parameters, and doesn't touch the primary constructor's signature, which is part of this
-    /// package's binary-compatibility baseline (<c>PackageValidationBaselineVersion</c>). External
-    /// callers reach this through <see cref="Failure(IReadOnlyDictionary{string, IReadOnlyList{string}})"/>
-    /// instead; <see cref="JsonConstructorAttribute"/> works on non-public constructors, so
-    /// deserialization is unaffected.</summary>
+    /// <summary>Carries <see cref="FieldErrors"/> alongside the flat list. Internal — doesn't collide with the primary constructor's optional parameters or touch its binary-compatibility baseline; external callers go through <see cref="Failure(IReadOnlyDictionary{string, IReadOnlyList{string}})"/> instead.</summary>
     [JsonConstructor]
     internal OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
         : this(isSuccessful, status, title, detail, errors)
@@ -35,23 +29,29 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
         FieldErrors = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
     }
 
+    /// <inheritdoc cref="IOperationResult.IsSuccessful"/>
     [JsonPropertyName("isSuccessful")]
     public virtual bool IsSuccessful { get; } = isSuccessful;
 
+    /// <inheritdoc cref="IOperationResult.Status"/>
     [JsonConverter(typeof(ResultStatusJsonConverter))]
     [JsonPropertyName("statusCode")]
     public ResultStatus Status { get; } = status;
 
+    /// <inheritdoc cref="IOperationResult.Title"/>
     [JsonPropertyName("statusMessage")]
     public string Title { get; } = title;
 
+    /// <inheritdoc cref="IOperationResult.Detail"/>
     [JsonPropertyName("detail")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Detail { get; } = detail;
 
+    /// <inheritdoc cref="IOperationResult.Errors"/>
     [JsonPropertyName("errors")]
     public IReadOnlyList<string> Errors { get; } = errors ?? [];
 
+    /// <inheritdoc cref="IHasFieldErrors.FieldErrors"/>
     [JsonPropertyName("fieldErrors")]
     public IReadOnlyDictionary<string, IReadOnlyList<string>> FieldErrors { get; protected set; } = ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
 
@@ -95,14 +95,20 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
             hash.Add(error);
         }
 
+        var fieldErrorsHash = 0;
         foreach (var pair in FieldErrors)
         {
-            hash.Add(pair.Key);
+            var pairHash = default(HashCode);
+            pairHash.Add(pair.Key);
             foreach (var message in pair.Value)
             {
-                hash.Add(message);
+                pairHash.Add(message);
             }
+
+            fieldErrorsHash ^= pairHash.ToHashCode();
         }
+
+        hash.Add(fieldErrorsHash);
 
         return hash.ToHashCode();
     }

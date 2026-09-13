@@ -20,7 +20,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            7.0.x
             8.0.x
             9.0.x
             10.0.x
@@ -32,7 +31,12 @@ jobs:
         run: dotnet build ResponseUtilityLibrary.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test test/ResultHandler.Tests/ResultHandler.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+        shell: pwsh
+        run: |
+          foreach ($tfm in @('net8.0', 'net9.0', 'net10.0')) {
+            dotnet test test/ResultHandler.Tests/ResultHandler.Tests.csproj -f $tfm --no-build --configuration Release --results-directory test/ResultHandler.Tests/TestResults --report-xunit-trx --report-xunit-trx-filename "test-results.$tfm.trx"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
       - name: Publish test results
         if: always()

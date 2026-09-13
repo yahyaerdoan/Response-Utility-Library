@@ -98,12 +98,7 @@ public static partial class AspNetCoreResultExtensions
         Generic,
     }
 
-    /// <summary>Creates an RFC 9457 <see cref="ProblemDetails"/> payload from an <see cref="IOperationResult"/>.</summary>
-    /// <param name="result">The result to convert.</param>
-    /// <param name="httpContext">
-    /// Optional; when provided, <see cref="ProblemDetails.Instance"/> is set to the current request
-    /// path, per RFC 9457's guidance that it identify "this specific occurrence" of the problem.
-    /// </param>
+    /// <summary>Creates an RFC 9457 <see cref="ProblemDetails"/> payload from an <see cref="IOperationResult"/>. When <paramref name="httpContext"/> is provided, sets <see cref="ProblemDetails.Instance"/> to the current request path.</summary>
     public static ProblemDetails ToProblemDetails(this IOperationResult result, HttpContext? httpContext = null)
     {
         var problem = new ProblemDetails
