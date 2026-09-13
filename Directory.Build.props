@@ -31,30 +31,13 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
-  <!--
-    Package validation compares the built package's API against the last published NuGet
-    baseline to catch accidental breaking changes. It needs a real -p:Version (set by
-    publish.yml from the release tag) to compare meaningfully, so it's gated on the
-    IsPublishBuild flag publish.yml passes explicitly — not on GITHUB_ACTIONS, which is
-    also 'true' for build.yml/codeql.yml's plain `dotnet build` (no -p:Version override),
-    where it would always fail comparing the placeholder Version against the baseline.
-  -->
+  <!-- Gated on IsPublishBuild (set explicitly by publish.yml), not GITHUB_ACTIONS, since a plain
+       `dotnet build` (build.yml/codeql.yml) has no real -p:Version to compare against the baseline. -->
   <PropertyGroup Condition="'$(IsPackable)' != 'false' AND '$(IsPublishBuild)' == 'true'">
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageValidationBaselineVersion>11.0.12-beta.12</PackageValidationBaselineVersion>
+    <!-- Bump to each new stable release (not betas — prereleases aren't API-stable against each other). -->
+    <PackageValidationBaselineVersion>12.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
-
-  <!--
-    The baseline (11.0.12-beta.12) still ships net7.0, and the API Compat tool shipping with newer
-    SDKs can no longer load a net7.0 assembly at all (PKV006) now that net7.0 is EOL - this repo
-    dropped net7.0 as a TargetFramework, so there is no net7.0-free baseline to compare against yet.
-    Ignoring just that one framework (not the whole baseline check) lets net8.0/net9.0/net10.0 keep
-    validating for real breaking changes. Once a net7.0-free version publishes, bump
-    PackageValidationBaselineVersion to it and remove this ItemGroup.
-  -->
-  <ItemGroup Condition="'$(IsPackable)' != 'false' AND '$(IsPublishBuild)' == 'true'">
-    <PackageValidationBaselineFrameworkToIgnore Include="net7.0" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(IsPackable)' != 'false'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
