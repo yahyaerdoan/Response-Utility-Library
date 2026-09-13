@@ -30,10 +30,30 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          # <Version> in ResultHandler.csproj is the full target version - bump it by hand per release.
-          # beta appends -beta.<run_number> to preview that same version (12.2.0-beta.5 < 12.2.0).
-          # Bump <Version> BEFORE the first beta of a release, not after.
-          $version = (dotnet msbuild src/ResultHandler/ResultHandler.csproj -getProperty:Version).Trim()
+          # major.minor comes from <Version>/<PackageId> in ResultHandler.csproj - bump major.minor by
+          # hand for a real API change. Patch is never hand-edited: it's the highest already-published
+          # stable patch for that major.minor (queried from NuGet.org) plus one, so it can only go up
+          # and master/beta always agree on the version they're targeting. beta appends
+          # -beta.<run_number> to preview that same version (12.1.34-beta.5 < 12.1.34).
+          $csprojVersion = (dotnet msbuild src/ResultHandler/ResultHandler.csproj -getProperty:Version).Trim()
+          $majorMinor = ($csprojVersion -split '\.')[0..1] -join '.'
+          $packageId = (dotnet msbuild src/ResultHandler/ResultHandler.csproj -getProperty:PackageId).Trim().ToLowerInvariant()
+
+          try {
+            $index = Invoke-RestMethod -Uri "https://api.nuget.org/v3-flatcontainer/$packageId/index.json"
+          } catch {
+            $index = $null
+          }
+
+          $publishedPatches = @()
+          if ($index) {
+            $publishedPatches = $index.versions |
+              Where-Object { $_ -notmatch '-' -and $_ -like "$majorMinor.*" } |
+              ForEach-Object { [int]($_.Substring($majorMinor.Length + 1)) }
+          }
+          $nextPatch = if ($publishedPatches.Count -gt 0) { ($publishedPatches | Measure-Object -Maximum).Maximum + 1 } else { 0 }
+
+          $version = "$majorMinor.$nextPatch"
           if ("${{ github.ref_name }}" -eq "beta") {
             $version = "$version-beta.${{ github.run_number }}"
           }
