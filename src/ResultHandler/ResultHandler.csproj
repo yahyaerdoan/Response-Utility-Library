@@ -14,7 +14,7 @@
     <PackageReleaseNotes>v12.1 - Per-field validation errors, plus FieldErrors bug fixes:
 
 Added:
-- Per-field validation errors: IHasFieldErrors, IResultFailureFactory&lt;TSelf&gt;.Failure(fieldErrors), OperationResult.Failure(fieldErrors) (see README "Per-field validation errors").
+- Per-field validation errors: IHasFieldErrors, IResultFailureFactory&lt;TSelf&gt;.Failure(fieldErrors), OperationResult.Failure(fieldErrors) (see README "Per-field validation errors"). Breaking for any external IResultFailureFactory&lt;TSelf&gt; implementer - see CHANGELOG.md.
 
 Fixed:
 - Map/Bind/ToErrorDataResult() dropped FieldErrors when re-projecting a failure into a different result type - now preserved, along with the original Errors list.
