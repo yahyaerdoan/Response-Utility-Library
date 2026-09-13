@@ -13,7 +13,8 @@ always called out explicitly below.
   `OperationDataResult<T>` (and therefore `ErrorResult`/`ErrorDataResult<T>`) implement it.
 - `IResultFailureFactory<TSelf>.Failure(IReadOnlyDictionary<string, IReadOnlyList<string>>)` — lets
   generic infrastructure that only knows `TSelf` build a per-field failure without knowing the concrete
-  result type; implemented by the same types as the rest of `IResultFailureFactory<TSelf>`.
+  result type; implemented by the same types as the rest of `IResultFailureFactory<TSelf>`. **Breaking**
+  for any existing external implementer of `IResultFailureFactory<TSelf>` — see `CompatibilitySuppressions.xml`.
 - `OperationResult.Failure(IReadOnlyDictionary<string, IReadOnlyList<string>>)` /
   `OperationDataResult<T>.Failure(...)` static factories, and matching `ErrorResult`/`ErrorDataResult<T>`
   constructors — build a failure from per-field messages; `Title`/`Status` default to
