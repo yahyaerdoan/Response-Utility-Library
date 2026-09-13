@@ -29,6 +29,11 @@ always called out explicitly below.
   two results built from field-error dictionaries with the same content in a different key insertion
   order previously could compare equal while returning different hash codes.
 
+### Removed (breaking for net7.0 consumers)
+- `net7.0` support — net7.0 reached end-of-life and current tooling (test SDK, xunit v3) has dropped
+  it too. The library now targets `net8.0`/`net9.0`/`net10.0` only; consumers still on net7.0 must
+  upgrade their app's target framework before taking this version.
+
 ## [12.0.0]
 
 ### Added

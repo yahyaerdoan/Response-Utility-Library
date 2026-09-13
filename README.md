@@ -1,6 +1,6 @@
 ﻿# ResponseResultHandler
 
-A Result-Pattern library for .NET (net7.0–net10.0). Wraps the outcome of an
+A Result-Pattern library for .NET (net8.0–net10.0). Wraps the outcome of an
 operation — success or failure, an HTTP-mappable status, a title/detail, and optional data — in an
 immutable object instead of throwing exceptions or returning bare booleans.
 
