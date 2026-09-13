@@ -7,11 +7,7 @@ using ResultHandler.Implementations.Error;
 
 namespace ResultHandler.Core.Base;
 
-/// <summary>
-/// Base implementation of <see cref="IOperationResult{T}"/>. Immutable; prefer the
-/// <see cref="Implementations.Success.SuccessDataResult{T}"/>/<see cref="Implementations.Error.ErrorDataResult{T}"/>
-/// subclasses or the <see cref="ResultHandler.Facade.Result"/> facade over constructing this directly.
-/// </summary>
+/// <summary>Immutable base implementation of <see cref="IOperationResult{T}"/>. Prefer <see cref="Implementations.Success.SuccessDataResult{T}"/>/<see cref="Implementations.Error.ErrorDataResult{T}"/> or the <see cref="ResultHandler.Facade.Result"/> facade over constructing this directly.</summary>
 /// <param name="data">The data payload; may be <see langword="null"/> when <paramref name="isSuccessful"/> is <see langword="false"/>.</param>
 /// <param name="isSuccessful">Whether the operation succeeded.</param>
 /// <param name="status">The outcome status.</param>
@@ -19,13 +15,11 @@ namespace ResultHandler.Core.Base;
 /// <param name="detail">Optional additional context.</param>
 /// <param name="errors">Optional list of individual error messages.</param>
 public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
-    : OperationResult(isSuccessful, status, title, detail, errors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>, IFieldFailureFactory<OperationDataResult<T>>
+    : OperationResult(isSuccessful, status, title, detail, errors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
 {
-    /// <summary>Carries per-field validation errors alongside the flat list - see the matching
-    /// constructor on <see cref="OperationResult"/> for why this is internal rather than a second
-    /// public overload.</summary>
+    /// <summary>Sets <paramref name="errors"/> and <paramref name="fieldErrors"/> independently — see the matching constructor on <see cref="OperationResult"/>.</summary>
     [JsonConstructor]
-    internal OperationDataResult([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
+    public OperationDataResult([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
         : this(data, isSuccessful, status, title, detail, errors)
     {
         FieldErrors = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;

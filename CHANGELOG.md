@@ -11,9 +11,10 @@ always called out explicitly below.
 - `IHasFieldErrors` (`ResultHandler.Core.Abstractions`) — optional companion to `IOperationResult` for
   results carrying per-field validation errors, keyed by property name. `OperationResult` and
   `OperationDataResult<T>` (and therefore `ErrorResult`/`ErrorDataResult<T>`) implement it.
-- `IFieldFailureFactory<TSelf>` (`ResultHandler.Core.Abstractions`) — CRTP companion to
-  `IResultFailureFactory<TSelf>` for generic infrastructure that needs to build a per-field failure
-  without knowing the concrete result type; implemented by the same types as `IResultFailureFactory<TSelf>`.
+- `IResultFailureFactory<TSelf>.Failure(IReadOnlyDictionary<string, IReadOnlyList<string>>)` — lets
+  generic infrastructure that only knows `TSelf` build a per-field failure without knowing the concrete
+  result type; implemented by the same types as the rest of `IResultFailureFactory<TSelf>`. **Breaking**
+  for any existing external implementer of `IResultFailureFactory<TSelf>` — see `CompatibilitySuppressions.xml`.
 - `OperationResult.Failure(IReadOnlyDictionary<string, IReadOnlyList<string>>)` /
   `OperationDataResult<T>.Failure(...)` static factories, and matching `ErrorResult`/`ErrorDataResult<T>`
   constructors — build a failure from per-field messages; `Title`/`Status` default to
@@ -21,10 +22,22 @@ always called out explicitly below.
   messages alongside `FieldErrors` (see README §11).
 - `ResponseResultHandler.AspNetCore`'s `ToProblemDetails()` adds a non-empty `FieldErrors` to the
   Problem Details body as a `"fieldErrors"` extension.
+- `OperationResult`/`OperationDataResult<T>` constructor overloads that carry `errors` and
+  `fieldErrors` independently — public (rather than internal) so a System.Text.Json
+  source-generated `JsonSerializerContext` (the pattern Native AOT/trimmed consumers use) can still
+  call them to round-trip `FieldErrors`.
+- `FieldErrorsExtensions.GetFieldErrors(this IOperationResult)` (`ResultHandler.Core.Abstractions`) —
+  returns a result's `FieldErrors` if it implements `IHasFieldErrors` and has any, otherwise empty.
 
 ### Fixed
 - `Map`/`Bind`/`ToErrorDataResult<T>()` (`ResultHandler.Functional`) now carry `FieldErrors` through
-  when re-projecting a failure into a different result type, instead of silently dropping them.
+  when re-projecting a failure into a different result type, instead of silently dropping them, and
+  preserve the original `Errors` list when it differs from the flattened `FieldErrors` values.
+- `Result.Combine(...)` (`ResultHandler.Facade`) now merges every combined failure's `FieldErrors` by
+  key, instead of only merging the flat `Errors` list and dropping field attribution.
+- `OperationResult.Failure(fieldErrors)` / `OperationDataResult<T>.Failure(fieldErrors)` and the
+  matching `ErrorResult`/`ErrorDataResult<T>` constructors no longer throw when a `fieldErrors`
+  dictionary contains a `null` value — that field's messages are skipped instead.
 - `OperationResult.GetHashCode()` now hashes `FieldErrors` order-independently, matching `Equals()` —
   two results built from field-error dictionaries with the same content in a different key insertion
   order previously could compare equal while returning different hash codes.

@@ -11,7 +11,22 @@
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Response  response Result result Handler handler CQRS cqrs MediatR  mediatR NetCore netCore Core core .NET .net ProblemDetails RFC9457</PackageTags>
-    <PackageReleaseNotes>v12.1: Adds per-field validation errors (IHasFieldErrors, IFieldFailureFactory&lt;TSelf&gt;, OperationResult.Failure(fieldErrors), see README "Per-field validation errors"). Fixes two FieldErrors bugs: Map/Bind/ToErrorDataResult used to drop FieldErrors when re-projecting a failure, and GetHashCode was order-sensitive while Equals wasn't. Drops net7.0 (EOL) — net8.0/net9.0/net10.0 only; consumers still on net7.0 must upgrade before taking this version. See CHANGELOG.md for details.
+    <PackageReleaseNotes>v12.1 - Per-field validation errors, plus FieldErrors bug fixes:
+
+Added:
+- Per-field validation errors: IHasFieldErrors, IResultFailureFactory&lt;TSelf&gt;.Failure(fieldErrors), OperationResult.Failure(fieldErrors) (see README "Per-field validation errors"). Breaking for any external IResultFailureFactory&lt;TSelf&gt; implementer - see CHANGELOG.md.
+
+Fixed:
+- Map/Bind/ToErrorDataResult() dropped FieldErrors when re-projecting a failure into a different result type - now preserved, along with the original Errors list.
+- Result.Combine(...) dropped FieldErrors when merging failures - field errors from every combined failure are now merged by key.
+- Failure(fieldErrors) threw if the dictionary had a null value - that field's messages are skipped instead.
+- GetHashCode() was order-sensitive for FieldErrors while Equals() wasn't, so equal-content dictionaries with a different key order could hash differently.
+- OperationResult/OperationDataResult&lt;T&gt;'s errors+fieldErrors constructor is now public, so Native AOT source-generated JSON deserializers can call it.
+
+Removed (breaking):
+- net7.0 support (EOL) - net8.0/net9.0/net10.0 only; upgrade your target framework before taking this version.
+
+See CHANGELOG.md for full details.
 
 v12 (breaking): Removed all members previously marked [Obsolete] — StatusMessage, StatusCode, ResultData, and every HttpStatusCode-based constructor across OperationResult/OperationDataResult/SuccessResult/SuccessDataResult/ErrorResult/ErrorDataResult. Use Title/Status/Data and the ResultStatus-based constructors instead (see README "Migrating to v12"). Also includes the previously-unreleased v11.1 additions: Result.Combine, Ensure/EnsureAsync guard clauses, and Task-aware async composition helpers (MatchAsync/OnSuccessAsync/OnFailureAsync/MapAsync/BindAsync). See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>

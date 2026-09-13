@@ -52,9 +52,12 @@ ResultHandler.Implementations.Error.ErrorDataResult<T>.ErrorDataResult(string! t
 ResultHandler.Implementations.Error.ErrorResult.ErrorResult(string! title, ResultHandler.Core.Enums.ResultStatus status, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> void
 static ResultHandler.Core.Base.OperationDataResult<T>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> ResultHandler.Core.Base.OperationDataResult<T>!
 static ResultHandler.Core.Base.OperationResult.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> ResultHandler.Core.Base.OperationResult!
-ResultHandler.Core.Abstractions.IFieldFailureFactory<TSelf>
-ResultHandler.Core.Abstractions.IFieldFailureFactory<TSelf>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> TSelf
+ResultHandler.Core.Abstractions.IResultFailureFactory<TSelf>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> TSelf
 ResultHandler.Core.Abstractions.IHasFieldErrors
 ResultHandler.Core.Abstractions.IHasFieldErrors.FieldErrors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
 ResultHandler.Core.Base.OperationResult.FieldErrors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
 ResultHandler.Core.Base.OperationResult.FieldErrors.set -> void
+ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail, System.Collections.Generic.IReadOnlyList<string!>? errors, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors) -> void
+ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail, System.Collections.Generic.IReadOnlyList<string!>? errors, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors) -> void
+ResultHandler.Core.Abstractions.FieldErrorsExtensions
+static ResultHandler.Core.Abstractions.FieldErrorsExtensions.GetFieldErrors(this ResultHandler.Core.Abstractions.IOperationResult! result) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!

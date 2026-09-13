@@ -6,14 +6,7 @@ using ResultHandler.Mapping;
 
 namespace ResultHandler.AspNetCore.Extensions;
 
-/// <summary>
-/// Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core
-/// response types. Split across three files: the MVC <see cref="IActionResult"/> surface lives in
-/// <c>AspNetCoreResultExtensions.Mvc.cs</c>, the Minimal API <see cref="IResult"/> surface lives in
-/// <c>AspNetCoreResultExtensions.MinimalApi.cs</c>, and this file holds what both share — RFC 9457
-/// <see cref="ProblemDetails"/> construction and the bodyless-status classification they both need to
-/// agree on.
-/// </summary>
+/// <summary>Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core response types. Split across <c>.Mvc.cs</c> (<see cref="IActionResult"/>), <c>.MinimalApi.cs</c> (<see cref="IResult"/>), and this file (shared RFC 9457 <see cref="ProblemDetails"/> and bodyless-status logic).</summary>
 public static partial class AspNetCoreResultExtensions
 {
     // RFC 9110 / RFC 6585 / RFC 4918 / RFC 7725 / RFC 8470 - canonical type URIs per RFC 9457 §4.2
@@ -115,19 +108,16 @@ public static partial class AspNetCoreResultExtensions
             problem.Extensions["errors"] = result.Errors;
         }
 
-        if (result is IHasFieldErrors { FieldErrors.Count: > 0 } withFieldErrors)
+        var fieldErrors = result.GetFieldErrors();
+        if (fieldErrors.Count > 0)
         {
-            problem.Extensions["fieldErrors"] = withFieldErrors.FieldErrors;
+            problem.Extensions["fieldErrors"] = fieldErrors;
         }
 
         return problem;
     }
 
-    /// <summary>
-    /// Single source of truth for which statuses map to a bodyless response and what HTTP code to
-    /// use — shared by both the <see cref="IActionResult"/> and Minimal API <see cref="IResult"/>
-    /// surfaces so the two never drift apart.
-    /// </summary>
+    /// <summary>Maps a status to a bodyless response kind and HTTP code — shared by the MVC and Minimal API surfaces.</summary>
     private static (BodylessKind Kind, int HttpCode) ClassifyBodyless(ResultStatus status)
     {
         var httpCode = (int)status.ToHttpStatusCode();

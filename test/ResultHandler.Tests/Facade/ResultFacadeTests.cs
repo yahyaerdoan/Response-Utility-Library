@@ -1,4 +1,6 @@
-﻿using ResultHandler.Core.Enums;
+﻿using ResultHandler.Core.Abstractions;
+using ResultHandler.Core.Base;
+using ResultHandler.Core.Enums;
 using ResultHandler.Facade;
 using ResultHandler.Implementations.Error;
 using Xunit;
@@ -139,6 +141,31 @@ public class ResultFacadeTests
         var result = Result.Combine(new ErrorResult("Something went wrong.", ResultStatus.Conflict));
 
         Assert.Equal(["Something went wrong."], result.Errors);
+    }
+
+    [Fact]
+    public void Combine_SomeFailWithFieldErrors_MergesFieldErrorsByKey()
+    {
+        var result = Result.Combine(
+            OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Name"] = ["Name is required."] }),
+            OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Price"] = ["Price must be greater than zero."] }));
+
+        var withFieldErrors = Assert.IsAssignableFrom<IHasFieldErrors>(result);
+        Assert.Equal(["Name is required."], withFieldErrors.FieldErrors["Name"]);
+        Assert.Equal(["Price must be greater than zero."], withFieldErrors.FieldErrors["Price"]);
+        Assert.Equal(["Name is required.", "Price must be greater than zero."], result.Errors);
+    }
+
+    [Fact]
+    public void Combine_MixOfFieldAndPlainFailures_KeepsPlainErrorsAndFieldErrors()
+    {
+        var result = Result.Combine(
+            OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Name"] = ["Name is required."] }),
+            Result.NotFound("Category 7 does not exist."));
+
+        var withFieldErrors = Assert.IsAssignableFrom<IHasFieldErrors>(result);
+        Assert.Equal(["Name is required."], withFieldErrors.FieldErrors["Name"]);
+        Assert.Equal(["Name is required.", "Category 7 does not exist."], result.Errors);
     }
 
     [Fact]

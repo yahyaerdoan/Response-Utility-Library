@@ -3,10 +3,7 @@ using ResultHandler.Core.Enums;
 
 namespace ResultHandler.Core.Abstractions;
 
-/// <summary>
-/// The outcome of an operation: whether it succeeded, a status mappable to an HTTP status code,
-/// a short title, optional detail text, and an optional list of error messages.
-/// </summary>
+/// <summary>The outcome of an operation: success flag, HTTP-mappable status, a title, optional detail, and optional error messages.</summary>
 public interface IOperationResult
 {
     /// <summary>Whether the operation succeeded.</summary>
