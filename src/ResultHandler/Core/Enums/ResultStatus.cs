@@ -1,76 +1,201 @@
-﻿namespace ResultHandler.Core.Enums;
+namespace ResultHandler.Core.Enums;
 
+/// <summary>Every standard 1xx-5xx HTTP status, decoupled from <see cref="System.Net.HttpStatusCode"/> so the library has no hard ASP.NET Core dependency.</summary>
 public enum ResultStatus
 {
     // 1xx - Informational
-    Continue,                       // 100
-    SwitchingProtocols,             // 101
-    Processing,                     // 102
-    EarlyHints,                     // 103
+
+    /// <summary>HTTP 100.</summary>
+    Continue,
+
+    /// <summary>HTTP 101.</summary>
+    SwitchingProtocols,
+
+    /// <summary>HTTP 102.</summary>
+    Processing,
+
+    /// <summary>HTTP 103.</summary>
+    EarlyHints,
 
     // 2xx - Success
-    Ok,                             // 200
-    Created,                        // 201
-    Accepted,                       // 202
-    NonAuthoritativeInformation,    // 203
-    NoContent,                      // 204
-    ResetContent,                   // 205
-    PartialContent,                 // 206
-    MultiStatus,                    // 207
-    AlreadyReported,                // 208
-    ImUsed,                         // 226
+
+    /// <summary>HTTP 200.</summary>
+    Ok,
+
+    /// <summary>HTTP 201.</summary>
+    Created,
+
+    /// <summary>HTTP 202.</summary>
+    Accepted,
+
+    /// <summary>HTTP 203.</summary>
+    NonAuthoritativeInformation,
+
+    /// <summary>HTTP 204.</summary>
+    NoContent,
+
+    /// <summary>HTTP 205.</summary>
+    ResetContent,
+
+    /// <summary>HTTP 206.</summary>
+    PartialContent,
+
+    /// <summary>HTTP 207.</summary>
+    MultiStatus,
+
+    /// <summary>HTTP 208.</summary>
+    AlreadyReported,
+
+    /// <summary>HTTP 226.</summary>
+    ImUsed,
 
     // 3xx - Redirection
-    MultipleChoices,                // 300
-    MovedPermanently,               // 301
-    Found,                          // 302
-    SeeOther,                       // 303
-    NotModified,                    // 304
-    UseProxy,                       // 305
-    TemporaryRedirect,              // 307
-    PermanentRedirect,              // 308
+
+    /// <summary>HTTP 300.</summary>
+    MultipleChoices,
+
+    /// <summary>HTTP 301.</summary>
+    MovedPermanently,
+
+    /// <summary>HTTP 302.</summary>
+    Found,
+
+    /// <summary>HTTP 303.</summary>
+    SeeOther,
+
+    /// <summary>HTTP 304.</summary>
+    NotModified,
+
+    /// <summary>HTTP 305.</summary>
+    UseProxy,
+
+    /// <summary>HTTP 307.</summary>
+    TemporaryRedirect,
+
+    /// <summary>HTTP 308.</summary>
+    PermanentRedirect,
 
     // 4xx - Client errors
-    BadRequest,                     // 400
-    Unauthorized,                   // 401
-    PaymentRequired,                // 402
-    Forbidden,                      // 403
-    NotFound,                       // 404
-    MethodNotAllowed,               // 405
-    NotAcceptable,                  // 406
-    ProxyAuthenticationRequired,    // 407
-    RequestTimeout,                 // 408
-    Conflict,                       // 409
-    Gone,                           // 410
-    LengthRequired,                 // 411
-    PreconditionFailed,             // 412
-    ContentTooLarge,                // 413
-    UriTooLong,                     // 414
-    UnsupportedMediaType,           // 415
-    RangeNotSatisfiable,            // 416
-    ExpectationFailed,              // 417
-    ImATeapot,                      // 418
-    MisdirectedRequest,             // 421
-    UnprocessableContent,           // 422
-    Locked,                         // 423
-    FailedDependency,               // 424
-    TooEarly,                       // 425
-    UpgradeRequired,                // 426
-    PreconditionRequired,           // 428
-    TooManyRequests,                // 429
-    RequestHeaderFieldsTooLarge,    // 431
-    UnavailableForLegalReasons,     // 451
+
+    /// <summary>HTTP 400.</summary>
+    BadRequest,
+
+    /// <summary>HTTP 401.</summary>
+    Unauthorized,
+
+    /// <summary>HTTP 402.</summary>
+    PaymentRequired,
+
+    /// <summary>HTTP 403.</summary>
+    Forbidden,
+
+    /// <summary>HTTP 404.</summary>
+    NotFound,
+
+    /// <summary>HTTP 405.</summary>
+    MethodNotAllowed,
+
+    /// <summary>HTTP 406.</summary>
+    NotAcceptable,
+
+    /// <summary>HTTP 407.</summary>
+    ProxyAuthenticationRequired,
+
+    /// <summary>HTTP 408.</summary>
+    RequestTimeout,
+
+    /// <summary>HTTP 409.</summary>
+    Conflict,
+
+    /// <summary>HTTP 410.</summary>
+    Gone,
+
+    /// <summary>HTTP 411.</summary>
+    LengthRequired,
+
+    /// <summary>HTTP 412.</summary>
+    PreconditionFailed,
+
+    /// <summary>HTTP 413.</summary>
+    ContentTooLarge,
+
+    /// <summary>HTTP 414.</summary>
+    UriTooLong,
+
+    /// <summary>HTTP 415.</summary>
+    UnsupportedMediaType,
+
+    /// <summary>HTTP 416.</summary>
+    RangeNotSatisfiable,
+
+    /// <summary>HTTP 417.</summary>
+    ExpectationFailed,
+
+    /// <summary>HTTP 418.</summary>
+    ImATeapot,
+
+    /// <summary>HTTP 421.</summary>
+    MisdirectedRequest,
+
+    /// <summary>HTTP 422.</summary>
+    UnprocessableContent,
+
+    /// <summary>HTTP 423.</summary>
+    Locked,
+
+    /// <summary>HTTP 424.</summary>
+    FailedDependency,
+
+    /// <summary>HTTP 425.</summary>
+    TooEarly,
+
+    /// <summary>HTTP 426.</summary>
+    UpgradeRequired,
+
+    /// <summary>HTTP 428.</summary>
+    PreconditionRequired,
+
+    /// <summary>HTTP 429.</summary>
+    TooManyRequests,
+
+    /// <summary>HTTP 431.</summary>
+    RequestHeaderFieldsTooLarge,
+
+    /// <summary>HTTP 451.</summary>
+    UnavailableForLegalReasons,
 
     // 5xx - Server errors
-    InternalServerError,              // 500
-    NotImplemented,                   // 501
-    BadGateway,                       // 502
-    ServiceUnavailable,               // 503
-    GatewayTimeout,                   // 504
-    HttpVersionNotSupported,          // 505
-    VariantAlsoNegotiates,            // 506
-    InsufficientStorage,              // 507
-    LoopDetected,                     // 508
-    NotExtended,                      // 510
-    NetworkAuthenticationRequired,    // 511
+
+    /// <summary>HTTP 500.</summary>
+    InternalServerError,
+
+    /// <summary>HTTP 501.</summary>
+    NotImplemented,
+
+    /// <summary>HTTP 502.</summary>
+    BadGateway,
+
+    /// <summary>HTTP 503.</summary>
+    ServiceUnavailable,
+
+    /// <summary>HTTP 504.</summary>
+    GatewayTimeout,
+
+    /// <summary>HTTP 505.</summary>
+    HttpVersionNotSupported,
+
+    /// <summary>HTTP 506.</summary>
+    VariantAlsoNegotiates,
+
+    /// <summary>HTTP 507.</summary>
+    InsufficientStorage,
+
+    /// <summary>HTTP 508.</summary>
+    LoopDetected,
+
+    /// <summary>HTTP 510.</summary>
+    NotExtended,
+
+    /// <summary>HTTP 511.</summary>
+    NetworkAuthenticationRequired,
 }

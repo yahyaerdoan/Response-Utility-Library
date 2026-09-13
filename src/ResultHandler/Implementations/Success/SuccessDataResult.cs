@@ -12,11 +12,13 @@ public class SuccessDataResult<T> : OperationDataResult<T>
     {
     }
 
+    /// <summary>Success with the given data and a custom title, status <see cref="ResultStatus.Ok"/>.</summary>
     public SuccessDataResult(T data, string title)
         : base(data, true, ResultStatus.Ok, title)
     {
     }
 
+    /// <summary>Success with the given data, title, and status.</summary>
     public SuccessDataResult(T data, string title, ResultStatus status)
         : base(data, true, status, title)
     {

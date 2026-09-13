@@ -1,17 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <PackageId>ResponseResultHandler</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler</Title>
-    <Version>12.0.0</Version>
+    <Version>12.1.0</Version>
     <Product>ResponseResultHandler</Product>
     <Description>Response Utility Library is a library designed for streamlined handling of response results, supporting success, error, and data outcomes in .NET applications. Within this library, the ResultHandler project serves as a versatile utility for managing result handling and responses efficiently across different use cases.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Response  response Result result Handler handler CQRS cqrs MediatR  mediatR NetCore netCore Core core .NET .net ProblemDetails RFC9457</PackageTags>
-    <PackageReleaseNotes>v12 (breaking): Removed all members previously marked [Obsolete] — StatusMessage, StatusCode, ResultData, and every HttpStatusCode-based constructor across OperationResult/OperationDataResult/SuccessResult/SuccessDataResult/ErrorResult/ErrorDataResult. Use Title/Status/Data and the ResultStatus-based constructors instead (see README "Migrating to v12"). Also includes the previously-unreleased v11.1 additions: Result.Combine, Ensure/EnsureAsync guard clauses, and Task-aware async composition helpers (MatchAsync/OnSuccessAsync/OnFailureAsync/MapAsync/BindAsync). See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v12.1: Adds per-field validation errors (IHasFieldErrors, IFieldFailureFactory&lt;TSelf&gt;, OperationResult.Failure(fieldErrors), see README "Per-field validation errors"). Fixes two FieldErrors bugs: Map/Bind/ToErrorDataResult used to drop FieldErrors when re-projecting a failure, and GetHashCode was order-sensitive while Equals wasn't. Drops net7.0 (EOL) — net8.0/net9.0/net10.0 only; consumers still on net7.0 must upgrade before taking this version. See CHANGELOG.md for details.
+
+v12 (breaking): Removed all members previously marked [Obsolete] — StatusMessage, StatusCode, ResultData, and every HttpStatusCode-based constructor across OperationResult/OperationDataResult/SuccessResult/SuccessDataResult/ErrorResult/ErrorDataResult. Use Title/Status/Data and the ResultStatus-based constructors instead (see README "Migrating to v12"). Also includes the previously-unreleased v11.1 additions: Result.Combine, Ensure/EnsureAsync guard clauses, and Task-aware async composition helpers (MatchAsync/OnSuccessAsync/OnFailureAsync/MapAsync/BindAsync). See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,10 +32,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.401">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <PackageReference Update="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
   </ItemGroup>
 
 </Project>

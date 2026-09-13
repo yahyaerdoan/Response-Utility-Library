@@ -5,6 +5,35 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [12.1.0]
+
+### Added
+- `IHasFieldErrors` (`ResultHandler.Core.Abstractions`) — optional companion to `IOperationResult` for
+  results carrying per-field validation errors, keyed by property name. `OperationResult` and
+  `OperationDataResult<T>` (and therefore `ErrorResult`/`ErrorDataResult<T>`) implement it.
+- `IFieldFailureFactory<TSelf>` (`ResultHandler.Core.Abstractions`) — CRTP companion to
+  `IResultFailureFactory<TSelf>` for generic infrastructure that needs to build a per-field failure
+  without knowing the concrete result type; implemented by the same types as `IResultFailureFactory<TSelf>`.
+- `OperationResult.Failure(IReadOnlyDictionary<string, IReadOnlyList<string>>)` /
+  `OperationDataResult<T>.Failure(...)` static factories, and matching `ErrorResult`/`ErrorDataResult<T>`
+  constructors — build a failure from per-field messages; `Title`/`Status` default to
+  `"Validation Failed"` / `422 Unprocessable Content`, and `Errors` is populated with the flattened
+  messages alongside `FieldErrors` (see README §11).
+- `ResponseResultHandler.AspNetCore`'s `ToProblemDetails()` adds a non-empty `FieldErrors` to the
+  Problem Details body as a `"fieldErrors"` extension.
+
+### Fixed
+- `Map`/`Bind`/`ToErrorDataResult<T>()` (`ResultHandler.Functional`) now carry `FieldErrors` through
+  when re-projecting a failure into a different result type, instead of silently dropping them.
+- `OperationResult.GetHashCode()` now hashes `FieldErrors` order-independently, matching `Equals()` —
+  two results built from field-error dictionaries with the same content in a different key insertion
+  order previously could compare equal while returning different hash codes.
+
+### Removed (breaking for net7.0 consumers)
+- `net7.0` support — net7.0 reached end-of-life and current tooling (test SDK, xunit v3) has dropped
+  it too. The library now targets `net8.0`/`net9.0`/`net10.0` only; consumers still on net7.0 must
+  upgrade their app's target framework before taking this version.
+
 ## [12.0.0]
 
 ### Added
@@ -36,7 +65,7 @@ always called out explicitly below.
 - Every `HttpStatusCode`-based constructor on `OperationResult`, `OperationDataResult<T>`,
   `SuccessResult`, `SuccessDataResult<T>`, `ErrorResult`, and `ErrorDataResult<T>` — use the
   `ResultStatus`-based constructor instead (convert an `HttpStatusCode` via
-  `HttpStatusCodeExtensions.ToResultStatus()` if needed). See README §13 "Migrating to v12" for the
+  `HttpStatusCodeExtensions.ToResultStatus()` if needed). See README §14 "Migrating to v12" for the
   full replacement table.
 
 ## [11.0.0]
@@ -57,10 +86,10 @@ always called out explicitly below.
 ### Fixed
 - `ToActionResult<T>()` / `ToEnvelopedActionResult()` used to hardcode HTTP `200` for any successful
   result carrying a body, discarding the result's actual `Status` (so `Result.Created(...)` came back
-  as `200`, not `201`). Both now honor `Status` correctly — see README §13 if you relied on the old
+  as `200`, not `201`). Both now honor `Status` correctly — see README §14 if you relied on the old
   behavior.
 
 ### Deprecated
 - `StatusMessage`, `StatusCode: HttpStatusCode`, and `ResultData` — marked `[Obsolete]`, forward into
   the new `Title`/`Status: ResultStatus`/`Data` members, and are kept indefinitely for backward
-  compatibility (see README §13).
+  compatibility (see README §14).

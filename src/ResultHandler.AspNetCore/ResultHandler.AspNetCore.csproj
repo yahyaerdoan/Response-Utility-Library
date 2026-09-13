@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <PackageId>ResponseResultHandler.AspNetCore</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler - ASP.NET Core</Title>
-    <Version>12.0.0</Version>
+    <Version>12.1.0</Version>
     <Product>ResponseResultHandler.AspNetCore</Product>
     <Description>ASP.NET Core integration for ResponseResultHandler: converts IOperationResult/IOperationResult&lt;T&gt; into IActionResult and RFC 9457 Problem Details responses.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
@@ -37,10 +37,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.401">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <PackageReference Update="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
   </ItemGroup>
 
 </Project>

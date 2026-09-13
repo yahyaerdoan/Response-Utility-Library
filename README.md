@@ -1,6 +1,6 @@
 ﻿# ResponseResultHandler
 
-A Result-Pattern library for .NET (net7.0–net10.0). Wraps the outcome of an
+A Result-Pattern library for .NET (net8.0–net10.0). Wraps the outcome of an
 operation — success or failure, an HTTP-mappable status, a title/detail, and optional data — in an
 immutable object instead of throwing exceptions or returning bare booleans.
 
@@ -30,7 +30,7 @@ Every result implements `IOperationResult` (`ResultHandler.Core.Abstractions`):
 |---|---|
 | `bool IsSuccessful` | did the operation succeed |
 | `ResultStatus Status` | outcome status — an enum, not `HttpStatusCode`, see §2 |
-| `string Title` | short summary, e.g. `"Not found."` |
+| `string Title` | short summary, e.g. `"Not Found"` |
 | `string? Detail` | optional extra context, e.g. `"Product 42 does not exist."` |
 | `IReadOnlyList<string> Errors` | optional list of individual error messages (validation, etc.) |
 
@@ -111,13 +111,13 @@ public IOperationResult<ProductDto> GetById(int id)
         : Result.Success(ToDto(product), "Product found.");
 }
 
-public ErrorResult ValidateCreate(CreateProductRequest request)
+public ErrorResult? ValidateCreate(CreateProductRequest request)
 {
     var errors = new List<string>();
     if (string.IsNullOrEmpty(request.Name)) errors.Add("Name is required.");
     if (request.Price <= 0) errors.Add("Price must be greater than zero.");
 
-    return errors.Count > 0 ? Result.Invalid(errors.ToArray()) : null!;
+    return errors.Count > 0 ? Result.Invalid(errors.ToArray()) : null;
 }
 
 public SuccessResult MoveResource(int id, string newLocation)
@@ -161,9 +161,14 @@ public class ProductsController : ControllerBase
 }
 ```
 
-* **`ToActionResult()`** — success returns the raw payload with the result's actual status code
-  (`201 { ... }` for `Created`, `202 { ... }` for `Accepted`, etc. — not hardcoded to `200`), or a
-  bodyless status for `NoContent`/1xx/3xx; failure returns an RFC 9457 `ProblemDetails` body.
+* **`ToActionResult()`** — for non-generic `IOperationResult` (commands with no data to return).
+  Success is always bodyless — a bare status code matching the result's actual `Status` (`201` for
+  `Created`, `204` for `NoContent`, etc.), never a payload; failure returns an RFC 9457
+  `ProblemDetails` body.
+* **`ToActionResult<T>()`** — for `IOperationResult<T>`. Success returns the raw `T` payload with the
+  result's actual status code (`201 { ... }` for `Created`, `202 { ... }` for `Accepted`, etc. — not
+  hardcoded to `200`), or a bodyless status for `NoContent`/1xx/3xx; failure is the same
+  `ProblemDetails` body.
 * **`ToEnvelopedActionResult()`** — success returns the *whole* result object (status/title/data) as
   the body instead of just the payload, with the same status-code-preserving behavior — useful when
   clients want metadata alongside the data.
@@ -182,7 +187,7 @@ A failed `GetById(999)` call above produces:
 ```json
 {
   "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
-  "title": "Not found.",
+  "title": "Not Found",
   "status": 404,
   "detail": "Product 999 does not exist.",
   "instance": "/api/products/999"
@@ -283,7 +288,7 @@ covers that case instead — it runs every result to completion and merges their
 ```csharp
 using ResultHandler.Facade; // Result
 
-ErrorResult ValidateCreate(CreateProductRequest request)
+ErrorResult? ValidateCreate(CreateProductRequest request)
 {
     var nameCheck = string.IsNullOrEmpty(request.Name)
         ? Result.Invalid("Name is required.")
@@ -294,7 +299,7 @@ ErrorResult ValidateCreate(CreateProductRequest request)
         : Result.Success();
 
     var combined = Result.Combine(nameCheck, priceCheck);
-    return combined.IsSuccessful ? null! : (ErrorResult)combined;
+    return combined.IsSuccessful ? null : (ErrorResult)combined;
 }
 ```
 
@@ -472,7 +477,82 @@ public async Task<IActionResult> Create(CreateProductCommand command)
 ```
 
 ---
-## 11. Serialization
+## 11. Per-field validation errors — `IHasFieldErrors` / `IFieldFailureFactory<TSelf>`
+
+§3's plain `IReadOnlyList<string> Errors` is a flat list — fine for "here are the problems" messages,
+but a form UI usually needs to know *which* input each message belongs to. `OperationResult`/
+`OperationDataResult<T>` (and therefore `ErrorResult`/`ErrorDataResult<T>`) also implement
+`IHasFieldErrors` (`ResultHandler.Core.Abstractions`):
+
+```csharp
+public interface IHasFieldErrors
+{
+    IReadOnlyDictionary<string, IReadOnlyList<string>> FieldErrors { get; }
+}
+```
+
+Build one with `OperationResult.Failure(fieldErrors)` / `OperationDataResult<T>.Failure(fieldErrors)`,
+or the generic `IFieldFailureFactory<TSelf>.Failure(fieldErrors)` (implemented by the same types, for
+the same CRTP reason as §10) — keyed by property name, valued by that property's messages:
+
+```csharp
+using ResultHandler.Core.Base;
+
+var fieldErrors = new Dictionary<string, IReadOnlyList<string>>
+{
+    ["Name"] = ["Name is required."],
+    ["Price"] = ["Price must be greater than zero."],
+};
+
+OperationResult validation = OperationResult.Failure(fieldErrors);
+```
+
+`FieldErrors` and the flattened `Errors` list are both populated from the same input — pick whichever
+shape a given caller needs; `Title`/`Status` default to `"Validation Failed"` /
+`422 Unprocessable Content`, same as the flat-list `Failure(errors)` overload.
+
+A generic pipeline behavior (mirrors §10's `ValidationBehavior`, keyed per field instead of a flat list):
+
+```csharp
+public class FieldValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
+    where TResponse : IOperationResult, IFieldFailureFactory<TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        var fieldErrors = validators
+            .Select(v => v.Validate(request))
+            .SelectMany(r => r.Errors)
+            .GroupBy(f => f.PropertyName)
+            .ToDictionary(g => g.Key, IReadOnlyList<string> (g) => [.. g.Select(f => f.ErrorMessage)]);
+
+        return fieldErrors.Count > 0 ? TResponse.Failure(fieldErrors) : await next(ct);
+    }
+}
+```
+
+`ToErrorDataResult<T>()`, `Map`, and `Bind` (§7/§10) carry `FieldErrors` through when re-projecting a
+failure into a different result type, same as they carry `Title`/`Status`/`Detail`/`Errors`.
+
+`ResultHandler.AspNetCore`'s `ToProblemDetails()` (§5/§6) adds a failed result's `FieldErrors` to the
+Problem Details body as a `"fieldErrors"` extension when non-empty:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.21",
+  "title": "Validation Failed",
+  "status": 422,
+  "errors": ["Name is required.", "Price must be greater than zero."],
+  "fieldErrors": {
+    "Name": ["Name is required."],
+    "Price": ["Price must be greater than zero."]
+  }
+}
+```
+
+---
+## 12. Serialization
 
 `System.Text.Json` output uses fixed property names regardless of your `JsonSerializerOptions`
 naming policy, and `ResultStatus` always serializes as its numeric HTTP code:
@@ -483,29 +563,32 @@ JsonSerializer.Serialize(Result.NotFound<ProductDto>("Product 42 does not exist.
 
 ```json
 {
+  "resultData": null,
   "isSuccessful": false,
   "statusCode": 404,
-  "statusMessage": "Not found.",
+  "statusMessage": "Not Found",
   "detail": "Product 42 does not exist.",
-  "resultData": null
+  "errors": [],
+  "fieldErrors": {}
 }
 ```
 
-`Detail` is omitted entirely when `null`.
+`Detail` is omitted entirely when `null`; `errors` and `fieldErrors` are always present, empty
+(`[]`/`{}`) when the failure doesn't carry any (see §11).
 
 ---
-## 12. Equality & debugging
+## 13. Equality & debugging
 
 `OperationResult`/`OperationDataResult<T>` override `Equals`/`GetHashCode` (structural, by value) and `ToString()`:
 
 ```csharp
 Result.NotFound("x") == Result.NotFound("x"); // false (reference types) — use .Equals()
 Result.NotFound("x").Equals(Result.NotFound("x")); // true
-Result.NotFound("x").ToString(); // "NotFound (404): Not found."
+Result.NotFound("x").ToString(); // "NotFound (404): Not Found"
 ```
 
 ---
-## 13. Migrating to v12
+## 14. Migrating to v12
 
 v12 **removes** every member that v11 marked `[Obsolete]` — they no longer compile, there's no
 forwarding shim. Replace them directly:
