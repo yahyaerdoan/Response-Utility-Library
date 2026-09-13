@@ -52,18 +52,6 @@ public class ResultErrorFactoryCoverageTests
         { Result.NetworkAuthenticationRequired, ResultStatus.NetworkAuthenticationRequired, ResultTitles.NetworkAuthenticationRequired },
     };
 
-    [Theory]
-    [MemberData(nameof(ErrorFactories))]
-    public void ErrorFactory_SetsExpectedStatusTitleAndDetail(Func<string, ErrorResult> factory, ResultStatus expectedStatus, string expectedTitle)
-    {
-        var result = factory("detail text");
-
-        Assert.False(result.IsSuccessful);
-        Assert.Equal(expectedStatus, result.Status);
-        Assert.Equal(expectedTitle, result.Title);
-        Assert.Equal("detail text", result.Detail);
-    }
-
     public static TheoryData<Func<string, ErrorDataResult<int>>, ResultStatus, string> ErrorDataFactories() => new()
     {
         { Result.BadRequest<int>, ResultStatus.BadRequest, ResultTitles.BadRequest },
@@ -107,6 +95,18 @@ public class ResultErrorFactoryCoverageTests
         { Result.NotExtended<int>, ResultStatus.NotExtended, ResultTitles.NotExtended },
         { Result.NetworkAuthenticationRequired<int>, ResultStatus.NetworkAuthenticationRequired, ResultTitles.NetworkAuthenticationRequired },
     };
+
+    [Theory]
+    [MemberData(nameof(ErrorFactories))]
+    public void ErrorFactory_SetsExpectedStatusTitleAndDetail(Func<string, ErrorResult> factory, ResultStatus expectedStatus, string expectedTitle)
+    {
+        var result = factory("detail text");
+
+        Assert.False(result.IsSuccessful);
+        Assert.Equal(expectedStatus, result.Status);
+        Assert.Equal(expectedTitle, result.Title);
+        Assert.Equal("detail text", result.Detail);
+    }
 
     [Theory]
     [MemberData(nameof(ErrorDataFactories))]

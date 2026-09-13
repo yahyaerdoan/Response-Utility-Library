@@ -26,16 +26,6 @@ public class ResultSuccessFactoryCoverageTests
         { Result.NotModified, ResultStatus.NotModified },
     };
 
-    [Theory]
-    [MemberData(nameof(ParameterlessFactories))]
-    public void ParameterlessFactory_SetsExpectedStatus(Func<SuccessResult> factory, ResultStatus expectedStatus)
-    {
-        var result = factory();
-
-        Assert.True(result.IsSuccessful);
-        Assert.Equal(expectedStatus, result.Status);
-    }
-
     public static TheoryData<Func<int, SuccessDataResult<int>>, ResultStatus> ParameterlessDataFactories() => new()
     {
         { data => Result.Created(data), ResultStatus.Created },
@@ -48,6 +38,36 @@ public class ResultSuccessFactoryCoverageTests
         { data => Result.NotModified(data), ResultStatus.NotModified },
     };
 
+    public static TheoryData<Func<string, SuccessResult>, ResultStatus> RedirectFactories() => new()
+    {
+        { Result.MovedPermanently, ResultStatus.MovedPermanently },
+        { Result.Found, ResultStatus.Found },
+        { Result.SeeOther, ResultStatus.SeeOther },
+        { Result.UseProxy, ResultStatus.UseProxy },
+        { Result.TemporaryRedirect, ResultStatus.TemporaryRedirect },
+        { Result.PermanentRedirect, ResultStatus.PermanentRedirect },
+    };
+
+    public static TheoryData<Func<int, string, SuccessDataResult<int>>, ResultStatus> RedirectDataFactories() => new()
+    {
+        { Result.MovedPermanently, ResultStatus.MovedPermanently },
+        { Result.Found, ResultStatus.Found },
+        { Result.SeeOther, ResultStatus.SeeOther },
+        { Result.UseProxy, ResultStatus.UseProxy },
+        { Result.TemporaryRedirect, ResultStatus.TemporaryRedirect },
+        { Result.PermanentRedirect, ResultStatus.PermanentRedirect },
+    };
+
+    [Theory]
+    [MemberData(nameof(ParameterlessFactories))]
+    public void ParameterlessFactory_SetsExpectedStatus(Func<SuccessResult> factory, ResultStatus expectedStatus)
+    {
+        var result = factory();
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal(expectedStatus, result.Status);
+    }
+
     [Theory]
     [MemberData(nameof(ParameterlessDataFactories))]
     public void DataFactory_CarriesDataAndSetsExpectedStatus(Func<int, SuccessDataResult<int>> factory, ResultStatus expectedStatus)
@@ -59,16 +79,6 @@ public class ResultSuccessFactoryCoverageTests
         Assert.Equal(42, result.Data);
     }
 
-    public static TheoryData<Func<string, SuccessResult>, ResultStatus> RedirectFactories() => new()
-    {
-        { Result.MovedPermanently, ResultStatus.MovedPermanently },
-        { Result.Found, ResultStatus.Found },
-        { Result.SeeOther, ResultStatus.SeeOther },
-        { Result.UseProxy, ResultStatus.UseProxy },
-        { Result.TemporaryRedirect, ResultStatus.TemporaryRedirect },
-        { Result.PermanentRedirect, ResultStatus.PermanentRedirect },
-    };
-
     [Theory]
     [MemberData(nameof(RedirectFactories))]
     public void RedirectFactory_InterpolatesLocationIntoTitleAndSetsExpectedStatus(Func<string, SuccessResult> factory, ResultStatus expectedStatus)
@@ -79,16 +89,6 @@ public class ResultSuccessFactoryCoverageTests
         Assert.Equal(expectedStatus, result.Status);
         Assert.Contains("https://example.com/target", result.Title);
     }
-
-    public static TheoryData<Func<int, string, SuccessDataResult<int>>, ResultStatus> RedirectDataFactories() => new()
-    {
-        { Result.MovedPermanently, ResultStatus.MovedPermanently },
-        { Result.Found, ResultStatus.Found },
-        { Result.SeeOther, ResultStatus.SeeOther },
-        { Result.UseProxy, ResultStatus.UseProxy },
-        { Result.TemporaryRedirect, ResultStatus.TemporaryRedirect },
-        { Result.PermanentRedirect, ResultStatus.PermanentRedirect },
-    };
 
     [Theory]
     [MemberData(nameof(RedirectDataFactories))]
