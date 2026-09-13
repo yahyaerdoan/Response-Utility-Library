@@ -90,6 +90,10 @@ dotnet_diagnostic.SA1309.severity = none # Field name should not begin with unde
 # a shipped public interface's variance is a deliberate API decision, not a mechanical style fix.
 dotnet_diagnostic.S3246.severity = none # Add the 'out' keyword to make a type parameter covariant
 
+# Matching the primary constructor's optional detail/errors defaults on the wider errors+fieldErrors
+# constructor would make short calls ambiguous between the two - kept required-only on purpose.
+dotnet_diagnostic.RS0027.severity = none # API with optional parameters should have the most parameters amongst its overloads
+
 # Test code deliberately declares locals as the interface type in several places (e.g.
 # IOperationResult result = new SuccessResult(...)) specifically to verify contract/annotation
 # behavior (like [MemberNotNullWhen]) through the interface reference, not the concrete type — the

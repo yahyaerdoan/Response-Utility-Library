@@ -5,11 +5,7 @@ using ResultHandler.Implementations.Error;
 
 namespace ResultHandler.Functional;
 
-/// <summary>
-/// Async counterparts of <see cref="ResultExtensions"/>' composition helpers, for chaining directly
-/// off a <see cref="Task{TResult}"/>-returning call or an async mapper/binder/side effect without
-/// an intermediate <see langword="await"/>.
-/// </summary>
+/// <summary>Async counterparts of <see cref="ResultExtensions"/>, for chaining off a <see cref="Task{TResult}"/> or an async mapper/binder without an intermediate <see langword="await"/>.</summary>
 public static partial class ResultExtensions
 {
     /// <summary>Awaits <paramref name="resultTask"/>, then reduces it into a single value.</summary>

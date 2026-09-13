@@ -36,10 +36,9 @@ public class ErrorDataResult<T> : OperationDataResult<T>
     {
     }
 
-    /// <summary><see cref="OperationResult.Errors"/> is populated with the flattened messages, for
-    /// callers that only read the flat list.</summary>
+    /// <summary>Also flattens <paramref name="fieldErrors"/> into <see cref="OperationResult.Errors"/>, for callers that only read the flat list.</summary>
     public ErrorDataResult(string title, ResultStatus status, IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
-        : base(default, false, status, title, null, [.. fieldErrors.SelectMany(pair => pair.Value)], fieldErrors)
+        : base(default, false, status, title, null, OperationResultDefaults.FlattenFieldErrors(fieldErrors), fieldErrors)
     {
     }
 
@@ -52,6 +51,12 @@ public class ErrorDataResult<T> : OperationDataResult<T>
     /// <summary>Error with a title, status, and additional detail text, carrying <paramref name="data"/>.</summary>
     public ErrorDataResult(T data, string title, ResultStatus status, string detail)
         : base(data, false, status, title, detail)
+    {
+    }
+
+    /// <summary>Carries <paramref name="errors"/> and <paramref name="fieldErrors"/> independently, for re-projecting a failure that already has its own flat message list. Internal — used only by <c>ResultExtensions.Propagate</c>.</summary>
+    internal ErrorDataResult(string title, ResultStatus status, IReadOnlyList<string> errors, IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
+        : base(default, false, status, title, null, errors, fieldErrors)
     {
     }
 }

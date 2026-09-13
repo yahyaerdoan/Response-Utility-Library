@@ -1,10 +1,6 @@
 namespace ResultHandler.Facade;
 
-/// <summary>
-/// Single source of truth for the default <c>detail</c> text used by optional-parameter failure
-/// factories in <see cref="Result"/> and <see cref="ResultHandler.Functional.ResultFailureFactory"/>, so the
-/// two call sites can never drift apart.
-/// </summary>
+/// <summary>Default <c>detail</c> text for optional-parameter failure factories in <see cref="Result"/> and <see cref="ResultHandler.Functional.ResultFailureFactory"/>.</summary>
 internal static class FailureMessages
 {
     public const string Unauthorized = "Authentication is required to access this resource.";

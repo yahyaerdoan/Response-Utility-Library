@@ -2,11 +2,7 @@ using ResultHandler.Core.Base;
 
 namespace ResultHandler.Facade;
 
-/// <summary>
-/// Single source of truth for the fixed title/message text used by <see cref="Result"/>'s
-/// per-status factories, so the concrete and generic overload of each factory can never drift
-/// apart the way two independently hand-typed literals could.
-/// </summary>
+/// <summary>Fixed title/message text used by <see cref="Result"/>'s per-status factories.</summary>
 internal static class ResultTitles
 {
     // 1xx / 2xx / 3xx - Result.Success.cs

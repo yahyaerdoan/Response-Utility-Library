@@ -6,10 +6,7 @@ using ResultHandler.Implementations.Success;
 
 namespace ResultHandler.Functional;
 
-/// <summary>
-/// Functional-style composition helpers over <see cref="IOperationResult"/> and <see cref="IOperationResult{T}"/>.
-/// Purely additive extension methods — they do not change the interfaces or existing constructors.
-/// </summary>
+/// <summary>Functional-style composition helpers over <see cref="IOperationResult"/> and <see cref="IOperationResult{T}"/>.</summary>
 public static partial class ResultExtensions
 {
     /// <summary>Reduces a result into a single value depending on whether it succeeded.</summary>
@@ -77,7 +74,7 @@ public static partial class ResultExtensions
             ? new ErrorDataResult<T>(title, status, detail)
             : result;
 
-    /// <summary>Re-projects a failed <see cref="IOperationResult"/> (e.g. from a business-rule check) into the typed <see cref="ErrorDataResult{T}"/> envelope a caller must return — title/status/detail/errors/fieldErrors carried over unchanged. Only call this when <paramref name="failed"/> is not successful.</summary>
+    /// <summary>Re-projects a failed <see cref="IOperationResult"/> into the typed <see cref="ErrorDataResult{T}"/> a caller must return, carrying title/status/detail/errors/fieldErrors over unchanged. Only call when <paramref name="failed"/> is not successful.</summary>
     /// <example>
     /// <code>
     /// var duplicateCheck = await _brandRules.NameCannotBeDuplicated(request.Name);
@@ -92,9 +89,10 @@ public static partial class ResultExtensions
 
     private static ErrorDataResult<TOut> Propagate<TOut>(IOperationResult failed)
     {
-        if (failed is IHasFieldErrors { FieldErrors.Count: > 0 } withFieldErrors)
+        var fieldErrors = failed.GetFieldErrors();
+        if (fieldErrors.Count > 0)
         {
-            return new ErrorDataResult<TOut>(failed.Title, failed.Status, withFieldErrors.FieldErrors);
+            return new ErrorDataResult<TOut>(failed.Title, failed.Status, failed.Errors, fieldErrors);
         }
 
         if (failed.Errors.Count > 0)
