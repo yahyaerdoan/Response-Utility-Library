@@ -12,21 +12,25 @@ public class ErrorDataResult<T> : OperationDataResult<T>
     {
     }
 
+    /// <summary>Default error, carrying <paramref name="data"/>: status <see cref="ResultStatus.InternalServerError"/>, title "An error occurred.".</summary>
     public ErrorDataResult(T data)
         : base(data, false, ResultStatus.InternalServerError, OperationResultDefaults.ErrorTitle)
     {
     }
 
+    /// <summary>Error with a title and status, no data, detail, or errors.</summary>
     public ErrorDataResult(string title, ResultStatus status)
         : base(default, false, status, title)
     {
     }
 
+    /// <summary>Error with a title, status, and additional detail text, no data.</summary>
     public ErrorDataResult(string title, ResultStatus status, string detail)
         : base(default, false, status, title, detail)
     {
     }
 
+    /// <summary>Error with a title, status, and a flat list of individual error messages, no data.</summary>
     public ErrorDataResult(string title, ResultStatus status, IReadOnlyList<string> errors)
         : base(default, false, status, title, null, errors)
     {
@@ -39,11 +43,13 @@ public class ErrorDataResult<T> : OperationDataResult<T>
     {
     }
 
+    /// <summary>Error with a title and status, carrying <paramref name="data"/>, no detail.</summary>
     public ErrorDataResult(T data, string title, ResultStatus status)
         : base(data, false, status, title)
     {
     }
 
+    /// <summary>Error with a title, status, and additional detail text, carrying <paramref name="data"/>.</summary>
     public ErrorDataResult(T data, string title, ResultStatus status, string detail)
         : base(data, false, status, title, detail)
     {

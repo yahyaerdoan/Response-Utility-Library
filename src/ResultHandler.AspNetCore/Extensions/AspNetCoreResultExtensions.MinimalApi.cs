@@ -11,15 +11,10 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>
     /// Maps to a Minimal API <see cref="IResult"/> without a body on success. Prefer this over
     /// <see cref="ToActionResult(IOperationResult, HttpContext?)"/> in Minimal API endpoint delegates —
-    /// returning <see cref="IActionResult"/> from a delegate triggers analyzer warning ASP0004 and
-    /// loses compile-time OpenAPI/Swagger metadata, since <see cref="IActionResult"/> is opaque to the
-    /// endpoint metadata pipeline.
+    /// returning <see cref="IActionResult"/> from a delegate triggers analyzer warning ASP0004 and is
+    /// opaque to the OpenAPI/Swagger metadata pipeline. When <paramref name="httpContext"/> is
+    /// provided, a failed result's <see cref="ProblemDetails.Instance"/> is set to the current request path.
     /// </summary>
-    /// <param name="result">The result to convert.</param>
-    /// <param name="httpContext">
-    /// Optional; when provided, a failed result's <see cref="ProblemDetails.Instance"/> is set to
-    /// the current request path per RFC 9457.
-    /// </param>
     public static IResult ToResult(this IOperationResult result, HttpContext? httpContext = null)
     {
         if (result.IsSuccessful)
@@ -35,16 +30,13 @@ public static partial class AspNetCoreResultExtensions
     }
 
     /// <summary>
-    /// Maps to a Minimal API <see cref="IResult"/> whose success body is the raw
-    /// <typeparamref name="T"/> data. 1xx / 3xx / NoContent / NotModified carry no body. Prefer this
-    /// over <see cref="ToActionResult{T}(IOperationResult{T}, HttpContext?)"/> in Minimal API endpoint
-    /// delegates — see the remarks on <see cref="ToResult(IOperationResult, HttpContext?)"/>.
+    /// Maps to a Minimal API <see cref="IResult"/> whose success body is the raw <typeparamref name="T"/>
+    /// data. 1xx/3xx/NoContent/NotModified carry no body. Prefer this over
+    /// <see cref="ToActionResult{T}(IOperationResult{T}, HttpContext?)"/> in Minimal API endpoint
+    /// delegates — see the remarks on <see cref="ToResult(IOperationResult, HttpContext?)"/>. When
+    /// <paramref name="httpContext"/> is provided, a failed result's <see cref="ProblemDetails.Instance"/>
+    /// is set to the current request path.
     /// </summary>
-    /// <param name="result">The result to convert.</param>
-    /// <param name="httpContext">
-    /// Optional; when provided, a failed result's <see cref="ProblemDetails.Instance"/> is set to
-    /// the current request path per RFC 9457.
-    /// </param>
     public static IResult ToResult<T>(this IOperationResult<T> result, HttpContext? httpContext = null)
     {
         if (result.IsSuccessful)
@@ -57,15 +49,12 @@ public static partial class AspNetCoreResultExtensions
 
     /// <summary>
     /// Maps to a Minimal API <see cref="IResult"/> whose success body is the full result envelope
-    /// (data + metadata). 1xx / 3xx / NoContent / NotModified carry no body. Prefer this over
+    /// (data + metadata). 1xx/3xx/NoContent/NotModified carry no body. Prefer this over
     /// <see cref="ToEnvelopedActionResult(IOperationResult, HttpContext?)"/> in Minimal API endpoint
-    /// delegates — see the remarks on <see cref="ToResult(IOperationResult, HttpContext?)"/>.
+    /// delegates — see the remarks on <see cref="ToResult(IOperationResult, HttpContext?)"/>. When
+    /// <paramref name="httpContext"/> is provided, a failed result's <see cref="ProblemDetails.Instance"/>
+    /// is set to the current request path.
     /// </summary>
-    /// <param name="result">The result to convert.</param>
-    /// <param name="httpContext">
-    /// Optional; when provided, a failed result's <see cref="ProblemDetails.Instance"/> is set to
-    /// the current request path per RFC 9457.
-    /// </param>
     public static IResult ToEnvelopedResult(this IOperationResult result, HttpContext? httpContext = null)
     {
         if (result.IsSuccessful)
@@ -77,12 +66,7 @@ public static partial class AspNetCoreResultExtensions
         return ToProblemResult(result, httpContext);
     }
 
-    /// <summary>Maps a failed result to a Minimal API <see cref="IResult"/> carrying RFC 9457 <see cref="ProblemDetails"/>.</summary>
-    /// <param name="result">The result to convert.</param>
-    /// <param name="httpContext">
-    /// Optional; when provided, <see cref="ProblemDetails.Instance"/> is set to the current request
-    /// path, per RFC 9457's guidance that it identify "this specific occurrence" of the problem.
-    /// </param>
+    /// <summary>Maps a failed result to a Minimal API <see cref="IResult"/> carrying RFC 9457 <see cref="ProblemDetails"/>. When <paramref name="httpContext"/> is provided, sets <see cref="ProblemDetails.Instance"/> to the current request path.</summary>
     public static IResult ToProblemResult(this IOperationResult result, HttpContext? httpContext = null)
         => Results.Json(
             result.ToProblemDetails(httpContext),

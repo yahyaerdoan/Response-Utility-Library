@@ -1,4 +1,4 @@
-using ResultHandler.Core.Abstractions;
+﻿using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Enums;
 using ResultHandler.Facade;
 using ResultHandler.Implementations.Error;
@@ -77,31 +77,13 @@ public static partial class ResultExtensions
             ? new ErrorDataResult<T>(title, status, detail)
             : result;
 
-    /// <summary>
-    /// Re-projects a failed, non-generic <see cref="IOperationResult"/> into the typed
-    /// <see cref="ErrorDataResult{T}"/> envelope a caller must return.
-    /// </summary>
-    /// <param name="failed">
-    /// A failed result, typically from a business-rule check that only knows <see cref="IOperationResult"/>,
-    /// not the caller's final data type. Only call this when
-    /// <paramref name="failed"/>.<see cref="IOperationResult.IsSuccessful"/> is <see langword="false"/>.
-    /// </param>
-    /// <typeparam name="T">The data type the caller's own result envelope needs to carry.</typeparam>
-    /// <returns>
-    /// An <see cref="ErrorDataResult{T}"/> carrying <paramref name="failed"/>'s title, status, detail
-    /// and errors unchanged — only the shape changes, not the content.
-    /// </returns>
+    /// <summary>Re-projects a failed <see cref="IOperationResult"/> (e.g. from a business-rule check) into the typed <see cref="ErrorDataResult{T}"/> envelope a caller must return — title/status/detail/errors/fieldErrors carried over unchanged. Only call this when <paramref name="failed"/> is not successful.</summary>
     /// <example>
     /// <code>
-    /// public async Task&lt;OperationDataResult&lt;CreatedBrandResponse&gt;&gt; Handle(CreateBrandCommand request, CancellationToken ct)
+    /// var duplicateCheck = await _brandRules.NameCannotBeDuplicated(request.Name);
+    /// if (!duplicateCheck.IsSuccessful)
     /// {
-    ///     var duplicateCheck = await _brandBusinessRules.BrandNameCannotBeDuplicatedWhenInserted(request.Name);
-    ///     if (!duplicateCheck.IsSuccessful)
-    ///     {
-    ///         return duplicateCheck.ToErrorDataResult&lt;CreatedBrandResponse&gt;();
-    ///     }
-    ///
-    ///     // ...
+    ///     return duplicateCheck.ToErrorDataResult&lt;CreatedBrandResponse&gt;();
     /// }
     /// </code>
     /// </example>
@@ -110,6 +92,11 @@ public static partial class ResultExtensions
 
     private static ErrorDataResult<TOut> Propagate<TOut>(IOperationResult failed)
     {
+        if (failed is IHasFieldErrors { FieldErrors.Count: > 0 } withFieldErrors)
+        {
+            return new ErrorDataResult<TOut>(failed.Title, failed.Status, withFieldErrors.FieldErrors);
+        }
+
         if (failed.Errors.Count > 0)
         {
             return new ErrorDataResult<TOut>(failed.Title, failed.Status, failed.Errors);

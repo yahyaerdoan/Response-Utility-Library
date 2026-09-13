@@ -4,17 +4,8 @@ namespace ResultHandler.Facade;
 
 public static partial class Result
 {
-    /// <summary>
-    /// Runs every result in <paramref name="results"/> to completion and merges their outcomes into
-    /// one — unlike <c>Ensure</c>/<c>Bind</c> chains, which short-circuit on the first failure, this
-    /// collects every failing result's messages so a caller can report all of them at once (e.g. every
-    /// invalid field on a form, not just the first one).
-    /// </summary>
-    /// <returns>
-    /// <see cref="Result.Success()"/> if every result succeeded, otherwise <see cref="Result.Invalid(IReadOnlyList{string})"/>
-    /// carrying every failed result's <see cref="IOperationResult.Errors"/> (or <see cref="IOperationResult.Detail"/>/
-    /// <see cref="IOperationResult.Title"/> when a failure carries no <see cref="IOperationResult.Errors"/>) concatenated in order.
-    /// </returns>
+    /// <summary>Runs every result to completion and merges their outcomes, instead of short-circuiting on the first failure like <c>Ensure</c>/<c>Bind</c> — use this to report every invalid field on a form at once, not just the first.</summary>
+    /// <returns><see cref="Result.Success()"/> if every result succeeded, otherwise <see cref="Result.Invalid(IReadOnlyList{string})"/> with every failure's messages concatenated in order.</returns>
     public static IOperationResult Combine(params IOperationResult[] results)
         => Combine((IEnumerable<IOperationResult>)results);
 
