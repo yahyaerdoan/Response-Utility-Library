@@ -5,7 +5,7 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
-## [12.1.0]
+## [12.1.33]
 
 ### Added
 - `IHasFieldErrors` (`ResultHandler.Core.Abstractions`) — optional companion to `IOperationResult` for
