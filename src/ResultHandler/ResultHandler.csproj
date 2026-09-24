@@ -5,7 +5,7 @@
     <PackageId>ResponseResultHandler</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler</Title>
-    <Version>12.1.33</Version>
+    <Version>13.0.0</Version>
     <Product>ResponseResultHandler</Product>
     <Description>Response Utility Library is a library designed for streamlined handling of response results, supporting success, error, and data outcomes in .NET applications. Within this library, the ResultHandler project serves as a versatile utility for managing result handling and responses efficiently across different use cases.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>

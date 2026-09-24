@@ -1,3 +1,4 @@
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
 using ResultHandler.Facade;
 using ResultHandler.Implementations.Error;
@@ -8,7 +9,7 @@ namespace ResultHandler.Tests.Facade;
 /// <summary>Closes the coverage gap left by <see cref="ResultFacadeTests"/>: every 4xx/5xx named factory in Result.Error.cs, non-generic and generic, gets its status/title/detail checked here instead of only the handful ResultFacadeTests spot-checks.</summary>
 public class ResultErrorFactoryCoverageTests
 {
-    public static TheoryData<Func<string, ErrorResult>, ResultStatus, string> ErrorFactories() => new()
+    public static TheoryData<Func<string, OperationResult>, ResultStatus, string> ErrorFactories() => new()
     {
         { Result.BadRequest, ResultStatus.BadRequest, ResultTitles.BadRequest },
         { Result.Unauthorized, ResultStatus.Unauthorized, ResultTitles.Unauthorized },
@@ -52,7 +53,7 @@ public class ResultErrorFactoryCoverageTests
         { Result.NetworkAuthenticationRequired, ResultStatus.NetworkAuthenticationRequired, ResultTitles.NetworkAuthenticationRequired },
     };
 
-    public static TheoryData<Func<string, ErrorDataResult<int>>, ResultStatus, string> ErrorDataFactories() => new()
+    public static TheoryData<Func<string, OperationDataResult<int>>, ResultStatus, string> ErrorDataFactories() => new()
     {
         { Result.BadRequest<int>, ResultStatus.BadRequest, ResultTitles.BadRequest },
         { Result.Unauthorized<int>, ResultStatus.Unauthorized, ResultTitles.Unauthorized },
@@ -98,7 +99,7 @@ public class ResultErrorFactoryCoverageTests
 
     [Theory]
     [MemberData(nameof(ErrorFactories))]
-    public void ErrorFactory_SetsExpectedStatusTitleAndDetail(Func<string, ErrorResult> factory, ResultStatus expectedStatus, string expectedTitle)
+    public void ErrorFactory_SetsExpectedStatusTitleAndDetail(Func<string, OperationResult> factory, ResultStatus expectedStatus, string expectedTitle)
     {
         var result = factory("detail text");
 
@@ -110,7 +111,7 @@ public class ResultErrorFactoryCoverageTests
 
     [Theory]
     [MemberData(nameof(ErrorDataFactories))]
-    public void ErrorDataFactory_SetsExpectedStatusTitleAndDefaultData(Func<string, ErrorDataResult<int>> factory, ResultStatus expectedStatus, string expectedTitle)
+    public void ErrorDataFactory_SetsExpectedStatusTitleAndDefaultData(Func<string, OperationDataResult<int>> factory, ResultStatus expectedStatus, string expectedTitle)
     {
         var result = factory("detail text");
 

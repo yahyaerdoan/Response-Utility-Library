@@ -35,8 +35,9 @@
        `dotnet build` (build.yml/codeql.yml) has no real -p:Version to compare against the baseline. -->
   <PropertyGroup Condition="'$(IsPackable)' != 'false' AND '$(IsPublishBuild)' == 'true'">
     <EnablePackageValidation>true</EnablePackageValidation>
-    <!-- Bump to each new stable release (not betas — prereleases aren't API-stable against each other). -->
-    <PackageValidationBaselineVersion>12.0.0</PackageValidationBaselineVersion>
+    <!-- No baseline during 13.0: it intentionally breaks 12.x (facade return types). Set this to 13.0.0
+         once that stable version is on nuget.org, then bump to each new stable release (not betas,
+         prereleases aren't API-stable against each other). -->
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsPackable)' != 'false'">

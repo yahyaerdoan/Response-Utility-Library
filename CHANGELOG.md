@@ -5,7 +5,24 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
-## [Unreleased]
+## [13.0.0]
+
+### Changed
+- **Breaking:** every `Result` facade factory (`ResultHandler.Facade`) now returns the common base type:
+  `OperationResult` instead of `SuccessResult`/`ErrorResult`, and `OperationDataResult<T>` instead of
+  `SuccessDataResult<T>`/`ErrorDataResult<T>`. Success and failure branches now share one static type,
+  so these compile without casts or explicit type arguments:
+  - `cond ? Result.Success(x) : Result.NotFound<T>("...")` (previously CS0173);
+  - lambdas that return both a success and a failure, e.g. in `Bind` (previously CS0411).
+
+  The objects created are unchanged (`Result.Success(x)` is still a `SuccessDataResult<T>` at runtime),
+  so `is`/pattern checks, serialization and ASP.NET Core mapping behave exactly as before.
+  `ResultFailureFactory` is unaffected.
+- `Result.Created`/`Result.Accepted` (and their `<T>` forms) no longer use an optional `title`
+  parameter; each is now an explicit pair, `Created()`/`Created(title)` and
+  `Created<T>(data)`/`Created<T>(data, title)`, matching `Result.Success`. Every existing call,
+  including `title:` named arguments, compiles unchanged, and the parameterless forms can now be used
+  as method groups (`Func<OperationResult> f = Result.Created;`).
 
 ### Added
 - `MapAsync`/`BindAsync` overloads for `Task<OperationDataResult<T>>` sources and for binders returning
@@ -18,11 +35,21 @@ always called out explicitly below.
   so every async operator chains directly off a MediatR `Send`. Side-effect and guard overloads return
   the concrete source type.
 
+### Migration
+- Source: only code that stores a facade result in a variable, field, return type or delegate typed
+  as a concrete subclass breaks, e.g. `ErrorResult e = Result.Conflict("...")` or
+  `Func<string, ErrorResult> f = Result.Conflict`. Change the declared type to `OperationResult` /
+  `OperationDataResult<T>` (or `IOperationResult` / `IOperationResult<T>`), or use `var`.
+- Binary: the return types are part of the method signatures, so assemblies compiled against 12.x
+  (for example another NuGet package built on this one) must be recompiled against 13.0.
+- Package validation no longer compares against the 12.x baseline; set
+  `PackageValidationBaselineVersion` to `13.0.0` once it is published.
+
 ### Documentation
 - README §7: `Ensure(predicate, message)` puts the message in `Detail` and leaves `Errors` empty; the
   previous "same shape as `Result.Invalid`" wording was wrong. Behavior is unchanged.
-- README §9: how to call `BindAsync` with an async lambda that returns both success and failure results
-  (explicit type arguments or an explicit lambda return type).
+- README §9: async lambdas that return both a success and a failure now bind without type arguments
+  (facade change above plus the new concrete-task overloads).
 
 ## [12.1.33]
 

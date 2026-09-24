@@ -1,3 +1,4 @@
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
 using ResultHandler.Facade;
 using ResultHandler.Implementations.Success;
@@ -8,7 +9,7 @@ namespace ResultHandler.Tests.Facade;
 /// <summary>Closes the coverage gap left by <see cref="ResultFacadeTests"/>: every named factory in Result.Success.cs, non-generic and generic, gets its status checked here.</summary>
 public class ResultSuccessFactoryCoverageTests
 {
-    public static TheoryData<Func<SuccessResult>, ResultStatus> ParameterlessFactories() => new()
+    public static TheoryData<Func<OperationResult>, ResultStatus> ParameterlessFactories() => new()
     {
         { () => Result.Continue(), ResultStatus.Continue },
         { () => Result.SwitchingProtocols(), ResultStatus.SwitchingProtocols },
@@ -26,7 +27,7 @@ public class ResultSuccessFactoryCoverageTests
         { Result.NotModified, ResultStatus.NotModified },
     };
 
-    public static TheoryData<Func<int, SuccessDataResult<int>>, ResultStatus> ParameterlessDataFactories() => new()
+    public static TheoryData<Func<int, OperationDataResult<int>>, ResultStatus> ParameterlessDataFactories() => new()
     {
         { data => Result.Created(data), ResultStatus.Created },
         { data => Result.Accepted(data), ResultStatus.Accepted },
@@ -38,7 +39,7 @@ public class ResultSuccessFactoryCoverageTests
         { data => Result.NotModified(data), ResultStatus.NotModified },
     };
 
-    public static TheoryData<Func<string, SuccessResult>, ResultStatus> RedirectFactories() => new()
+    public static TheoryData<Func<string, OperationResult>, ResultStatus> RedirectFactories() => new()
     {
         { Result.MovedPermanently, ResultStatus.MovedPermanently },
         { Result.Found, ResultStatus.Found },
@@ -48,7 +49,7 @@ public class ResultSuccessFactoryCoverageTests
         { Result.PermanentRedirect, ResultStatus.PermanentRedirect },
     };
 
-    public static TheoryData<Func<int, string, SuccessDataResult<int>>, ResultStatus> RedirectDataFactories() => new()
+    public static TheoryData<Func<int, string, OperationDataResult<int>>, ResultStatus> RedirectDataFactories() => new()
     {
         { Result.MovedPermanently, ResultStatus.MovedPermanently },
         { Result.Found, ResultStatus.Found },
@@ -60,7 +61,7 @@ public class ResultSuccessFactoryCoverageTests
 
     [Theory]
     [MemberData(nameof(ParameterlessFactories))]
-    public void ParameterlessFactory_SetsExpectedStatus(Func<SuccessResult> factory, ResultStatus expectedStatus)
+    public void ParameterlessFactory_SetsExpectedStatus(Func<OperationResult> factory, ResultStatus expectedStatus)
     {
         var result = factory();
 
@@ -70,7 +71,7 @@ public class ResultSuccessFactoryCoverageTests
 
     [Theory]
     [MemberData(nameof(ParameterlessDataFactories))]
-    public void DataFactory_CarriesDataAndSetsExpectedStatus(Func<int, SuccessDataResult<int>> factory, ResultStatus expectedStatus)
+    public void DataFactory_CarriesDataAndSetsExpectedStatus(Func<int, OperationDataResult<int>> factory, ResultStatus expectedStatus)
     {
         var result = factory(42);
 
@@ -81,7 +82,7 @@ public class ResultSuccessFactoryCoverageTests
 
     [Theory]
     [MemberData(nameof(RedirectFactories))]
-    public void RedirectFactory_InterpolatesLocationIntoTitleAndSetsExpectedStatus(Func<string, SuccessResult> factory, ResultStatus expectedStatus)
+    public void RedirectFactory_InterpolatesLocationIntoTitleAndSetsExpectedStatus(Func<string, OperationResult> factory, ResultStatus expectedStatus)
     {
         var result = factory("https://example.com/target");
 
@@ -92,7 +93,7 @@ public class ResultSuccessFactoryCoverageTests
 
     [Theory]
     [MemberData(nameof(RedirectDataFactories))]
-    public void RedirectDataFactory_CarriesDataAndInterpolatesLocation(Func<int, string, SuccessDataResult<int>> factory, ResultStatus expectedStatus)
+    public void RedirectDataFactory_CarriesDataAndInterpolatesLocation(Func<int, string, OperationDataResult<int>> factory, ResultStatus expectedStatus)
     {
         var result = factory(42, "https://example.com/target");
 
@@ -100,6 +101,30 @@ public class ResultSuccessFactoryCoverageTests
         Assert.Equal(expectedStatus, result.Status);
         Assert.Equal(42, result.Data);
         Assert.Contains("https://example.com/target", result.Title);
+    }
+
+    [Fact]
+    public void CreatedAndAccepted_DefaultAndCustomTitles()
+    {
+        Assert.Equal(ResultTitles.Created, Result.Created().Title);
+        Assert.Equal("Order placed.", Result.Created("Order placed.").Title);
+        Assert.Equal(ResultTitles.Created, Result.Created(7).Title);
+        Assert.Equal("Order placed.", Result.Created(7, "Order placed.").Title);
+        Assert.Equal(ResultTitles.Accepted, Result.Accepted().Title);
+        Assert.Equal("Queued.", Result.Accepted("Queued.").Title);
+        Assert.Equal(ResultTitles.Accepted, Result.Accepted(7).Title);
+        Assert.Equal("Queued.", Result.Accepted(7, "Queued.").Title);
+        Assert.Equal("Queued.", Result.Accepted(7, title: "Queued.").Title);
+    }
+
+    [Fact]
+    public void CreatedAndAccepted_AreUsableAsMethodGroups()
+    {
+        Func<OperationResult> created = Result.Created;
+        Func<int, OperationDataResult<int>> accepted = Result.Accepted;
+
+        Assert.Equal(ResultStatus.Created, created().Status);
+        Assert.Equal(ResultStatus.Accepted, accepted(1).Status);
     }
 
     [Fact]
