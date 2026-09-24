@@ -11,7 +11,19 @@
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Response  response Result result Handler handler CQRS cqrs MediatR  mediatR NetCore netCore Core core .NET .net ProblemDetails RFC9457</PackageTags>
-    <PackageReleaseNotes>v12.1 - Per-field validation errors, plus FieldErrors bug fixes:
+    <PackageReleaseNotes>v13.0 (breaking) - Result facade returns the common base types, plus async overloads for MediatR-style concrete results:
+
+Changed (breaking):
+- Every Result facade factory now returns OperationResult (was SuccessResult/ErrorResult) or OperationDataResult&lt;T&gt; (was SuccessDataResult&lt;T&gt;/ErrorDataResult&lt;T&gt;). Success and failure branches share one static type, so `cond ? Result.Success(x) : Result.NotFound&lt;T&gt;(...)` and lambdas returning both compile without casts or explicit type arguments. Runtime types are unchanged.
+- Result.Created/Result.Accepted (and their &lt;T&gt; forms) are explicit overload pairs instead of an optional title parameter; existing calls compile unchanged.
+- Binary breaking: assemblies compiled against 12.x must be recompiled.
+
+Added:
+- MapAsync/BindAsync/MatchAsync/OnSuccessAsync/OnFailureAsync/EnsureAsync overloads for Task&lt;OperationDataResult&lt;T&gt;&gt; and Task&lt;OperationResult&gt; sources (for example a MediatR Send), and BindAsync binders returning Task&lt;OperationDataResult&lt;TOut&gt;&gt;.
+
+Migration: change variables, return types or delegates declared as a concrete subclass (ErrorResult e = Result.Conflict(...), Func&lt;string, ErrorResult&gt;) to OperationResult/OperationDataResult&lt;T&gt; or use var. See CHANGELOG.md for full details.
+
+v12.1 - Per-field validation errors, plus FieldErrors bug fixes:
 
 Added:
 - Per-field validation errors: IHasFieldErrors, IResultFailureFactory&lt;TSelf&gt;.Failure(fieldErrors), OperationResult.Failure(fieldErrors) (see README "Per-field validation errors"). Breaking for any external IResultFailureFactory&lt;TSelf&gt; implementer - see CHANGELOG.md.
