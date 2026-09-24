@@ -109,6 +109,12 @@ success/error; `SuccessResult`/`ErrorResult` cover the normal cases.
 (non-generic and `<T>`), named after the status, with sensible default titles baked in. It's what
 the example above looks like using it instead:
 
+Every factory returns the common base type: `OperationResult` for the non-generic form and
+`OperationDataResult<T>` for `<T>` (since 13.0). Success and failure branches therefore share one type,
+so `cond ? Result.Success(x) : Result.NotFound<T>(...)` and lambdas that return both compile without
+casts or explicit type arguments. The runtime objects are still `SuccessResult`/`ErrorDataResult<T>`
+and so on, so `is` checks keep working.
+
 ```csharp
 using ResultHandler.Facade; // Result
 
@@ -121,7 +127,7 @@ public IOperationResult<ProductDto> GetById(int id)
         : Result.Success(ToDto(product), "Product found.");
 }
 
-public ErrorResult? ValidateCreate(CreateProductRequest request)
+public OperationResult? ValidateCreate(CreateProductRequest request)
 {
     var errors = new List<string>();
     if (string.IsNullOrEmpty(request.Name)) errors.Add("Name is required.");
@@ -130,11 +136,11 @@ public ErrorResult? ValidateCreate(CreateProductRequest request)
     return errors.Count > 0 ? Result.Invalid(errors.ToArray()) : null;
 }
 
-public SuccessResult MoveResource(int id, string newLocation)
+public OperationResult MoveResource(int id, string newLocation)
     => Result.MovedPermanently(newLocation); // 3xx redirects — location gets interpolated into the title
 
 // Escape hatch for anything not covered by a named factory:
-public ErrorResult CustomFailure()
+public OperationResult CustomFailure()
     => Result.Failure("Payment declined.", "The card was rejected by the issuer.", ResultStatus.PaymentRequired);
 ```
 
@@ -277,8 +283,10 @@ IOperationResult<ProductDto> validated = _products.GetById(id)
 `Map`/`Bind` short-circuit automatically: if the source result failed, the mapper/binder never runs
 and the failure (title/status/detail/errors) is carried over into the new result type. `Ensure` turns
 a still-*successful* result into a failure when a business-rule predicate rejects the data — the
-shortcut overload above defaults to `"Validation Failed"` / `422 Unprocessable Content` (same shape as
-`Result.Invalid`); pass your own `(title, detail, status)` when a different outcome fits better:
+shortcut overload above defaults to `"Validation Failed"` / `422 Unprocessable Content` and puts your
+message in `Detail` (`Errors` stays empty, unlike `Result.Invalid`, which fills `Errors`; `Result.Combine`
+falls back to `Detail`, so the message is never lost when you aggregate); pass your own
+`(title, detail, status)` when a different outcome fits better:
 
 ```csharp
 _products.GetById(id)
@@ -296,7 +304,7 @@ covers that case instead — it runs every result to completion and merges their
 ```csharp
 using ResultHandler.Facade; // Result
 
-ErrorResult? ValidateCreate(CreateProductRequest request)
+IOperationResult? ValidateCreate(CreateProductRequest request)
 {
     var nameCheck = string.IsNullOrEmpty(request.Name)
         ? Result.Invalid("Name is required.")
@@ -307,7 +315,7 @@ ErrorResult? ValidateCreate(CreateProductRequest request)
         : Result.Success();
 
     var combined = Result.Combine(nameCheck, priceCheck);
-    return combined.IsSuccessful ? null : (ErrorResult)combined;
+    return combined.IsSuccessful ? null : combined;
 }
 ```
 
@@ -360,6 +368,47 @@ in the same chain:
 | `Task<IOperationResult<T>>` source, sync delegate | `.MapAsync(p => p.Name)` |
 | `Task<IOperationResult<T>>` source, async delegate | `.BindAsync(p => _orders.CreateDraftOrderAsync(p))` |
 | `IOperationResult<T>` source, async delegate | `existingResult.OnSuccessAsync(p => _email.SendAsync(p))` |
+
+**Concrete result tasks (MediatR `Send`).** `Task<T>` is invariant, so a `Task<OperationDataResult<T>>`
+(what a MediatR handler returns) is not a `Task<IOperationResult<T>>`, and a `Task<OperationResult>` is not
+a `Task<IOperationResult>`. Every async operator has extra overloads for these concrete sources
+(`MapAsync`/`BindAsync`/`EnsureAsync` for data results; `MatchAsync`/`OnSuccessAsync`/`OnFailureAsync` for
+both), so you can chain `Send` calls without casting:
+
+```csharp
+app.MapPut("/me/profile", async (UpdateProfileCommand command, ISender sender, HttpContext httpContext) =>
+    (await sender.Send(new GetCurrentUserQuery())                           // Task<OperationDataResult<UserDto>>
+        .BindAsync(user => sender.Send(command with { UserId = user.Id }))  // Task<OperationDataResult<ProfileDto>>
+        .MapAsync(profile => profile.DisplayName))
+    .ToEnvelopedResult(httpContext));
+```
+
+The result type follows the source: a `Task<OperationDataResult<T>>` chained into another concrete
+task (or through `MapAsync`) stays `OperationDataResult<TOut>`, so a handler can return it directly. Once
+an interface (`IOperationResult<TOut>`) enters the chain, it stays an interface.
+
+**Async lambdas that return both a success and a failure.** Facade factories return the common base
+type (§4), so the lambda's return type is inferred as `Task<OperationDataResult<T>>` and binds without
+type arguments:
+
+```csharp
+.BindAsync(async user =>
+{
+    if (!user.IsActive)
+    {
+        return Result.Forbidden<OrderDto>("Inactive user.");
+    }
+
+    return Result.Success(await _orders.CreateAsync(user.Id));
+})
+```
+
+Only a lambda that returns nothing but hand-built subclasses of different kinds
+(`new SuccessDataResult<T>(...)` in one branch, `new ErrorDataResult<T>(...)` in another) has no common
+type to infer; use the facade for at least one branch, or name the types once with
+`.BindAsync<UserDto, OrderDto>(...)`.
+
+A lambda that only ever returns success is a mapping, not a bind: use `MapAsync` with an async mapper.
 
 `MatchAsync`, `OnSuccessAsync`, `OnFailureAsync`, `MapAsync`, `BindAsync`, and `EnsureAsync` all follow
 this pattern, for both `IOperationResult` and `IOperationResult<T>` (`EnsureAsync` only exists for
