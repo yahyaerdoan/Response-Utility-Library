@@ -1,5 +1,7 @@
 using ResultHandler.Core.Abstractions;
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
+using ResultHandler.Facade;
 using ResultHandler.Functional;
 using ResultHandler.Implementations.Error;
 using ResultHandler.Implementations.Success;
@@ -176,4 +178,275 @@ public class ResultExtensionsAsyncTests
         static Task<IOperationResult<string>> ValidateAsync(string name)
             => Task.FromResult<IOperationResult<string>>(new SuccessDataResult<string>(name));
     }
+
+    [Fact]
+    public async Task BindAsync_ConcreteTaskSource_ConcreteTaskBinder_ChainsAndKeepsConcreteType()
+    {
+        OperationDataResult<string> result = await SendGetUserId(7).BindAsync(SendGetUserName);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal("user-7", result.Data);
+    }
+
+    [Fact]
+    public async Task BindAsync_ConcreteTaskSource_Failure_ShortCircuitsWithoutInvokingBinder()
+    {
+        var invoked = false;
+        var source = Task.FromResult<OperationDataResult<int>>(Result.NotFound<int>("Missing."));
+
+        var result = await source.BindAsync(id =>
+        {
+            invoked = true;
+            return SendGetUserName(id);
+        });
+
+        Assert.False(invoked);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
+        Assert.Equal("Missing.", result.Detail);
+    }
+
+    [Fact]
+    public async Task BindAsync_ConcreteTaskSource_Failure_CarriesFieldErrors()
+    {
+        var fieldErrors = new Dictionary<string, IReadOnlyList<string>> { ["Name"] = ["Name is required."] };
+        var source = Task.FromResult(OperationDataResult<int>.Failure(fieldErrors));
+
+        var result = await source.BindAsync(SendGetUserName);
+
+        Assert.Equal(["Name is required."], result.FieldErrors["Name"]);
+    }
+
+    [Fact]
+    public async Task BindAsync_ConcreteTaskSource_InterfaceBinders_Resolve()
+    {
+        IOperationResult<string> viaSync = await SendGetUserId(3).BindAsync(id => (IOperationResult<string>)Result.Success<string>($"s{id}"));
+        IOperationResult<string> viaAsync = await SendGetUserId(3).BindAsync(id => Task.FromResult<IOperationResult<string>>(Result.Success<string>($"a{id}")));
+
+        Assert.Equal("s3", viaSync.Data);
+        Assert.Equal("a3", viaAsync.Data);
+    }
+
+    [Fact]
+    public async Task BindAsync_InterfaceSources_ConcreteTaskBinder_Resolve()
+    {
+        IOperationResult<int> value = Result.Success<int>(5);
+        var fromValue = await value.BindAsync(SendGetUserName);
+        var fromTask = await Task.FromResult(value).BindAsync(SendGetUserName);
+
+        Assert.Equal("user-5", fromValue.Data);
+        Assert.Equal("user-5", fromTask.Data);
+    }
+
+    [Fact]
+    public async Task BindAsync_InterfaceSource_FailureWithConcreteTaskBinder_ShortCircuits()
+    {
+        IOperationResult<int> value = Result.Conflict<int>("Taken.");
+
+        var result = await value.BindAsync(SendGetUserName);
+
+        Assert.Equal(ResultStatus.Conflict, result.Status);
+    }
+
+    [Fact]
+    public async Task BindAsync_InterfaceTaskSource_KeepsInterfaceReturnTypeForBothBinderShapes()
+    {
+        Task<IOperationResult<int>> source = Task.FromResult<IOperationResult<int>>(Result.Success<int>(1));
+
+        Task<IOperationResult<int>> viaInterfaceBinder = source.BindAsync(x => Task.FromResult<IOperationResult<int>>(Result.Success<int>(x + 1)));
+        Task<IOperationResult<int>> viaConcreteBinder = source.BindAsync(x => Task.FromResult<OperationDataResult<int>>(Result.Success<int>(x + 2)));
+
+        Assert.Equal(2, (await viaInterfaceBinder).Data);
+        Assert.Equal(3, (await viaConcreteBinder).Data);
+    }
+
+    [Fact]
+    public async Task MapAsync_ConcreteTaskSource_SyncAndAsyncMappers_KeepTitleAndStatus()
+    {
+        var source = Task.FromResult<OperationDataResult<int>>(Result.Created<int>(4));
+
+        OperationDataResult<string> mapped = await source.MapAsync(x => $"#{x}");
+        OperationDataResult<int> mappedAsync = await source.MapAsync(x => Task.FromResult(x * 10));
+
+        Assert.Equal("#4", mapped.Data);
+        Assert.Equal(ResultStatus.Created, mapped.Status);
+        Assert.Equal(40, mappedAsync.Data);
+        Assert.Equal(ResultStatus.Created, mappedAsync.Status);
+    }
+
+    [Fact]
+    public async Task MapAsync_ConcreteTaskSource_Failure_SkipsMapper()
+    {
+        var invoked = false;
+        var source = Task.FromResult<OperationDataResult<int>>(Result.NotFound<int>("Missing."));
+
+        var result = await source.MapAsync(x =>
+        {
+            invoked = true;
+            return x;
+        });
+
+        Assert.False(invoked);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
+    }
+
+    [Fact]
+    public async Task ConcreteChain_BindThenMap_ComposesLikeAMediatRPipeline()
+    {
+        var result = await SendGetUserId(9)
+            .BindAsync(SendGetUserName)
+            .MapAsync(name => name.ToUpperInvariant());
+
+        Assert.Equal("USER-9", result.Data);
+    }
+
+    [Fact]
+    public async Task BindAsync_AsyncLambdaWithMixedReturns_ResolvesWithExplicitTypeArguments()
+    {
+        var found = await SendGetUserId(2).BindAsync<int, string>(async id =>
+        {
+            await Task.Yield();
+            if (id < 0)
+            {
+                return Result.NotFound<string>("Missing.");
+            }
+
+            return Result.Success<string>($"user-{id}");
+        });
+
+        IOperationResult<int> value = Result.Success<int>(-1);
+        var missing = await value.BindAsync<int, string>(async id =>
+        {
+            await Task.Yield();
+            if (id < 0)
+            {
+                return Result.NotFound<string>("Missing.");
+            }
+
+            return Result.Success<string>($"user-{id}");
+        });
+
+        Assert.Equal("user-2", found.Data);
+        Assert.Equal(ResultStatus.NotFound, missing.Status);
+    }
+
+    [Fact]
+    public async Task BindAsync_AsyncLambdaWithExplicitReturnType_Resolves()
+    {
+        var result = await SendGetUserId(4).BindAsync(async Task<OperationDataResult<string>> (int id) =>
+        {
+            await Task.Yield();
+            return id > 0 ? Result.Success<string>($"user-{id}") : Result.NotFound<string>("Missing.");
+        });
+
+        Assert.Equal("user-4", result.Data);
+    }
+
+    [Fact]
+    public async Task MatchAsync_ConcreteTaskSources_ReduceBothOutcomes()
+    {
+        var command = Task.FromResult<OperationResult>(Result.Conflict("Taken."));
+
+        var commandOutput = await command.MatchAsync(_ => "ok", failure => failure.Detail ?? "none");
+        var commandOutputAsync = await command.MatchAsync(_ => Task.FromResult("ok"), failure => Task.FromResult(failure.Status.ToString()));
+        var queryOutput = await SendGetUserId(6).MatchAsync(id => id * 2, _ => -1);
+        var queryOutputAsync = await SendGetUserId(6).MatchAsync(id => Task.FromResult(id * 3), _ => Task.FromResult(-1));
+
+        Assert.Equal("Taken.", commandOutput);
+        Assert.Equal(nameof(ResultStatus.Conflict), commandOutputAsync);
+        Assert.Equal(12, queryOutput);
+        Assert.Equal(18, queryOutputAsync);
+    }
+
+    [Fact]
+    public async Task OnSuccessAsync_ConcreteTaskSources_RunOnlyOnSuccessAndKeepConcreteType()
+    {
+        var seen = new List<string>();
+
+        OperationResult command = await Task.FromResult<OperationResult>(Result.Success())
+            .OnSuccessAsync(_ => seen.Add("sync"));
+        await Task.FromResult<OperationResult>(Result.Success())
+            .OnSuccessAsync(_ => Task.Run(() => seen.Add("async")));
+        OperationDataResult<int> query = await SendGetUserId(8)
+            .OnSuccessAsync(id => seen.Add($"data-{id}"));
+        await SendGetUserId(9)
+            .OnSuccessAsync(id => Task.Run(() => seen.Add($"async-data-{id}")));
+        await Task.FromResult<OperationDataResult<int>>(Result.NotFound<int>("Missing."))
+            .OnSuccessAsync(_ => seen.Add("never"));
+
+        Assert.True(command.IsSuccessful);
+        Assert.Equal(8, query.Data);
+        Assert.Equal(["sync", "async", "data-8", "async-data-9"], seen);
+    }
+
+    [Fact]
+    public async Task OnFailureAsync_ConcreteTaskSources_RunOnlyOnFailureAndKeepConcreteType()
+    {
+        var seen = new List<ResultStatus>();
+
+        OperationResult command = await Task.FromResult<OperationResult>(Result.Conflict("Taken."))
+            .OnFailureAsync(failure => seen.Add(failure.Status));
+        await Task.FromResult<OperationResult>(Result.Forbidden("No."))
+            .OnFailureAsync(failure => Task.Run(() => seen.Add(failure.Status)));
+        OperationDataResult<int> query = await Task.FromResult<OperationDataResult<int>>(Result.NotFound<int>("Missing."))
+            .OnFailureAsync(failure => seen.Add(failure.Status));
+        await Task.FromResult<OperationDataResult<int>>(Result.Unauthorized<int>("Who?"))
+            .OnFailureAsync(failure => Task.Run(() => seen.Add(failure.Status)));
+        await SendGetUserId(1).OnFailureAsync(failure => seen.Add(failure.Status));
+
+        Assert.False(command.IsSuccessful);
+        Assert.Equal(ResultStatus.NotFound, query.Status);
+        Assert.Equal([ResultStatus.Conflict, ResultStatus.Forbidden, ResultStatus.NotFound, ResultStatus.Unauthorized], seen);
+    }
+
+    [Fact]
+    public async Task EnsureAsync_ConcreteTaskSource_RejectsWithDetailAndKeepsConcreteType()
+    {
+        OperationDataResult<int> passed = await SendGetUserId(3).EnsureAsync(id => id > 0, "Id must be positive.");
+        OperationDataResult<int> rejected = await SendGetUserId(-3).EnsureAsync(id => Task.FromResult(id > 0), "Id must be positive.");
+
+        Assert.True(passed.IsSuccessful);
+        Assert.Equal(ResultStatus.UnprocessableContent, rejected.Status);
+        Assert.Equal("Id must be positive.", rejected.Detail);
+        Assert.Empty(rejected.Errors);
+    }
+
+    [Fact]
+    public async Task EnsureAsync_ConcreteTaskSource_AlreadyFailed_SkipsPredicate()
+    {
+        var invoked = false;
+        var source = Task.FromResult<OperationDataResult<int>>(Result.NotFound<int>("Missing."));
+
+        var result = await source.EnsureAsync(
+            _ =>
+            {
+                invoked = true;
+                return true;
+            },
+            "Unused.");
+
+        Assert.False(invoked);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
+    }
+
+    [Fact]
+    public async Task ConcreteChain_AllOperators_ComposeFromMediatRStyleSources()
+    {
+        var log = new List<string>();
+
+        var output = await SendGetUserId(5)
+            .EnsureAsync(id => id > 0, "Id must be positive.")
+            .OnSuccessAsync(id => log.Add($"id={id}"))
+            .BindAsync(SendGetUserName)
+            .OnFailureAsync(failure => log.Add(failure.Title))
+            .MatchAsync(name => name, failure => failure.Title);
+
+        Assert.Equal("user-5", output);
+        Assert.Equal(["id=5"], log);
+    }
+
+    private static Task<OperationDataResult<int>> SendGetUserId(int id)
+        => Task.FromResult<OperationDataResult<int>>(Result.Success<int>(id));
+
+    private static Task<OperationDataResult<string>> SendGetUserName(int id)
+        => Task.FromResult<OperationDataResult<string>>(id > 0 ? Result.Success<string>($"user-{id}") : Result.NotFound<string>("User not found."));
 }
