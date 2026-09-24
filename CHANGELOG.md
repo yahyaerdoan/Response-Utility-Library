@@ -5,6 +5,17 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [Unreleased]
+
+### Changed
+- Package validation compares against `13.0.0` again (`PackageValidationBaselineVersion` in
+  `Directory.Build.props`), so a publish build now fails on any breaking change to the 13.0 public API.
+  No library code changed.
+
+### Documentation
+- NuGet package release notes (`PackageReleaseNotes` in `ResultHandler.csproj`) now describe 13.0; the
+  13.0.0 package still showed the 12.1 notes.
+
 ## [13.0.0]
 
 ### Changed
