@@ -5,6 +5,25 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [Unreleased]
+
+### Added
+- `MapAsync`/`BindAsync` overloads for `Task<OperationDataResult<T>>` sources and for binders returning
+  `Task<OperationDataResult<TOut>>`. `Task<T>` is invariant, so chains that start from, or bind into, a
+  MediatR-style `Send` (which returns the concrete `OperationDataResult<T>`) previously did not compile
+  without a cast. The result type follows the source: concrete in, concrete out; an interface anywhere
+  in the chain keeps it an interface. Existing overloads and their return types are unchanged.
+- `MatchAsync`/`OnSuccessAsync`/`OnFailureAsync` overloads for `Task<OperationResult>` and
+  `Task<OperationDataResult<T>>` sources, and `EnsureAsync` overloads for `Task<OperationDataResult<T>>`,
+  so every async operator chains directly off a MediatR `Send`. Side-effect and guard overloads return
+  the concrete source type.
+
+### Documentation
+- README §7: `Ensure(predicate, message)` puts the message in `Detail` and leaves `Errors` empty; the
+  previous "same shape as `Result.Invalid`" wording was wrong. Behavior is unchanged.
+- README §9: how to call `BindAsync` with an async lambda that returns both success and failure results
+  (explicit type arguments or an explicit lambda return type).
+
 ## [12.1.33]
 
 ### Added
