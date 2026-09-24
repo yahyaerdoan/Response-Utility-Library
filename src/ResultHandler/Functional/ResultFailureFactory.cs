@@ -232,8 +232,8 @@ public static class ResultFailureFactory
         where TSelf : IOperationResult, IResultFailureFactory<TSelf>
         => From<TSelf>(Result.NetworkAuthenticationRequired(detail));
 
-    /// <summary>Re-projects a concrete <see cref="ErrorResult"/> produced by the <see cref="Result"/> facade into <typeparamref name="TSelf"/>.</summary>
-    private static TSelf From<TSelf>(ErrorResult error)
+    /// <summary>Re-projects a failure produced by the <see cref="Result"/> facade into <typeparamref name="TSelf"/>.</summary>
+    private static TSelf From<TSelf>(IOperationResult error)
         where TSelf : IOperationResult, IResultFailureFactory<TSelf>
         => TSelf.Failure(error.Title, error.Detail ?? error.Title, error.Status);
 }

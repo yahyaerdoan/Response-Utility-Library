@@ -109,6 +109,12 @@ success/error; `SuccessResult`/`ErrorResult` cover the normal cases.
 (non-generic and `<T>`), named after the status, with sensible default titles baked in. It's what
 the example above looks like using it instead:
 
+Every factory returns the common base type: `OperationResult` for the non-generic form and
+`OperationDataResult<T>` for `<T>` (since 13.0). Success and failure branches therefore share one type,
+so `cond ? Result.Success(x) : Result.NotFound<T>(...)` and lambdas that return both compile without
+casts or explicit type arguments. The runtime objects are still `SuccessResult`/`ErrorDataResult<T>`
+and so on, so `is` checks keep working.
+
 ```csharp
 using ResultHandler.Facade; // Result
 
@@ -121,7 +127,7 @@ public IOperationResult<ProductDto> GetById(int id)
         : Result.Success(ToDto(product), "Product found.");
 }
 
-public ErrorResult? ValidateCreate(CreateProductRequest request)
+public OperationResult? ValidateCreate(CreateProductRequest request)
 {
     var errors = new List<string>();
     if (string.IsNullOrEmpty(request.Name)) errors.Add("Name is required.");
@@ -130,11 +136,11 @@ public ErrorResult? ValidateCreate(CreateProductRequest request)
     return errors.Count > 0 ? Result.Invalid(errors.ToArray()) : null;
 }
 
-public SuccessResult MoveResource(int id, string newLocation)
+public OperationResult MoveResource(int id, string newLocation)
     => Result.MovedPermanently(newLocation); // 3xx redirects — location gets interpolated into the title
 
 // Escape hatch for anything not covered by a named factory:
-public ErrorResult CustomFailure()
+public OperationResult CustomFailure()
     => Result.Failure("Payment declined.", "The card was rejected by the issuer.", ResultStatus.PaymentRequired);
 ```
 
@@ -298,7 +304,7 @@ covers that case instead — it runs every result to completion and merges their
 ```csharp
 using ResultHandler.Facade; // Result
 
-ErrorResult? ValidateCreate(CreateProductRequest request)
+IOperationResult? ValidateCreate(CreateProductRequest request)
 {
     var nameCheck = string.IsNullOrEmpty(request.Name)
         ? Result.Invalid("Name is required.")
@@ -309,7 +315,7 @@ ErrorResult? ValidateCreate(CreateProductRequest request)
         : Result.Success();
 
     var combined = Result.Combine(nameCheck, priceCheck);
-    return combined.IsSuccessful ? null : (ErrorResult)combined;
+    return combined.IsSuccessful ? null : combined;
 }
 ```
 
@@ -381,24 +387,26 @@ The result type follows the source: a `Task<OperationDataResult<T>>` chained int
 task (or through `MapAsync`) stays `OperationDataResult<TOut>`, so a handler can return it directly. Once
 an interface (`IOperationResult<TOut>`) enters the chain, it stays an interface.
 
-**Async lambdas that return different result types.** C# infers an async lambda's return type from its
-`return` statements. `Result.Success<T>` returns `SuccessDataResult<T>` and `Result.NotFound<T>` returns
-`ErrorDataResult<T>`; with both in one lambda there is no common type to infer, so `BindAsync` reports
-CS0411. Name the types once, either on the call or on the lambda:
+**Async lambdas that return both a success and a failure.** Facade factories return the common base
+type (§4), so the lambda's return type is inferred as `Task<OperationDataResult<T>>` and binds without
+type arguments:
 
 ```csharp
-.BindAsync<UserDto, OrderDto>(async user =>
+.BindAsync(async user =>
 {
     if (!user.IsActive)
     {
         return Result.Forbidden<OrderDto>("Inactive user.");
     }
 
-    return Result.Success<OrderDto>(await _orders.CreateAsync(user.Id));
+    return Result.Success(await _orders.CreateAsync(user.Id));
 })
-
-.BindAsync(async Task<OperationDataResult<OrderDto>> (UserDto user) => ...)
 ```
+
+Only a lambda that returns nothing but hand-built subclasses of different kinds
+(`new SuccessDataResult<T>(...)` in one branch, `new ErrorDataResult<T>(...)` in another) has no common
+type to infer; use the facade for at least one branch, or name the types once with
+`.BindAsync<UserDto, OrderDto>(...)`.
 
 A lambda that only ever returns success is a mapping, not a bind: use `MapAsync` with an async mapper.
 
