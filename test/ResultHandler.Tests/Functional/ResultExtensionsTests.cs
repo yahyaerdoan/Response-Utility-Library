@@ -1,4 +1,6 @@
+using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Enums;
+using ResultHandler.Facade;
 using ResultHandler.Functional;
 using ResultHandler.Implementations.Error;
 using ResultHandler.Implementations.Success;
@@ -122,6 +124,41 @@ public class ResultExtensionsTests
         Assert.False(invoked);
         Assert.False(chained.IsSuccessful);
         Assert.Equal(ResultStatus.NotFound, chained.Status);
+    }
+
+    [Fact]
+    public void Bind_NonGenericBinder_Success_ReturnsBinderResult()
+    {
+        IOperationResult<int> result = Result.Success(4);
+
+        IOperationResult bound = result.Bind(id => id > 0 ? Result.NoContent() : Result.NotFound("Missing."));
+
+        Assert.Equal(ResultStatus.NoContent, bound.Status);
+    }
+
+    [Fact]
+    public void Bind_NonGenericBinder_Failure_CarriesTitleStatusDetailAndErrors()
+    {
+        IOperationResult<int> notFound = Result.NotFound<int>("Missing.");
+        IOperationResult<int> invalid = Result.Invalid<int>("A is required.", "B is required.");
+
+        var fromDetail = notFound.Bind(_ => Result.NoContent());
+        var fromErrors = invalid.Bind(_ => Result.NoContent());
+
+        Assert.IsType<ErrorResult>(fromDetail);
+        Assert.Equal(ResultStatus.NotFound, fromDetail.Status);
+        Assert.Equal("Missing.", fromDetail.Detail);
+        Assert.Equal(["A is required.", "B is required."], fromErrors.Errors);
+    }
+
+    [Fact]
+    public void Bind_DataBinder_StillReturnsDataResult()
+    {
+        IOperationResult<int> result = Result.Success(4);
+
+        IOperationResult<string> bound = result.Bind(id => Result.Success<string>($"#{id}"));
+
+        Assert.Equal("#4", bound.Data);
     }
 
     [Fact]

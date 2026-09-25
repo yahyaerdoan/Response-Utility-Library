@@ -444,9 +444,121 @@ public class ResultExtensionsAsyncTests
         Assert.Equal(["id=5"], log);
     }
 
+    [Fact]
+    public async Task BindAsync_ConcreteTaskSource_NonGenericCommand_ChainsAndKeepsConcreteType()
+    {
+        OperationResult result = await SendGetUserId(3).BindAsync(SendDeleteAddress);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal(ResultStatus.NoContent, result.Status);
+    }
+
+    [Fact]
+    public async Task BindAsync_ConcreteTaskSource_NonGenericCommand_FailureShortCircuitsAsErrorResult()
+    {
+        var invoked = false;
+        var fieldErrors = new Dictionary<string, IReadOnlyList<string>> { ["Email"] = ["Email is required."] };
+        var source = Task.FromResult(OperationDataResult<int>.Failure(fieldErrors));
+
+        var result = await source.BindAsync(id =>
+        {
+            invoked = true;
+            return SendDeleteAddress(id);
+        });
+
+        Assert.False(invoked);
+        Assert.IsType<ErrorResult>(result);
+        Assert.Equal(ResultStatus.UnprocessableContent, result.Status);
+        Assert.Equal(["Email is required."], result.FieldErrors["Email"]);
+    }
+
+    [Fact]
+    public async Task BindAsync_ConcreteTaskSource_NonGenericCommandFailure_IsReturnedUnchanged()
+    {
+        var result = await SendGetUserId(-1).BindAsync(SendDeleteAddress);
+
+        Assert.Equal(ResultStatus.Conflict, result.Status);
+        Assert.Equal("Address is in use.", result.Detail);
+    }
+
+    [Fact]
+    public async Task BindAsync_InterfaceSources_NonGenericBinders_Resolve()
+    {
+        IOperationResult<int> value = Result.Success(2);
+        var interfaceTask = Task.FromResult(value);
+
+        IOperationResult fromValueConcrete = await value.BindAsync(SendDeleteAddress);
+        IOperationResult fromTaskConcrete = await interfaceTask.BindAsync(SendDeleteAddress);
+        IOperationResult fromValueInterface = await value.BindAsync(id => Task.FromResult<IOperationResult>(Result.Accepted()));
+        IOperationResult fromTaskInterface = await interfaceTask.BindAsync(id => Task.FromResult<IOperationResult>(Result.Accepted()));
+        IOperationResult fromTaskSync = await interfaceTask.BindAsync(id => (IOperationResult)Result.Accepted());
+        IOperationResult fromConcreteSync = await SendGetUserId(2).BindAsync(id => (IOperationResult)Result.Accepted());
+        IOperationResult fromConcreteInterface = await SendGetUserId(2).BindAsync(id => Task.FromResult<IOperationResult>(Result.Accepted()));
+
+        Assert.Equal(ResultStatus.NoContent, fromValueConcrete.Status);
+        Assert.Equal(ResultStatus.NoContent, fromTaskConcrete.Status);
+        Assert.All([fromValueInterface, fromTaskInterface, fromTaskSync, fromConcreteSync, fromConcreteInterface], r => Assert.Equal(ResultStatus.Accepted, r.Status));
+    }
+
+    [Fact]
+    public async Task BindAsync_AsyncLambdaReturningNonGenericResults_BindsToNonGenericOverload()
+    {
+        OperationResult result = await SendGetUserId(5).BindAsync(async id =>
+        {
+            await Task.Yield();
+            return id > 0 ? Result.NoContent() : Result.Conflict("Blocked.");
+        });
+
+        Assert.Equal(ResultStatus.NoContent, result.Status);
+    }
+
+    [Fact]
+    public async Task BindAsync_LambdaWithOnlyHandBuiltSubclasses_FallsBackToNonGenericOverload()
+    {
+        IOperationResult<int> source = Result.Success(1);
+
+        var bound = await source.BindAsync(async id =>
+        {
+            await Task.Yield();
+            if (id < 0)
+            {
+                return new ErrorDataResult<string>("Missing.", ResultStatus.NotFound);
+            }
+
+            return new SuccessDataResult<string>($"#{id}");
+        });
+
+        var (staticType, value) = Describe(bound);
+
+        Assert.Equal(typeof(IOperationResult), staticType);
+        Assert.IsType<SuccessDataResult<string>>(value);
+    }
+
+    [Fact]
+    public async Task BindAsync_DataBinders_StillBindToDataOverloads()
+    {
+        OperationDataResult<string> concrete = await SendGetUserId(1).BindAsync(SendGetUserName);
+        OperationDataResult<int> asyncLambda = await SendGetUserId(1).BindAsync(async id =>
+        {
+            await Task.Yield();
+            return Result.Success(id + 1);
+        });
+        IOperationResult<string> syncLambda = await SendGetUserId(1).BindAsync(id => Result.Success<string>($"#{id}"));
+
+        Assert.Equal("user-1", concrete.Data);
+        Assert.Equal(2, asyncLambda.Data);
+        Assert.Equal("#1", syncLambda.Data);
+    }
+
     private static Task<OperationDataResult<int>> SendGetUserId(int id)
         => Task.FromResult<OperationDataResult<int>>(Result.Success<int>(id));
 
     private static Task<OperationDataResult<string>> SendGetUserName(int id)
         => Task.FromResult<OperationDataResult<string>>(id > 0 ? Result.Success<string>($"user-{id}") : Result.NotFound<string>("User not found."));
+
+    private static Task<OperationResult> SendDeleteAddress(int id)
+        => Task.FromResult(id > 0 ? Result.NoContent() : Result.Conflict("Address is in use."));
+
+    private static (Type StaticType, object? Value) Describe<TValue>(TValue value)
+        => (typeof(TValue), value);
 }

@@ -62,6 +62,12 @@ public static partial class ResultExtensions
             ? binder(result.Data)
             : Propagate<TOut>(result);
 
+    /// <summary>Chains into an operation that returns no data (for example a command), short-circuiting on failure.</summary>
+    public static IOperationResult Bind<T>(this IOperationResult<T> result, Func<T, IOperationResult> binder)
+        => result.IsSuccessful
+            ? binder(result.Data)
+            : Propagate(result);
+
     /// <summary>Turns a still-successful result into a validation failure when <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
     public static IOperationResult<T> Ensure<T>(this IOperationResult<T> result, Func<T, bool> predicate, string errorMessage)
         => result.IsSuccessful && !predicate(result.Data)
@@ -86,6 +92,24 @@ public static partial class ResultExtensions
     /// </example>
     public static ErrorDataResult<T> ToErrorDataResult<T>(this IOperationResult failed)
         => Propagate<T>(failed);
+
+    private static ErrorResult Propagate(IOperationResult failed)
+    {
+        var fieldErrors = failed.GetFieldErrors();
+        if (fieldErrors.Count > 0)
+        {
+            return new ErrorResult(failed.Title, failed.Status, failed.Errors, fieldErrors);
+        }
+
+        if (failed.Errors.Count > 0)
+        {
+            return new ErrorResult(failed.Title, failed.Status, failed.Errors);
+        }
+
+        return failed.Detail is null
+            ? new ErrorResult(failed.Title, failed.Status)
+            : new ErrorResult(failed.Title, failed.Status, failed.Detail);
+    }
 
     private static ErrorDataResult<TOut> Propagate<TOut>(IOperationResult failed)
     {

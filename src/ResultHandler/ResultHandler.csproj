@@ -5,13 +5,20 @@
     <PackageId>ResponseResultHandler</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler</Title>
-    <Version>13.0.0</Version>
+    <Version>13.1.0</Version>
     <Product>ResponseResultHandler</Product>
     <Description>Response Utility Library is a library designed for streamlined handling of response results, supporting success, error, and data outcomes in .NET applications. Within this library, the ResultHandler project serves as a versatile utility for managing result handling and responses efficiently across different use cases.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Response  response Result result Handler handler CQRS cqrs MediatR  mediatR NetCore netCore Core core .NET .net ProblemDetails RFC9457</PackageTags>
-    <PackageReleaseNotes>v13.0 (breaking) - Result facade returns the common base types, plus async overloads for MediatR-style concrete results:
+    <PackageReleaseNotes>v13.1 - Bind into commands that return no data:
+
+Added:
+- Bind/BindAsync overloads whose binder returns a result with no data (IOperationResult, or Task&lt;OperationResult&gt; such as a MediatR command Send), so a data result chains into a command in one expression. Failures keep title, status, detail, errors and field errors. Existing overloads are unchanged.
+
+See CHANGELOG.md for full details.
+
+v13.0 (breaking) - Result facade returns the common base types, plus async overloads for MediatR-style concrete results:
 
 Changed (breaking):
 - Every Result facade factory now returns OperationResult (was SuccessResult/ErrorResult) or OperationDataResult&lt;T&gt; (was SuccessDataResult&lt;T&gt;/ErrorDataResult&lt;T&gt;). Success and failure branches share one static type, so `cond ? Result.Success(x) : Result.NotFound&lt;T&gt;(...)` and lambdas returning both compile without casts or explicit type arguments. Runtime types are unchanged.
