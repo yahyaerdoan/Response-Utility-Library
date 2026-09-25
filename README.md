@@ -387,6 +387,20 @@ The result type follows the source: a `Task<OperationDataResult<T>>` chained int
 task (or through `MapAsync`) stays `OperationDataResult<TOut>`, so a handler can return it directly. Once
 an interface (`IOperationResult<TOut>`) enters the chain, it stays an interface.
 
+**Binding into a command that returns no data.** When the next step returns a non-generic
+`OperationResult` (a delete, a status change, a password change), `Bind`/`BindAsync` return a
+non-generic result as well, so the same one-line chain works:
+
+```csharp
+app.MapDelete("/addresses/{id:guid}", async (Guid id, ISender sender, HttpContext httpContext) =>
+    (await sender.Send(new GetCurrentUserQuery())                                  // Task<OperationDataResult<UserDto>>
+        .BindAsync(user => sender.Send(new DeleteUserAddressCommand(id, user.Id)))) // Task<OperationResult>
+    .ToEnvelopedResult(httpContext));
+```
+
+A failed source is re-projected into an `ErrorResult` with its title, status, detail, errors and field
+errors intact, exactly like the data-returning `Bind`.
+
 **Async lambdas that return both a success and a failure.** Facade factories return the common base
 type (§4), so the lambda's return type is inferred as `Task<OperationDataResult<T>>` and binds without
 type arguments:
@@ -405,8 +419,9 @@ type arguments:
 
 Only a lambda that returns nothing but hand-built subclasses of different kinds
 (`new SuccessDataResult<T>(...)` in one branch, `new ErrorDataResult<T>(...)` in another) has no common
-type to infer; use the facade for at least one branch, or name the types once with
-`.BindAsync<UserDto, OrderDto>(...)`.
+data type to infer. It still compiles, but through the no-data overload above, so the chain's static
+type becomes `IOperationResult` and `.Data` is no longer available. Use the facade for at least one
+branch, or name the types once with `.BindAsync<UserDto, OrderDto>(...)`.
 
 A lambda that only ever returns success is a mapping, not a bind: use `MapAsync` with an async mapper.
 

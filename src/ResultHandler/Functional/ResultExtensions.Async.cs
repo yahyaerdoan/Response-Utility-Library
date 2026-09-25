@@ -288,6 +288,47 @@ public static partial class ResultExtensions
     public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<OperationDataResult<TOut>>> binder)
         => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
 
+    /// <summary>Awaits <paramref name="resultTask"/>, then chains into an operation that returns no data, short-circuiting on failure.</summary>
+    public static async Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, IOperationResult> binder)
+        => (await resultTask.ConfigureAwait(false)).Bind(binder);
+
+    /// <summary>Chains <paramref name="result"/> into an async operation that returns no data, short-circuiting on failure.</summary>
+    public static async Task<IOperationResult> BindAsync<T>(this IOperationResult<T> result, Func<T, Task<IOperationResult>> binder)
+        => result.IsSuccessful
+            ? await binder(result.Data).ConfigureAwait(false)
+            : Propagate(result);
+
+    /// <summary>Awaits <paramref name="resultTask"/>, then chains into an async operation that returns no data, short-circuiting on failure.</summary>
+    public static async Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
+        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+
+    /// <summary>Chains <paramref name="result"/> into an async operation returning a concrete result with no data (for example a MediatR command <c>Send</c>), short-circuiting on failure.</summary>
+    public static async Task<IOperationResult> BindAsync<T>(this IOperationResult<T> result, Func<T, Task<OperationResult>> binder)
+        => result.IsSuccessful
+            ? await binder(result.Data).ConfigureAwait(false)
+            : Propagate(result);
+
+    /// <summary>Awaits <paramref name="resultTask"/>, then chains into an async operation returning a concrete result with no data, short-circuiting on failure.</summary>
+    public static async Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
+        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+
+    /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into an operation that returns no data, short-circuiting on failure.</summary>
+    public static async Task<IOperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, IOperationResult> binder)
+        => (await resultTask.ConfigureAwait(false)).Bind(binder);
+
+    /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into an async operation that returns no data, short-circuiting on failure.</summary>
+    public static async Task<IOperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
+        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+
+    /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into an operation returning a concrete result with no data (for example a MediatR command <c>Send</c>), short-circuiting on failure.</summary>
+    public static async Task<OperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return result.IsSuccessful
+            ? await binder(result.Data).ConfigureAwait(false)
+            : Propagate(result);
+    }
+
     /// <summary>Awaits <paramref name="resultTask"/>, then turns it into a validation failure when <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
     public static async Task<IOperationResult<T>> EnsureAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, bool> predicate, string errorMessage)
         => (await resultTask.ConfigureAwait(false)).Ensure(predicate, errorMessage);
