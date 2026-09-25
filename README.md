@@ -254,6 +254,20 @@ app.MapPost("/api/products", (CreateProductRequest request, ProductService produ
 app.Run();
 ```
 
+**Documenting the error responses.** A result-returning endpoint can fail with Problem Details, but
+OpenAPI generators only see what the endpoint declares. `ProducesResultProblems()` declares the
+common failures for a whole route group in one call: `500` always, `401`/`403` when the endpoint
+requires authorization, and `422` when it reads a request body. Status codes an endpoint already
+declares are left alone, and it works with both `Microsoft.AspNetCore.OpenApi` and Swashbuckle
+(it only adds standard endpoint metadata, no extra package):
+
+```csharp
+var api = app.MapGroup("/api").ProducesResultProblems();
+
+api.MapGet("/products/{id:int}", (int id, ProductService products) => products.GetById(id).ToResult())
+    .ProducesProblem(StatusCodes.Status404NotFound); // endpoint-specific statuses stay explicit
+```
+
 ---
 ## 7. Functional composition
 
