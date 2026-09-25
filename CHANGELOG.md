@@ -5,6 +5,16 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [13.2.0]
+
+### Added
+- `ProducesResultProblems()` endpoint convention (`ResultHandler.AspNetCore.Extensions`): declares
+  `application/problem+json` responses for a route group or endpoint so OpenAPI documents show the
+  failures a result-returning endpoint can produce: `500` always, `401`/`403` when authorization is
+  required (and not `AllowAnonymous`), `422` when the endpoint reads a request body. Statuses an
+  endpoint already declares are not duplicated. Uses only standard endpoint metadata, so it adds no
+  package dependency and works with `Microsoft.AspNetCore.OpenApi` and Swashbuckle.
+
 ## [13.1.0]
 
 ### Added
