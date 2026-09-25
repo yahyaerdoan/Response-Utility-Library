@@ -5,7 +5,16 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
-## [Unreleased]
+## [13.1.0]
+
+### Added
+- `Bind`/`BindAsync` overloads whose binder returns a result with no data (`IOperationResult`, or a
+  concrete `Task<OperationResult>` such as a MediatR command `Send`). A data result can now chain
+  into a command in one expression; previously there was no overload for it, so callers had to await,
+  check `IsSuccessful` and branch by hand. A failed source is re-projected into an `ErrorResult` with
+  title, status, detail, errors and field errors intact. Existing overloads are unchanged and still
+  win whenever the binder returns a data result. `Task<OperationDataResult<T>>` chained into
+  `Task<OperationResult>` returns `Task<OperationResult>`; every other shape returns `IOperationResult`.
 
 ### Changed
 - Package validation compares against `13.0.0` again (`PackageValidationBaselineVersion` in
@@ -15,6 +24,8 @@ always called out explicitly below.
 ### Documentation
 - NuGet package release notes (`PackageReleaseNotes` in `ResultHandler.csproj`) now describe 13.0; the
   13.0.0 package still showed the 12.1 notes.
+- README §9: binding into a command that returns no data, and why a lambda returning only hand-built
+  subclasses now resolves to the no-data overload.
 
 ## [13.0.0]
 
