@@ -5,12 +5,13 @@
     <PackageId>ResponseResultHandler.AspNetCore</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler - ASP.NET Core</Title>
-    <Version>13.1.0</Version>
+    <Version>13.2.0</Version>
     <Product>ResponseResultHandler.AspNetCore</Product>
     <Description>ASP.NET Core integration for ResponseResultHandler: converts IOperationResult/IOperationResult&lt;T&gt; into IActionResult and RFC 9457 Problem Details responses.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>AspNetCore ProblemDetails RFC9457 Response Result Handler CQRS MediatR</PackageTags>
+    <PackageTags>AspNetCore ProblemDetails RFC9457 Response Result Handler CQRS MediatR OpenAPI</PackageTags>
+    <PackageReleaseNotes>v13.2 - ProducesResultProblems(): one call on a route group documents the Problem Details responses (500, 401/403 for authorized endpoints, 422 for endpoints with a body) for OpenAPI, with no extra package dependency. See CHANGELOG.md for full details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

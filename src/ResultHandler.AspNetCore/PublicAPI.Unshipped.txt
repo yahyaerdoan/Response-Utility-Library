@@ -1,1 +1,3 @@
 #nullable enable
+ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions
+static ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions.ProducesResultProblems<TBuilder>(this TBuilder builder) -> TBuilder
