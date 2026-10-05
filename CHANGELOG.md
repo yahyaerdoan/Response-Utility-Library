@@ -5,6 +5,17 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [13.3.0]
+
+### Added
+- `ProducesEnveloped<T>()` and `ProducesEnveloped()` endpoint extensions (`ResultHandler.AspNetCore.Extensions`):
+  declare the success body that `ToEnvelopedResult` writes, `OperationDataResult<T>` for data results and
+  `OperationResult` for results without data, as `application/json` with the given status (200 by default,
+  pass 201 for creates). OpenAPI documents and generated clients then show the envelope (`resultData`,
+  `isSuccessful`, `statusCode`, `statusMessage`, `errors`, `fieldErrors`) and the data type inside it.
+  Together with `ProducesResultProblems()` an endpoint's success and failure responses are both documented.
+  Bodyless statuses (204) are still declared with `Produces(204)`.
+
 ## [13.2.0]
 
 ### Added

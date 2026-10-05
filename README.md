@@ -268,6 +268,35 @@ api.MapGet("/products/{id:int}", (int id, ProductService products) => products.G
     .ProducesProblem(StatusCodes.Status404NotFound); // endpoint-specific statuses stay explicit
 ```
 
+**Documenting the success body.** `ToEnvelopedResult()` writes the whole envelope on success, but an
+endpoint returning `IResult` gives OpenAPI no type to describe it. `ProducesEnveloped<T>()` declares it as
+`OperationDataResult<T>` (or `OperationResult` with `ProducesEnveloped()` when there is no data), so docs and
+generated clients see `resultData` with its real type next to the status fields:
+
+```csharp
+api.MapGet("/products/{id:int}", (int id, ProductService products) => products.GetById(id).ToEnvelopedResult())
+    .ProducesEnveloped<ProductResponse>();
+
+api.MapPost("/products", (CreateProduct command, ProductService products) => products.Create(command).ToEnvelopedResult())
+    .ProducesEnveloped<Guid>(StatusCodes.Status201Created);
+```
+
+`statusCode` is written as a number by `ResultStatusJsonConverter`, which schema generators can't see through, so
+it shows up untyped. With `Microsoft.AspNetCore.OpenApi` (.NET 10), one schema transformer types it:
+
+```csharp
+builder.Services.AddOpenApi(options => options.AddSchemaTransformer((schema, context, _) =>
+{
+    if (context.JsonTypeInfo.Type == typeof(ResultStatus))
+    {
+        schema.Type = JsonSchemaType.Integer;
+        schema.Format = "int32";
+    }
+
+    return Task.CompletedTask;
+}));
+```
+
 ---
 ## 7. Functional composition
 
