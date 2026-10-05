@@ -1,3 +1,6 @@
 #nullable enable
 ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions
 static ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions.ProducesResultProblems<TBuilder>(this TBuilder builder) -> TBuilder
+ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions
+static ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions.ProducesEnveloped(this Microsoft.AspNetCore.Builder.RouteHandlerBuilder! builder, int statusCode = 200) -> Microsoft.AspNetCore.Builder.RouteHandlerBuilder!
+static ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions.ProducesEnveloped<TData>(this Microsoft.AspNetCore.Builder.RouteHandlerBuilder! builder, int statusCode = 200) -> Microsoft.AspNetCore.Builder.RouteHandlerBuilder!
