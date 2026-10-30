@@ -1,4 +1,5 @@
-﻿using ResultHandler.Core.Base;
+﻿using System.Globalization;
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
 using ResultHandler.Facade;
 using ResultHandler.Functional;
@@ -61,7 +62,7 @@ public class ErrorCodeTests
     {
         var failed = Result.Conflict<int>("Slug taken.").WithCode("Tenant.SlugTaken");
 
-        var bound = failed.Bind(value => Result.Success(value.ToString()));
+        var bound = failed.Bind(value => Result.Success(value.ToString(CultureInfo.InvariantCulture)));
 
         Assert.Equal("Tenant.SlugTaken", bound.Code);
         Assert.Equal(ResultStatus.Conflict, bound.Status);

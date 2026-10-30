@@ -34,7 +34,7 @@ public class ResultFacadeTests
 
         Assert.True(result.IsSuccessful);
         Assert.Equal(ResultStatus.MovedPermanently, result.Status);
-        Assert.Contains("https://example.com/new", result.Title);
+        Assert.Contains("https://example.com/new", result.Title, StringComparison.Ordinal);
     }
 
     [Fact]
