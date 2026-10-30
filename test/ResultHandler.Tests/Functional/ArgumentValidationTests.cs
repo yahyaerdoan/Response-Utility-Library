@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using ResultHandler.AspNetCore.Extensions;
+﻿using ResultHandler.AspNetCore.Extensions;
 using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Base;
 using ResultHandler.Facade;
@@ -12,6 +11,8 @@ namespace ResultHandler.Tests.Functional;
 public class ArgumentValidationTests
 {
     private static readonly OperationDataResult<int> Success = Result.Success(1);
+    private static readonly IOperationResult MissingResult = null;
+    private static readonly IOperationResult<int> MissingDataResult = null;
 
     [Fact]
     public void SyncOperators_RejectNullDelegates_WithTheParameterName()
@@ -19,7 +20,7 @@ public class ArgumentValidationTests
         Assert.Equal("mapper", Assert.Throws<ArgumentNullException>(() => Success.Map<int, int>(null)).ParamName);
         Assert.Equal("binder", Assert.Throws<ArgumentNullException>(() => Success.Bind<int, int>(null)).ParamName);
         Assert.Equal("predicate", Assert.Throws<ArgumentNullException>(() => Success.Ensure(null, "message")).ParamName);
-        Assert.Equal("result", Assert.Throws<ArgumentNullException>(() => ((IOperationResult<int>)null).Map(value => value)).ParamName);
+        Assert.Equal("result", Assert.Throws<ArgumentNullException>(() => MissingDataResult.Map(value => value)).ParamName);
     }
 
     [Fact]
@@ -46,10 +47,10 @@ public class ArgumentValidationTests
     [Fact]
     public void HttpMappings_RejectANullResult_ButAcceptAMissingHttpContext()
     {
-        Assert.Throws<ArgumentNullException>(() => ((IOperationResult)null).ToResult());
-        Assert.Throws<ArgumentNullException>(() => ((IOperationResult)null).ToActionResult());
+        Assert.Throws<ArgumentNullException>(() => MissingResult.ToResult());
+        Assert.Throws<ArgumentNullException>(() => MissingResult.ToActionResult());
         Assert.NotNull(Success.ToResult(httpContext: null));
-        Assert.NotNull(Success.ToEnvelopedResult((HttpContext?)null));
+        Assert.NotNull(Success.ToEnvelopedResult(httpContext: null));
     }
 }
 #pragma warning restore CS8600, CS8625
