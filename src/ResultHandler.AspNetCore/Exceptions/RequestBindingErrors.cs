@@ -72,7 +72,7 @@ internal static partial class RequestBindingErrors
             return [(string.Empty, InvalidJson)];
         }
 
-        if (key.StartsWith("$", StringComparison.Ordinal))
+        if (key.StartsWith('$'))
         {
             return [(FromJsonPath(key), InvalidValue)];
         }

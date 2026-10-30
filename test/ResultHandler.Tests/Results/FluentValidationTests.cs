@@ -166,7 +166,8 @@ public class FluentValidationTests
         using var client = Client(app);
         using var response = await client.PostAsJsonAsync(path, request, TestContext.Current.CancellationToken);
         Assert.StartsWith("application/problem+json", response.Content.Headers.ContentType?.ToString(), StringComparison.Ordinal);
-        return (response.StatusCode, JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).RootElement.Clone());
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        return (response.StatusCode, document.RootElement.Clone());
     }
 
     public sealed class ReceiptRequestValidator : AbstractValidator<ReceiptRequest>
