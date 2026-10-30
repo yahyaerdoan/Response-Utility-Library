@@ -20,4 +20,7 @@ public interface IOperationResult
 
     /// <summary>Optional list of individual error messages (e.g. validation failures).</summary>
     IReadOnlyList<string> Errors { get; }
+
+    /// <summary>Optional machine-readable error code (e.g. <c>"Tenant.SlugTaken"</c>) so clients can tell failures with the same status apart without parsing <see cref="Detail"/>. <see langword="null"/> unless set with <c>WithCode</c>.</summary>
+    string? Code { get; }
 }

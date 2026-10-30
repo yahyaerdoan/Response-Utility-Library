@@ -4,3 +4,18 @@ static ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions.Pr
 ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions
 static ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions.ProducesEnveloped(this Microsoft.AspNetCore.Builder.RouteHandlerBuilder! builder, int statusCode = 200) -> Microsoft.AspNetCore.Builder.RouteHandlerBuilder!
 static ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions.ProducesEnveloped<TData>(this Microsoft.AspNetCore.Builder.RouteHandlerBuilder! builder, int statusCode = 200) -> Microsoft.AspNetCore.Builder.RouteHandlerBuilder!
+ResultHandler.AspNetCore.Extensions.ResultProblemDetailsServiceCollectionExtensions
+static ResultHandler.AspNetCore.Extensions.ResultProblemDetailsServiceCollectionExtensions.AddResultProblemDetails(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Microsoft.AspNetCore.Http.ProblemDetailsOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions.ProducesResultProblem<TBuilder>(this TBuilder builder, params int[]! statusCodes) -> TBuilder
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.ResultProblemDetails() -> void
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.Code.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.Code.set -> void
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.TraceId.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.TraceId.set -> void
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.ResultValidationProblemDetails() -> void
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.Code.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.Code.set -> void
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.TraceId.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.TraceId.set -> void

@@ -80,7 +80,7 @@ public static partial class ResultExtensions
             ? new ErrorDataResult<T>(title, status, detail)
             : result;
 
-    /// <summary>Re-projects a failed <see cref="IOperationResult"/> into the typed <see cref="ErrorDataResult{T}"/> a caller must return, carrying title/status/detail/errors/fieldErrors over unchanged. Only call when <paramref name="failed"/> is not successful.</summary>
+    /// <summary>Re-projects a failed <see cref="IOperationResult"/> into the typed <see cref="ErrorDataResult{T}"/> a caller must return, carrying title/status/detail/errors/fieldErrors/code over unchanged. Only call when <paramref name="failed"/> is not successful.</summary>
     /// <example>
     /// <code>
     /// var duplicateCheck = await _brandRules.NameCannotBeDuplicated(request.Name);
@@ -94,6 +94,18 @@ public static partial class ResultExtensions
         => Propagate<T>(failed);
 
     private static ErrorResult Propagate(IOperationResult failed)
+    {
+        var propagated = Reproject(failed);
+        return failed.Code is null ? propagated : (ErrorResult)propagated.CloneWithCode(failed.Code);
+    }
+
+    private static ErrorDataResult<TOut> Propagate<TOut>(IOperationResult failed)
+    {
+        var propagated = Reproject<TOut>(failed);
+        return failed.Code is null ? propagated : (ErrorDataResult<TOut>)propagated.CloneWithCode(failed.Code);
+    }
+
+    private static ErrorResult Reproject(IOperationResult failed)
     {
         var fieldErrors = failed.GetFieldErrors();
         if (fieldErrors.Count > 0)
@@ -111,7 +123,7 @@ public static partial class ResultExtensions
             : new ErrorResult(failed.Title, failed.Status, failed.Detail);
     }
 
-    private static ErrorDataResult<TOut> Propagate<TOut>(IOperationResult failed)
+    private static ErrorDataResult<TOut> Reproject<TOut>(IOperationResult failed)
     {
         var fieldErrors = failed.GetFieldErrors();
         if (fieldErrors.Count > 0)

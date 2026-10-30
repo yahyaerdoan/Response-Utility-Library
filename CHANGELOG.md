@@ -5,6 +5,53 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [14.0.0]
+
+Failed responses now follow ASP.NET Core's own Problem Details conventions end to end, so clients,
+Scalar/Swagger UI and generated code see one shape for every error.
+
+### Changed
+- **Breaking (wire):** validation failures are written as `HttpValidationProblemDetails`. `"errors"` is
+  now a map from field name to messages, the same shape ASP.NET Core uses for `ValidationProblem`, and
+  the `"fieldErrors"` extension is gone. Messages in `Errors` that don't belong to a field go under the
+  `""` key (ASP.NET Core's model-level key); field messages are no longer written twice.
+- Failures from `ToResult`/`ToProblemResult`/`ToEnvelopedResult` and the `ToActionResult` family are
+  written through `IProblemDetailsService` when it is registered, so `CustomizeProblemDetails` applies
+  to them. Previously they were serialized directly and skipped it.
+- Every failed response gets `instance` and a `traceId` extension
+  (`Activity.Current?.Id ?? HttpContext.TraceIdentifier`) when it is written, on every target framework,
+  whether or not an `HttpContext` was passed in.
+- `ProducesResultProblems()` also documents `400` for endpoints that read a body, and describes the
+  responses with `ResultProblemDetails` / `ResultValidationProblemDetails` instead of `ProblemDetails`,
+  so OpenAPI documents show `code`, `traceId` and the `errors` map.
+- **Breaking (API):** `IOperationResult` has a new `Code` member. Only code that implements the
+  interface itself is affected.
+- The `[JsonConstructor]` of `OperationResult` / `OperationDataResult<T>` is now the overload with a
+  trailing `code` parameter; the previous overloads remain as ordinary constructors.
+
+### Added
+- `IOperationResult.Code` and `WithCode(code)` (`ResultHandler.Facade`): a machine-readable error code,
+  written as the `"code"` Problem Details extension and as `code` in the result JSON, carried through
+  `Map`/`Bind`/`ToErrorDataResult`. `Result.Combine` does not merge codes.
+- `AddResultProblemDetails()`: `AddProblemDetails()` plus a customization that gives framework-produced
+  problems (401/403, unknown routes, 405, 415, 429, unhandled exceptions) the same `type`, `title`,
+  `instance` and `traceId` as failed results. Use with `app.UseStatusCodePages()`.
+- `ProducesResultProblem(params int[] statusCodes)` to document endpoint-specific failures (404, 409, ...)
+  with the same schemas.
+- `ResultProblemDetails` and `ResultValidationProblemDetails` (`ResultHandler.AspNetCore.OpenApi`):
+  OpenAPI schemas for the failure bodies.
+
+### Migration
+- Clients that read `"fieldErrors"` should read `"errors"` (same map). Clients that read `"errors"` as a
+  list should read the `""` key of the map, or flatten its values.
+- Tests that assert `JsonHttpResult<ProblemDetails>` or an exact `ObjectResult` for a failure should use
+  `IValueHttpResult<ProblemDetails>` / `IStatusCodeHttpResult`, or `Assert.IsAssignableFrom<ObjectResult>`.
+- Middleware that writes `ToProblemDetails(...)` with `WriteAsJsonAsync<ProblemDetails>` loses the
+  `errors` map (it serializes the declared base type); write it with
+  `await result.ToProblemResult().ExecuteAsync(httpContext)` instead.
+- Binary: assemblies compiled against 13.x must be recompiled against 14.0. Package validation has no
+  baseline during 14.0; set `PackageValidationBaselineVersion` to `14.0.0` once it is published.
+
 ## [13.3.0]
 
 ### Added

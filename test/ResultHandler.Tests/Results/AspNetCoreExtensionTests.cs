@@ -1,8 +1,12 @@
+using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ResultHandler.AspNetCore.Extensions;
 using ResultHandler.Core.Abstractions;
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
+using ResultHandler.Facade;
 using ResultHandler.Implementations.Error;
 using ResultHandler.Implementations.Success;
 using Xunit;
@@ -64,14 +68,16 @@ public class AspNetCoreExtensionTests
     }
 
     [Fact]
-    public void ToProblemResult_Failure_ReturnsJsonHttpResultWithProblemDetails()
+    public void ToProblemResult_Failure_ReturnsProblemJsonResultWithProblemDetails()
     {
         var result = new ErrorResult("Not found.", ResultStatus.NotFound, "The user does not exist.");
 
-        var httpResult = Assert.IsType<JsonHttpResult<ProblemDetails>>(result.ToProblemResult());
-        var problemDetails = Assert.IsType<ProblemDetails>(httpResult.Value);
+        var httpResult = result.ToProblemResult();
+        var problemDetails = Assert.IsAssignableFrom<IValueHttpResult<ProblemDetails>>(httpResult).Value;
 
-        Assert.Equal(404, httpResult.StatusCode);
+        Assert.NotNull(problemDetails);
+        Assert.Equal(404, Assert.IsAssignableFrom<IStatusCodeHttpResult>(httpResult).StatusCode);
+        Assert.Equal("application/problem+json", Assert.IsAssignableFrom<IContentTypeHttpResult>(httpResult).ContentType);
         Assert.Equal(404, problemDetails.Status);
         Assert.Equal("Not found.", problemDetails.Title);
         Assert.Equal("The user does not exist.", problemDetails.Detail);
@@ -123,7 +129,7 @@ public class AspNetCoreExtensionTests
     {
         var result = new ErrorResult("Not found.", ResultStatus.NotFound, "The user does not exist.");
 
-        var actionResult = Assert.IsType<ObjectResult>(result.ToActionResult());
+        var actionResult = Assert.IsAssignableFrom<ObjectResult>(result.ToActionResult());
         var problemDetails = Assert.IsType<ProblemDetails>(actionResult.Value);
 
         Assert.Equal(404, actionResult.StatusCode);
@@ -133,40 +139,76 @@ public class AspNetCoreExtensionTests
     }
 
     [Fact]
-    public void ToProblemDetails_WithErrors_AddsErrorsExtension()
+    public void ToProblemDetails_WithFlatErrors_PutsThemUnderTheGeneralKey()
     {
-        var errors = new[] { "Field A is required." };
-        var result = new ErrorResult("Validation failed.", ResultStatus.UnprocessableContent, errors);
+        var result = new ErrorResult("Validation failed.", ResultStatus.UnprocessableContent, ["Field A is required."]);
 
-        var problemDetails = result.ToProblemDetails();
+        var problemDetails = Assert.IsType<HttpValidationProblemDetails>(result.ToProblemDetails());
 
-        Assert.True(problemDetails.Extensions.TryGetValue("errors", out var errorsExtension));
-        Assert.Equal(errors, errorsExtension);
+        var only = Assert.Single(problemDetails.Errors);
+        Assert.Equal(string.Empty, only.Key);
+        Assert.Equal(["Field A is required."], only.Value);
     }
 
     [Fact]
-    public void ToProblemDetails_WithFieldErrors_AddsFieldErrorsExtension()
+    public void ToProblemDetails_WithFieldErrors_WritesTheErrorsMapOnly()
     {
         var fieldErrors = new Dictionary<string, IReadOnlyList<string>>
         {
-            ["UserNameOrEmail"] = ["'User Name Or Email' must not be empty."],
+            ["Title"] = ["Title is required."],
+            ["Icon"] = ["Icon is required."],
         };
         var result = new ErrorResult("Validation Failed", ResultStatus.UnprocessableContent, fieldErrors);
 
-        var problemDetails = result.ToProblemDetails();
+        var problemDetails = Assert.IsType<HttpValidationProblemDetails>(result.ToProblemDetails());
 
-        Assert.True(problemDetails.Extensions.TryGetValue("fieldErrors", out var fieldErrorsExtension));
-        Assert.Equal(fieldErrors, fieldErrorsExtension);
+        Assert.NotEmpty(result.Errors);
+        Assert.Equal(["Icon", "Title"], problemDetails.Errors.Keys.Order());
+        Assert.Equal(["Title is required."], problemDetails.Errors["Title"]);
+        Assert.Empty(problemDetails.Extensions);
     }
 
     [Fact]
-    public void ToProblemDetails_WithoutFieldErrors_OmitsFieldErrorsExtension()
+    public void ToProblemDetails_CombinedFailures_KeepFieldMessagesOnTheirFieldAndTheRestUnderTheGeneralKey()
+    {
+        var fieldFailure = OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Name"] = ["Name is required."] });
+        var otherFailure = Result.Conflict("Name already exists.");
+
+        var problemDetails = Assert.IsType<HttpValidationProblemDetails>(Result.Combine(fieldFailure, otherFailure).ToProblemDetails());
+
+        Assert.Equal(["Name is required."], problemDetails.Errors["Name"]);
+        Assert.Equal(["Name already exists."], problemDetails.Errors[string.Empty]);
+    }
+
+    [Fact]
+    public void ToProblemDetails_WithoutErrors_IsPlainProblemDetails()
     {
         var result = new ErrorResult("Not found.", ResultStatus.NotFound, "The user does not exist.");
 
         var problemDetails = result.ToProblemDetails();
 
-        Assert.False(problemDetails.Extensions.ContainsKey("fieldErrors"));
+        Assert.IsType<ProblemDetails>(problemDetails);
+        Assert.Empty(problemDetails.Extensions);
+    }
+
+    [Fact]
+    public void ToProblemDetails_WithCode_AddsCodeExtension()
+    {
+        var problemDetails = Result.Conflict("Slug taken.").WithCode("Tenant.SlugTaken").ToProblemDetails();
+
+        Assert.Equal("Tenant.SlugTaken", problemDetails.Extensions["code"]);
+    }
+
+    [Fact]
+    public void ToProblemDetails_WithHttpContext_AddsInstanceAndTraceId()
+    {
+        var httpContext = new DefaultHttpContext { TraceIdentifier = "trace-1" };
+        httpContext.Request.Path = "/api/things";
+
+        var problemDetails = Result.NotFound("Missing.").ToProblemDetails(httpContext);
+
+        Assert.Equal("/api/things", problemDetails.Instance);
+        Assert.Equal(Activity.Current?.Id ?? "trace-1", problemDetails.Extensions["traceId"]);
     }
 
     [Fact]
