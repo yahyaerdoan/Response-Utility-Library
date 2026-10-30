@@ -1,0 +1,35 @@
+<div class="composer">
+  <div class="composer-head">
+    <span class="live"><span class="dot" aria-hidden="true"></span>Live preview</span>
+    <div class="style-switch" role="radiogroup" aria-label="API style">
+      @for (item of styles; track item) {
+        <button type="button" role="radio" [class.active]="style() === item" [attr.aria-checked]="style() === item" (click)="chooseStyle(item)">
+          {{ item === 'Minimal API' ? 'Minimal' : 'MVC' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="chips" role="group" aria-label="Compose the pipeline">
+    @for (feature of features; track feature.id) {
+      <button type="button" class="chip-toggle" [class.on]="selected().has(feature.id)" [attr.aria-pressed]="selected().has(feature.id)"
+              (click)="toggle(feature.id)">
+        <i class="bi" [class]="selected().has(feature.id) ? 'bi-check-lg' : 'bi-plus-lg'"></i>{{ feature.label }}
+      </button>
+    }
+  </div>
+
+  <rh-code-block class="code" [code]="displayed()" language="csharp" [flush]="true" />
+
+  <div class="composer-foot">
+    <div class="outcomes" aria-live="polite">
+      @for (outcome of outcomes(); track outcome.code) {
+        <span class="status-pill" [class]="'status-pill c' + (outcome.code >= 400 ? 4 : 2)">{{ outcome.code }} {{ outcome.label }}</span>
+      }
+    </div>
+    <label class="typing">
+      <input type="checkbox" class="form-check-input" [checked]="typing()" (change)="typing.set(!typing())">
+      Typing animation
+    </label>
+  </div>
+</div>

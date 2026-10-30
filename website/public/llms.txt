@@ -1,0 +1,61 @@
+# ResponseResultHandler
+
+> Result-pattern library for .NET 8, 9 and 10. Wraps an operation outcome (success or failure, an HTTP-mappable ResultStatus, title, detail, errors, per-field errors and optional data) in an immutable object, and converts it to IActionResult / IResult with RFC 9457 Problem Details.
+
+Packages: ResponseResultHandler (core, BCL only) and ResponseResultHandler.AspNetCore (MVC and Minimal API adapters).
+
+## Get started
+
+- [Introduction](/docs/introduction): What ResponseResultHandler is, the problem it solves and how its pieces fit together.
+- [Installation](/docs/installation): Add the packages, pick your target framework and learn which namespace holds what.
+- [Quick start](/docs/quick-start): From zero to a Problem-Details-returning endpoint in five minutes.
+- [Use it anywhere](/docs/use-anywhere): The same result-returning service in a console app, a Blazor component, a worker and an API, with no extra infrastructure.
+
+## Fundamentals
+
+- [The core contract](/docs/core-contract): IOperationResult and IOperationResult<T>: the shape every result shares.
+- [ResultStatus](/docs/result-status): An HTTP-shaped status enum that does not depend on ASP.NET Core.
+- [Result facade](/docs/result-facade): One named factory per status, with sensible default titles and messages.
+- [Building results directly](/docs/building-results): SuccessResult, ErrorResult and their generic twins: the concrete types behind the facade.
+
+## ASP.NET Core
+
+- [MVC controllers](/docs/mvc-controllers): ToActionResult, ToActionResult<T> and ToEnvelopedActionResult for controller actions.
+- [Minimal APIs](/docs/minimal-apis): IResult-returning adapters that are native to Minimal APIs and visible to OpenAPI.
+- [Problem Details (RFC 9457)](/docs/problem-details): How failures are rendered, and why the type URLs point at real RFC sections.
+
+## Composition
+
+- [Functional composition](/docs/functional): Map, Bind, Ensure, Match, OnSuccess and OnFailure: railway-oriented programming for .NET.
+- [Result.Combine](/docs/combine): Run independent checks to completion and report every failure at once.
+- [Async composition](/docs/async): MapAsync, BindAsync, EnsureAsync, MatchAsync, OnSuccessAsync and OnFailureAsync, including MediatR Send chains.
+
+## Advanced
+
+- [Generic short-circuiting](/docs/generic-short-circuiting): IResultFailureFactory<TSelf> and ResultFailureFactory: return failures from MediatR behaviors, decorators or any generic pipeline without throwing.
+- [Per-field validation errors](/docs/field-errors): IHasFieldErrors: messages keyed by property name, ready for form UIs.
+- [Serialization & AOT](/docs/serialization): Stable JSON contract, numeric status codes, round-tripping and source-generated contexts.
+- [Equality & debugging](/docs/equality-debugging): Structural equality, stable hash codes and a readable ToString().
+
+## Guides
+
+- [Recipe: vertical slice + MediatR](/docs/vertical-slice): A complete feature folder (command, validator, handler and endpoint) wired with results end-to-end.
+- [Recipe: consuming from a client](/docs/client-consumption): Typed Problem Details in TypeScript / Angular and mapping fieldErrors onto form controls.
+- [Recipe: testing](/docs/testing): Assert outcomes, not exceptions, in unit and integration tests.
+- [Best practices](/docs/best-practices): Guidelines that keep a result-based codebase clean and predictable.
+- [Common pitfalls](/docs/pitfalls): Mistakes that only show up once results flow through caching, transactions, pipelines and payments, and how to avoid them.
+- [Case study: a modular monolith](/docs/case-study): What adopting results end-to-end changed in a production field-service platform: less code, and bugs found along the way.
+
+## Reference
+
+- [API reference](/docs/api-reference): Every public type and member of both packages, grouped by namespace.
+- [Compared to alternatives](/docs/comparison): How ResponseResultHandler compares with throwing exceptions and with other .NET result libraries, including where it is not the best fit.
+- [Migrating to v13](/docs/migration-v13): Facade factories return the base types. What breaks, how to fix it, and why everything must be rebuilt.
+- [Migrating to v12](/docs/migration-v12): Members removed in v12 and what to use instead.
+- [FAQ](/docs/faq): Short answers to the questions people ask most.
+
+## Tools
+
+- [Status explorer](/statuses): every ResultStatus with its factory, defaults and Problem Details type
+- [Playground](/playground): build a result and see the C# call, HTTP response and a unit test
+- [Pipeline](/pipeline): Map / Bind / Ensure short-circuiting step by step

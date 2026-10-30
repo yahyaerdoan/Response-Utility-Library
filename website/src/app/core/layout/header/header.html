@@ -1,0 +1,40 @@
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container-xxl d-flex align-items-center gap-3 h-100">
+    <a routerLink="/" class="brand" aria-label="ResponseResultHandler home">
+      <span class="logo" aria-hidden="true"><i class="bi bi-check2-circle"></i></span>
+      <span class="d-none d-sm-inline">Result<span class="text-gradient">Handler</span></span>
+    </a>
+
+    <nav class="main-nav d-none d-lg-flex" aria-label="Primary">
+      @for (link of nav; track link.route) {
+        <a [routerLink]="link.route" routerLinkActive="active">{{ link.label }}</a>
+      }
+    </nav>
+
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <button type="button" class="search-trigger" (click)="palette.open()" [attr.aria-label]="'Search (' + keyboard.modifier() + '+K)'">
+        <i class="bi bi-search"></i>
+        <span class="d-none d-md-inline">Search</span>
+        <kbd class="d-none d-md-inline">{{ keyboard.modifier() }} K</kbd>
+      </button>
+      <button type="button" class="icon-btn" (click)="install.open()" aria-label="Install packages" title="Install"><i class="bi bi-download"></i></button>
+      <button type="button" class="icon-btn" (click)="theme.toggle()"
+              [attr.aria-label]="theme.current() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
+        <i class="bi" [class.bi-sun]="theme.current() === 'dark'" [class.bi-moon-stars]="theme.current() === 'light'"></i>
+      </button>
+      <a class="icon-btn d-none d-sm-grid" [href]="github" target="_blank" rel="noopener" aria-label="GitHub repository"><i class="bi bi-github"></i></a>
+      <button type="button" class="icon-btn d-lg-none" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()" aria-label="Menu">
+        <i class="bi" [class.bi-list]="!menuOpen()" [class.bi-x-lg]="menuOpen()"></i>
+      </button>
+    </div>
+  </div>
+
+  @if (menuOpen()) {
+    <nav class="mobile-nav d-lg-none" aria-label="Primary">
+      @for (link of nav; track link.route) {
+        <a [routerLink]="link.route" routerLinkActive="active" (click)="menuOpen.set(false)"><i class="bi me-2" [class]="link.icon"></i>{{ link.label }}</a>
+      }
+    </nav>
+  }
+</header>

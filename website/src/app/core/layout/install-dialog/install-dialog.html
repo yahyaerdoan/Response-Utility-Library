@@ -1,0 +1,38 @@
+<dialog #dialog class="install" aria-labelledby="install-title" (close)="service.close()" (click)="onBackdropClick($event)">
+  <div class="body">
+    <header class="head">
+      <div>
+        <h2 id="install-title" class="h5 fw-bold mb-1">Install ResponseResultHandler</h2>
+        <p class="small text-muted-rh mb-0">Add the packages to your project in one step.</p>
+      </div>
+      <button type="button" class="btn btn-sm btn-ghost" (click)="service.close()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </header>
+
+    <fieldset class="channels">
+      <legend class="label">Release channel</legend>
+      @for (option of channels; track option.id) {
+        <label class="channel" [class.active]="channel() === option.id">
+          <input type="radio" name="channel" class="visually-hidden" [value]="option.id" [checked]="channel() === option.id" (change)="channel.set(option.id)">
+          <span class="fw-semibold">{{ option.label }}</span>
+          <small class="text-muted-rh">{{ option.description }}</small>
+        </label>
+      }
+    </fieldset>
+
+    <div class="form-check form-switch my-3">
+      <input id="aspnet" class="form-check-input" type="checkbox" role="switch" [checked]="includeAspNetCore()" (change)="includeAspNetCore.set(!includeAspNetCore())">
+      <label class="form-check-label small" for="aspnet">Include <code>ResponseResultHandler.AspNetCore</code> (MVC / Minimal API adapters)</label>
+    </div>
+
+    <rh-code-tabs [snippets]="snippets()" [syncKey]="installGroup" />
+
+    <p class="small text-muted-rh mt-3 mb-0">
+      @if (version(); as current) {
+        Latest {{ channel() }} version on NuGet: <strong>{{ current }}</strong>.
+      } @else {
+        Floating versions shown; the exact version is resolved by NuGet.
+      }
+      <a [href]="links.nugetCore" target="_blank" rel="noopener">View on NuGet <i class="bi bi-box-arrow-up-right"></i></a>
+    </p>
+  </div>
+</dialog>

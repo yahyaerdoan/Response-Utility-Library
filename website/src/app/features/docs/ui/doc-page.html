@@ -1,0 +1,55 @@
+@if (page(); as doc) {
+  <div class="doc-grid">
+    <article class="doc">
+      <div class="top-row">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <a routerLink="/docs">Docs</a><i class="bi bi-chevron-right"></i><span>{{ group() }}</span>
+        </nav>
+        <rh-doc-actions [page]="doc" />
+      </div>
+      <header class="mb-4">
+        <h1 class="fw-bold d-flex align-items-center gap-3">
+          <span class="icon-tile"><i class="bi" [class]="doc.icon"></i></span>{{ doc.title }}
+        </h1>
+        <p class="lead text-muted-rh mb-0">{{ doc.summary }}</p>
+        @if (usesApiStyle()) {
+          <rh-api-style-pivot class="d-block mt-3" />
+        }
+      </header>
+
+      @for (section of doc.sections; track section.id) {
+        <section [id]="section.id" class="doc-section">
+          <h2 class="h4 fw-bold">
+            <a class="anchor" [rhFragmentLink]="section.id" aria-label="Link to this section">#</a>{{ section.title }}
+          </h2>
+          <rh-content-renderer [blocks]="section.blocks" />
+        </section>
+      }
+
+      <footer class="pager">
+        @if (neighbours().previous; as previous) {
+          <a class="pager-link surface surface-hover" [routerLink]="['/docs', previous.slug]">
+            <small class="text-muted-rh"><i class="bi bi-arrow-left me-1"></i>Previous</small>
+            <strong>{{ previous.title }}</strong>
+          </a>
+        } @else { <span></span> }
+        @if (neighbours().next; as next) {
+          <a class="pager-link surface surface-hover text-end" [routerLink]="['/docs', next.slug]">
+            <small class="text-muted-rh">Next<i class="bi bi-arrow-right ms-1"></i></small>
+            <strong>{{ next.title }}</strong>
+          </a>
+        }
+      </footer>
+      <p class="small text-muted-rh mt-4">
+        <i class="bi bi-github me-1"></i>Found something unclear? <a [href]="editUrl" target="_blank" rel="noopener">Suggest an edit on GitHub</a>.
+      </p>
+    </article>
+    <aside class="toc-col"><rh-doc-toc [sections]="doc.sections" /></aside>
+  </div>
+} @else {
+  <div class="py-5 text-center">
+    <h1 class="h3">Page not found</h1>
+    <p class="text-muted-rh">There is no documentation page called “{{ slug() }}”.</p>
+    <a class="btn btn-accent" routerLink="/docs">Back to the docs</a>
+  </div>
+}
