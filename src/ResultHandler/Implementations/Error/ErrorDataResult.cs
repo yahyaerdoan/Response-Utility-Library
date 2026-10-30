@@ -1,9 +1,12 @@
-﻿using ResultHandler.Core.Base;
+﻿using System.Text.Json.Serialization;
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
+using ResultHandler.Serialization;
 
 namespace ResultHandler.Implementations.Error;
 
 /// <summary>A failed <see cref="OperationDataResult{T}"/> (<c>IsSuccessful</c> is always <see langword="false"/>).</summary>
+[JsonConverter(typeof(OperationResultJsonConverterFactory))]
 public class ErrorDataResult<T> : OperationDataResult<T>
 {
     /// <summary>Default error, no data: status <see cref="ResultStatus.InternalServerError"/>, title "An error occurred.".</summary>
@@ -30,15 +33,15 @@ public class ErrorDataResult<T> : OperationDataResult<T>
     {
     }
 
-    /// <summary>Error with a title, status, and a flat list of individual error messages, no data.</summary>
+    /// <summary>Error with a title, status, and messages that belong to no field, no data.</summary>
     public ErrorDataResult(string title, ResultStatus status, IReadOnlyList<string> errors)
-        : base(default, false, status, title, null, errors)
+        : base(default, false, status, title, null, OperationResultDefaults.General(errors))
     {
     }
 
-    /// <summary>Also flattens <paramref name="fieldErrors"/> into <see cref="OperationResult.Errors"/>, for callers that only read the flat list.</summary>
-    public ErrorDataResult(string title, ResultStatus status, IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
-        : base(default, false, status, title, null, OperationResultDefaults.FlattenFieldErrors(fieldErrors), fieldErrors)
+    /// <summary>Error with a title, status, and error messages by field (<c>""</c> for messages that belong to no field).</summary>
+    public ErrorDataResult(string title, ResultStatus status, IReadOnlyDictionary<string, IReadOnlyList<string>> errors)
+        : base(default, false, status, title, null, errors)
     {
     }
 
@@ -54,9 +57,9 @@ public class ErrorDataResult<T> : OperationDataResult<T>
     {
     }
 
-    /// <summary>Carries <paramref name="errors"/> and <paramref name="fieldErrors"/> independently, for re-projecting a failure that already has its own flat message list. Internal — used only by <c>ResultExtensions.Propagate</c>.</summary>
-    internal ErrorDataResult(string title, ResultStatus status, IReadOnlyList<string> errors, IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
-        : base(default, false, status, title, null, errors, fieldErrors)
+    /// <summary>Error carrying every part of another failure, for re-projecting it into this type. Internal: used only by <c>ResultExtensions.Propagate</c>.</summary>
+    internal ErrorDataResult(string title, ResultStatus status, string? detail, IReadOnlyDictionary<string, IReadOnlyList<string>> errors)
+        : base(default, false, status, title, detail, errors)
     {
     }
 }

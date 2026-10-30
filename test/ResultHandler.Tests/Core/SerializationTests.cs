@@ -46,6 +46,54 @@ public class SerializationTests
     }
 
     [Fact]
+    public void Success_HasNoErrorsProperty()
+    {
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(new SuccessDataResult<string>("payload", "Fetched.", ResultStatus.Ok)));
+
+        Assert.Equal(["resultData", "isSuccessful", "statusCode", "statusMessage"], document.RootElement.EnumerateObject().Select(property => property.Name));
+    }
+
+    [Fact]
+    public void DataResult_RoundTripsThroughJson()
+    {
+        var original = Result.Success(new[] { 1, 2, 3 }, "Fetched.");
+
+        var restored = JsonSerializer.Deserialize<OperationDataResult<int[]>>(JsonSerializer.Serialize(original));
+
+        Assert.NotNull(restored);
+        Assert.Equal([1, 2, 3], restored.Data ?? []);
+        Assert.Equal("Fetched.", restored.Title);
+        Assert.True(restored.IsSuccessful);
+    }
+
+    [Fact]
+    public void Deserialization_IgnoresUnknownProperties_SoResultsCachedBeforeV16StillRead()
+    {
+        const string cached = """
+            {"resultData":[1,2],"isSuccessful":true,"statusCode":200,"statusMessage":"Fetched.","errors":[],"fieldErrors":{}}
+            """;
+
+        var restored = JsonSerializer.Deserialize<OperationDataResult<int[]>>(cached);
+
+        Assert.NotNull(restored);
+        Assert.Equal([1, 2], restored.Data ?? []);
+        Assert.Equal(ResultStatus.Ok, restored.Status);
+        Assert.Empty(restored.Errors);
+    }
+
+    [Fact]
+    public void Deserialization_OfASubclass_IsNotSupported()
+    {
+        Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<SuccessResult>("{\"isSuccessful\":true,\"statusCode\":200,\"statusMessage\":\"Ok\"}"));
+    }
+
+    [Fact]
+    public void Deserialization_WithoutStatusCode_Fails()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<OperationResult>("{\"isSuccessful\":true}"));
+    }
+
+    [Fact]
     public void Code_IsOmittedFromJson_WhenNull()
     {
         var result = new ErrorResult("Conflict", ResultStatus.Conflict, "Slug taken.");

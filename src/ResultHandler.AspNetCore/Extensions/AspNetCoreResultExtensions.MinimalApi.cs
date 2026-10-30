@@ -14,11 +14,13 @@ public static partial class AspNetCoreResultExtensions
     {
         if (result.IsSuccessful)
         {
-            return result.Status switch
+            EnsureFinalStatus(result.Status);
+            var success = result.Status switch
             {
                 ResultStatus.NoContent => Results.NoContent(),
                 _ => Results.StatusCode((int)result.Status.ToHttpStatusCode()),
             };
+            return WithLocation(result, success);
         }
 
         return ToProblemResult(result, httpContext);
@@ -29,7 +31,8 @@ public static partial class AspNetCoreResultExtensions
     {
         if (result.IsSuccessful)
         {
-            return ToSuccessResult(result.Status, result.Data);
+            EnsureFinalStatus(result.Status);
+            return WithLocation(result, ToSuccessResult(result.Status, result.Data));
         }
 
         return ToProblemResult(result, httpContext);
@@ -40,8 +43,10 @@ public static partial class AspNetCoreResultExtensions
     {
         if (result.IsSuccessful)
         {
-            return ToBodylessSuccessResult(result.Status)
+            EnsureFinalStatus(result.Status);
+            var success = ToBodylessSuccessResult(result.Status)
                 ?? Results.Json(ResultEnvelopeFactory.Create(result), statusCode: (int)result.Status.ToHttpStatusCode());
+            return WithLocation(result, success);
         }
 
         return ToProblemResult(result, httpContext);
@@ -50,6 +55,9 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>Maps a failed result to a Minimal API <see cref="IResult"/> carrying RFC 9457 <see cref="ProblemDetails"/> (see <see cref="ToProblemDetails"/>), written through <see cref="IProblemDetailsService"/> when one is registered. The request's instance and trace id are added when the response is written, so <paramref name="httpContext"/> is optional. The returned value implements <see cref="IValueHttpResult{TValue}"/> of <see cref="ProblemDetails"/> and <see cref="IStatusCodeHttpResult"/> for tests.</summary>
     public static IResult ToProblemResult(this IOperationResult result, HttpContext? httpContext = null)
         => new ProblemDetailsHttpResult(result.ToProblemDetails(httpContext));
+
+    private static IResult WithLocation(IOperationResult result, IResult success)
+        => result.Location is { } location ? new LocationHttpResult(success, location) : success;
 
     private static IResult ToSuccessResult<T>(ResultStatus status, T data)
     {

@@ -1,9 +1,12 @@
-﻿using ResultHandler.Core.Base;
+﻿using System.Text.Json.Serialization;
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
+using ResultHandler.Serialization;
 
 namespace ResultHandler.Implementations.Success;
 
 /// <summary>A successful <see cref="OperationResult"/> (<c>IsSuccessful</c> is always <see langword="true"/>).</summary>
+[JsonConverter(typeof(OperationResultJsonConverterFactory))]
 public class SuccessResult : OperationResult
 {
     /// <summary>Default success: status <see cref="ResultStatus.Ok"/>, title "Operation completed successfully.".</summary>

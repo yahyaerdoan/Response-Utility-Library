@@ -59,3 +59,6 @@ ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultData.get -> TData?
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultData.init -> void
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultEnvelope() -> void
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.Resolve(System.Exception! exception, Microsoft.AspNetCore.Http.HttpContext! httpContext) -> ResultHandler.Core.Abstractions.IOperationResult!
+ResultHandler.AspNetCore.Extensions.ResultModelStateMvcBuilderExtensions
+static ResultHandler.AspNetCore.Extensions.ResultModelStateMvcBuilderExtensions.AddResultModelStateResponses(this Microsoft.Extensions.DependencyInjection.IMvcBuilder! builder) -> Microsoft.Extensions.DependencyInjection.IMvcBuilder!

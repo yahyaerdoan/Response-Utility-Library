@@ -46,7 +46,7 @@ public class FluentValidationTests
 
         Assert.False(failure.IsSuccessful);
         Assert.Equal(ResultStatus.UnprocessableContent, failure.Status);
-        Assert.Equal(["Number is required."], failure.FieldErrors["Number"]);
+        Assert.Equal(["Number is required."], failure.Errors["Number"]);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class FluentValidationTests
         var failure = new ValidationResult([new ValidationFailure("Number", "Number is required.")]).ToFailure<OperationDataResult<int>>();
 
         Assert.False(failure.IsSuccessful);
-        Assert.Equal(["Number is required."], failure.FieldErrors["Number"]);
+        Assert.Equal(["Number is required."], failure.Errors["Number"]);
     }
 
     [Fact]

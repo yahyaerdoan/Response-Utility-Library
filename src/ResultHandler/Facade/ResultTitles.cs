@@ -5,11 +5,7 @@ namespace ResultHandler.Facade;
 /// <summary>Fixed title/message text used by <see cref="Result"/>'s per-status factories.</summary>
 internal static class ResultTitles
 {
-    // 1xx / 2xx / 3xx - Result.Success.cs
-    public const string Continue = "Continue.";
-    public const string SwitchingProtocols = "Switching protocols.";
-    public const string Processing = "Processing.";
-    public const string EarlyHints = "Early hints.";
+    // 2xx / 3xx - Result.Success.cs
     public const string Created = "Resource created successfully.";
     public const string Accepted = "Request accepted for processing.";
     public const string NoContent = "No content.";
@@ -68,7 +64,6 @@ internal static class ResultTitles
     public const string MovedPermanentlyTemplate = "Resource moved permanently to: {0}";
     public const string FoundTemplate = "Resource found at: {0}";
     public const string SeeOtherTemplate = "See other resource at: {0}";
-    public const string UseProxyTemplate = "Requested resource must be accessed through the proxy: {0}";
     public const string TemporaryRedirectTemplate = "Temporarily redirected to: {0}";
     public const string PermanentRedirectTemplate = "Permanently redirected to: {0}";
 }

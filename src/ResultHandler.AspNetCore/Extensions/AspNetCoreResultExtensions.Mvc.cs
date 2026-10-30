@@ -14,11 +14,13 @@ public static partial class AspNetCoreResultExtensions
     {
         if (result.IsSuccessful)
         {
-            return result.Status switch
+            EnsureFinalStatus(result.Status);
+            var success = result.Status switch
             {
                 ResultStatus.NoContent => new NoContentResult(),
                 _ => new StatusCodeResult((int)result.Status.ToHttpStatusCode()),
             };
+            return WithLocation(result, success);
         }
 
         return ToProblemActionResult(result, httpContext);
@@ -29,7 +31,8 @@ public static partial class AspNetCoreResultExtensions
     {
         if (result.IsSuccessful)
         {
-            return ToSuccessActionResult(result.Status, result.Data);
+            EnsureFinalStatus(result.Status);
+            return WithLocation(result, ToSuccessActionResult(result.Status, result.Data));
         }
 
         return ToProblemActionResult(result, httpContext);
@@ -40,12 +43,17 @@ public static partial class AspNetCoreResultExtensions
     {
         if (result.IsSuccessful)
         {
-            return (IActionResult?)ToBodylessSuccessActionResult(result.Status)
+            EnsureFinalStatus(result.Status);
+            var success = (IActionResult?)ToBodylessSuccessActionResult(result.Status)
                 ?? new ObjectResult(ResultEnvelopeFactory.Create(result)) { StatusCode = (int)result.Status.ToHttpStatusCode() };
+            return WithLocation(result, success);
         }
 
         return ToProblemActionResult(result, httpContext);
     }
+
+    private static IActionResult WithLocation(IOperationResult result, IActionResult success)
+        => result.Location is { } location ? new LocationActionResult(success, location) : success;
 
     private static IActionResult ToSuccessActionResult<T>(ResultStatus status, T data)
     {

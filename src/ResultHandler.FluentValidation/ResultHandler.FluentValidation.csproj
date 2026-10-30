@@ -5,13 +5,15 @@
     <PackageId>ResponseResultHandler.FluentValidation</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler - FluentValidation</Title>
-    <Version>15.0.0</Version>
+    <Version>16.0.0</Version>
     <Product>ResponseResultHandler.FluentValidation</Product>
     <Description>FluentValidation integration for ResponseResultHandler: turns validation results into field-keyed failed results, and validates Minimal API and MVC requests into RFC 9457 validation Problem Details without MediatR.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>FluentValidation Validation AspNetCore MinimalApi ProblemDetails RFC9457 Result</PackageTags>
-    <PackageReleaseNotes>v15.0 - First release: ValidationResult.ToFieldErrors()/ToOperationResult()/ToFailure&lt;TResult&gt;(), WithResultValidation() for Minimal API endpoints and groups, AddResultValidation() for MVC. See CHANGELOG.md.</PackageReleaseNotes>
+    <PackageReleaseNotes>v16.0 - No changes in this package. Versions move together; see CHANGELOG.md.
+
+v15.0 - First release: ValidationResult.ToFieldErrors()/ToOperationResult()/ToFailure&lt;TResult&gt;(), WithResultValidation() for Minimal API endpoints and groups, AddResultValidation() for MVC. See CHANGELOG.md.</PackageReleaseNotes>
   </PropertyGroup>
 
 
