@@ -192,10 +192,12 @@ public class ProductsController : ControllerBase
   example in exception middleware). Pass `HttpContext` to also get `instance` (the request path,
   RFC 9457 §3.1.4) and `traceId`. A result with field errors or error messages becomes an
   `HttpValidationProblemDetails` (§11).
-* Failures are written through ASP.NET Core's `IProblemDetailsService` when it is registered
-  (`AddProblemDetails()` or `AddResultProblemDetails()`, below), so your `CustomizeProblemDetails`
-  applies to them as well. `instance` and `traceId` are added when the response is written, so the
-  `httpContext` parameter is optional.
+* Your `CustomizeProblemDetails` (`AddProblemDetails()` or `AddResultProblemDetails()`, below)
+  applies to failures as well. Minimal API results are written through `IProblemDetailsService`; MVC
+  results apply the customization and then use normal content negotiation, like MVC's own
+  `ValidationProblem()`, because MVC's Problem Details writer drops the validation `errors`.
+  `instance` and `traceId` are added when the response is written, so the `httpContext` parameter is
+  optional.
 * Every 4xx/5xx `ResultStatus` maps `ProblemDetails.Type` to the actual RFC section that defines it
   (RFC 9110, RFC 6585, RFC 4918, RFC 7725, RFC 8470); 1xx/2xx/3xx use `about:blank` per RFC 9457
   §4.2.1, since those aren't "problems".

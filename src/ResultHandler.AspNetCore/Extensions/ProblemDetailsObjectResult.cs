@@ -1,10 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace ResultHandler.AspNetCore.Extensions;
 
-/// <summary>MVC result for a failed operation: adds the request's instance and trace id, then writes through <see cref="IProblemDetailsService"/> when one is registered, falling back to normal <see cref="ObjectResult"/> content negotiation.</summary>
+/// <summary>
+/// MVC result for a failed operation: adds the request's instance and trace id, applies <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/>,
+/// then writes through normal <see cref="ObjectResult"/> content negotiation, the same path MVC's own <c>ValidationProblem()</c> takes. It does not
+/// go through <see cref="IProblemDetailsService"/>: MVC's writer rebuilds the body as a plain <see cref="ProblemDetails"/> and drops
+/// <see cref="HttpValidationProblemDetails.Errors"/>.
+/// </summary>
 internal sealed class ProblemDetailsObjectResult : ObjectResult
 {
     public ProblemDetailsObjectResult(ProblemDetails problemDetails)
@@ -16,24 +22,16 @@ internal sealed class ProblemDetailsObjectResult : ObjectResult
 
     public ProblemDetails ProblemDetails { get; }
 
-    public override async Task ExecuteResultAsync(ActionContext context)
+    public override Task ExecuteResultAsync(ActionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         var httpContext = context.HttpContext;
         AspNetCoreResultExtensions.Enrich(ProblemDetails, httpContext);
 
-        var problemDetailsService = httpContext.RequestServices?.GetService<IProblemDetailsService>();
-        if (problemDetailsService is not null)
-        {
-            httpContext.Response.StatusCode = StatusCode ?? StatusCodes.Status500InternalServerError;
-            var written = await problemDetailsService.TryWriteAsync(new ProblemDetailsContext { HttpContext = httpContext, ProblemDetails = ProblemDetails }).ConfigureAwait(false);
-            if (written)
-            {
-                return;
-            }
-        }
+        var customize = httpContext.RequestServices?.GetService<IOptions<ProblemDetailsOptions>>()?.Value.CustomizeProblemDetails;
+        customize?.Invoke(new ProblemDetailsContext { HttpContext = httpContext, ProblemDetails = ProblemDetails });
 
-        await base.ExecuteResultAsync(context).ConfigureAwait(false);
+        return base.ExecuteResultAsync(context);
     }
 }

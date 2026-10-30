@@ -63,9 +63,28 @@ public class ProblemDetailsWritingTests
     }
 
     [Fact]
+    public async Task ToActionResult_ValidationFailure_KeepsErrorsWhenMvcAndProblemDetailsAreRegistered()
+    {
+        var httpContext = CreateHttpContext(services => services.AddControllers().Services.AddResultProblemDetails());
+        httpContext.SetEndpoint(new Endpoint(null, new EndpointMetadataCollection(new ApiControllerAttribute()), "api-controller"));
+        var actionContext = new ActionContext(httpContext, new RouteData(), new ActionDescriptor());
+        var result = new ErrorResult("Validation Failed", ResultStatus.UnprocessableContent, new Dictionary<string, IReadOnlyList<string>>
+        {
+            ["Title"] = ["Title is required."],
+        });
+
+        await result.ToActionResult().ExecuteResultAsync(actionContext);
+
+        using var body = await ReadBodyAsync(httpContext);
+        Assert.Equal(422, httpContext.Response.StatusCode);
+        Assert.Equal("Title is required.", body.RootElement.GetProperty("errors").GetProperty("Title")[0].GetString());
+        Assert.Equal("trace-1", body.RootElement.GetProperty("traceId").GetString());
+    }
+
+    [Fact]
     public async Task ToActionResult_GoesThroughCustomizeProblemDetails()
     {
-        var httpContext = CreateHttpContext(services => services.AddProblemDetails(options =>
+        var httpContext = CreateHttpContext(services => services.AddControllers().Services.AddProblemDetails(options =>
             options.CustomizeProblemDetails = context => context.ProblemDetails.Extensions["tenant"] = "acme"));
         var actionContext = new ActionContext(httpContext, new RouteData(), new ActionDescriptor());
 
