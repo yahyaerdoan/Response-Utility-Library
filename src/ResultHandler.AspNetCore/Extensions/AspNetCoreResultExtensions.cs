@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ResultHandler.Core.Abstractions;
@@ -6,9 +7,15 @@ using ResultHandler.Mapping;
 
 namespace ResultHandler.AspNetCore.Extensions;
 
-/// <summary>Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core response types. Split across <c>.Mvc.cs</c> (<see cref="IActionResult"/>), <c>.MinimalApi.cs</c> (<see cref="IResult"/>), and this file (shared RFC 9457 <see cref="ProblemDetails"/> and bodyless-status logic).</summary>
+/// <summary>Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core response types. Split across <c>.Mvc.cs</c> (<see cref="IActionResult"/>), <c>.MinimalApi.cs</c> (<see cref="IResult"/>), and this file (shared RFC 9457 <see cref="ProblemDetails"/> and bodyless-status logic). Failures are written through <see cref="IProblemDetailsService"/> when one is registered (<c>AddProblemDetails</c>/<c>AddResultProblemDetails</c>), so <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/> applies to them too.</summary>
 public static partial class AspNetCoreResultExtensions
 {
+    /// <summary>The <c>"errors"</c> key for messages not tied to a field, matching ASP.NET Core's model-level <c>ModelState</c> key.</summary>
+    internal const string GeneralErrorKey = "";
+
+    internal const string CodeExtension = "code";
+    internal const string TraceIdExtension = "traceId";
+
     // RFC 9110 / RFC 6585 / RFC 4918 / RFC 7725 / RFC 8470 - canonical type URIs per RFC 9457 §4.2
     // internal (not private) so ResultHandler.Tests can assert every ResultStatus is covered.
     internal static readonly Dictionary<ResultStatus, string> _problemTypes =
@@ -91,30 +98,91 @@ public static partial class AspNetCoreResultExtensions
         Generic,
     }
 
-    /// <summary>Creates an RFC 9457 <see cref="ProblemDetails"/> payload from an <see cref="IOperationResult"/>. When <paramref name="httpContext"/> is provided, sets <see cref="ProblemDetails.Instance"/> to the current request path.</summary>
+    /// <summary>
+    /// Creates an RFC 9457 <see cref="ProblemDetails"/> payload from an <see cref="IOperationResult"/>. A result with field errors or error
+    /// messages becomes an <see cref="HttpValidationProblemDetails"/> whose <c>"errors"</c> maps each field to its messages (messages not tied to
+    /// a field go under the <c>""</c> key), the same shape as ASP.NET Core's own validation responses. <see cref="IOperationResult.Code"/> is
+    /// written as the <c>"code"</c> extension. When <paramref name="httpContext"/> is provided, also sets <see cref="ProblemDetails.Instance"/>
+    /// to the request path and adds a <c>"traceId"</c> extension; the <c>ToResult</c>/<c>ToActionResult</c> family does this on its own.
+    /// </summary>
     public static ProblemDetails ToProblemDetails(this IOperationResult result, HttpContext? httpContext = null)
     {
-        var problem = new ProblemDetails
-        {
-            Type = _problemTypes.TryGetValue(result.Status, out var type) ? type : "about:blank",
-            Title = result.Title,
-            Detail = result.Detail,
-            Status = (int)result.Status.ToHttpStatusCode(),
-            Instance = httpContext?.Request.Path.Value,
-        };
+        ArgumentNullException.ThrowIfNull(result);
 
-        if (result.Errors.Count > 0)
+        var validationErrors = ToValidationErrors(result);
+        var problem = validationErrors is null ? new ProblemDetails() : new HttpValidationProblemDetails(validationErrors);
+        problem.Type = TypeFor(result.Status);
+        problem.Title = result.Title;
+        problem.Detail = result.Detail;
+        problem.Status = (int)result.Status.ToHttpStatusCode();
+
+        if (result.Code is not null)
         {
-            problem.Extensions["errors"] = result.Errors;
+            problem.Extensions[CodeExtension] = result.Code;
         }
 
-        var fieldErrors = result.GetFieldErrors();
-        if (fieldErrors.Count > 0)
+        if (httpContext is not null)
         {
-            problem.Extensions["fieldErrors"] = fieldErrors;
+            Enrich(problem, httpContext);
         }
 
         return problem;
+    }
+
+    /// <summary>Fills what only the request knows: <see cref="ProblemDetails.Instance"/> (if unset) and the <c>"traceId"</c> extension (if absent), the value ASP.NET Core itself uses.</summary>
+    internal static void Enrich(ProblemDetails problem, HttpContext httpContext)
+    {
+        problem.Instance ??= httpContext.Request.Path.Value;
+        problem.Extensions.TryAdd(TraceIdExtension, Activity.Current?.Id ?? httpContext.TraceIdentifier);
+    }
+
+    /// <summary>The RFC type URI for <paramref name="status"/>, or <c>about:blank</c>.</summary>
+    internal static string TypeFor(ResultStatus status)
+        => _problemTypes.TryGetValue(status, out var type) ? type : "about:blank";
+
+    private static Dictionary<string, string[]>? ToValidationErrors(IOperationResult result)
+    {
+        var fieldErrors = result.GetFieldErrors();
+        if (fieldErrors.Count == 0 && result.Errors.Count == 0)
+        {
+            return null;
+        }
+
+        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        var keyedMessages = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var pair in fieldErrors)
+        {
+            if (pair.Value is null)
+            {
+                continue;
+            }
+
+            errors[pair.Key] = [.. pair.Value];
+            foreach (var message in pair.Value)
+            {
+                keyedMessages[message] = keyedMessages.GetValueOrDefault(message) + 1;
+            }
+        }
+
+        var general = new List<string>();
+        foreach (var message in result.Errors)
+        {
+            if (keyedMessages.TryGetValue(message, out var remaining) && remaining > 0)
+            {
+                keyedMessages[message] = remaining - 1;
+            }
+            else
+            {
+                general.Add(message);
+            }
+        }
+
+        if (general.Count > 0)
+        {
+            errors[GeneralErrorKey] = errors.TryGetValue(GeneralErrorKey, out var existing) ? [.. existing, .. general] : [.. general];
+        }
+
+        return errors;
     }
 
     /// <summary>Maps a status to a bodyless response kind and HTTP code — shared by the MVC and Minimal API surfaces.</summary>

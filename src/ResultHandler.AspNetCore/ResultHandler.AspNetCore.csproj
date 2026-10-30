@@ -1,17 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <PackageId>ResponseResultHandler.AspNetCore</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler - ASP.NET Core</Title>
-    <Version>13.3.0</Version>
+    <Version>14.0.0</Version>
     <Product>ResponseResultHandler.AspNetCore</Product>
     <Description>ASP.NET Core integration for ResponseResultHandler: converts IOperationResult/IOperationResult&lt;T&gt; into IActionResult and RFC 9457 Problem Details responses.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>AspNetCore ProblemDetails RFC9457 Response Result Handler CQRS MediatR OpenAPI</PackageTags>
-    <PackageReleaseNotes>v13.3 - ProducesEnveloped&lt;T&gt;() / ProducesEnveloped(): documents the success body ToEnvelopedResult writes (OperationDataResult&lt;T&gt; or OperationResult) for OpenAPI, so API docs and generated clients see the envelope and its data type.
+    <PackageReleaseNotes>v14.0 - Breaking: validation failures use the ASP.NET Core shape ("errors" is a field-to-messages map, "fieldErrors" removed). Failures go through IProblemDetailsService (CustomizeProblemDetails applies) and always carry instance and traceId. New: "code" extension from WithCode, AddResultProblemDetails() for framework errors, ProducesResultProblem(...), and ResultProblemDetails/ResultValidationProblemDetails OpenAPI schemas. See CHANGELOG.md for migration.
+
+v13.3 - ProducesEnveloped&lt;T&gt;() / ProducesEnveloped(): documents the success body ToEnvelopedResult writes (OperationDataResult&lt;T&gt; or OperationResult) for OpenAPI, so API docs and generated clients see the envelope and its data type.
 
 v13.2 - ProducesResultProblems(): one call on a route group documents the Problem Details responses (500, 401/403 for authorized endpoints, 422 for endpoints with a body) for OpenAPI, with no extra package dependency. See CHANGELOG.md for full details.</PackageReleaseNotes>
   </PropertyGroup>

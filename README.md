@@ -188,8 +188,14 @@ public class ProductsController : ControllerBase
 * **`ToEnvelopedActionResult()`** — success returns the *whole* result object (status/title/data) as
   the body instead of just the payload, with the same status-code-preserving behavior — useful when
   clients want metadata alongside the data.
-* **`ToProblemDetails(HttpContext? httpContext = null)`** — builds the `ProblemDetails` yourself;
-  pass `HttpContext` and `Instance` gets set to the current request path (RFC 9457 §3.1.4).
+* **`ToProblemDetails(HttpContext? httpContext = null)`**: builds the `ProblemDetails` yourself (for
+  example in exception middleware). Pass `HttpContext` to also get `instance` (the request path,
+  RFC 9457 §3.1.4) and `traceId`. A result with field errors or error messages becomes an
+  `HttpValidationProblemDetails` (§11).
+* Failures are written through ASP.NET Core's `IProblemDetailsService` when it is registered
+  (`AddProblemDetails()` or `AddResultProblemDetails()`, below), so your `CustomizeProblemDetails`
+  applies to them as well. `instance` and `traceId` are added when the response is written, so the
+  `httpContext` parameter is optional.
 * Every 4xx/5xx `ResultStatus` maps `ProblemDetails.Type` to the actual RFC section that defines it
   (RFC 9110, RFC 6585, RFC 4918, RFC 7725, RFC 8470); 1xx/2xx/3xx use `about:blank` per RFC 9457
   §4.2.1, since those aren't "problems".
@@ -206,8 +212,47 @@ A failed `GetById(999)` call above produces:
   "title": "Not Found",
   "status": 404,
   "detail": "Product 999 does not exist.",
-  "instance": "/api/products/999"
+  "instance": "/api/products/999",
+  "traceId": "00-3f1c...-01"
 }
+```
+
+`traceId` is `Activity.Current?.Id ?? HttpContext.TraceIdentifier`, the same value ASP.NET Core uses, so
+a client can quote it and you can find the request in your logs.
+
+**Error codes.** Two failures can share a status (`409` for "slug taken" and "email taken") and differ
+only in `detail`, which is text for people. `WithCode` (`ResultHandler.Facade`) attaches a stable,
+machine-readable code that clients can switch on; it is written as the `"code"` extension and carried
+through `Map`/`Bind`/`ToErrorDataResult`:
+
+```csharp
+return Result.Conflict("That slug is already taken.").WithCode("Tenant.SlugTaken");
+```
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+  "title": "Conflict",
+  "status": 409,
+  "detail": "That slug is already taken.",
+  "code": "Tenant.SlugTaken",
+  "traceId": "00-3f1c...-01"
+}
+```
+
+**Framework errors in the same shape.** Some failures never reach your code: `401`/`403` from
+authentication, `404` for unknown routes, `405`, `415`, `429` from rate limiting, unhandled exceptions.
+`AddResultProblemDetails()` registers ASP.NET Core's Problem Details services with a customization that
+gives those responses the same `type` URIs, `title`, `instance` and `traceId` as failed results. Your own
+`CustomizeProblemDetails` still runs, after it:
+
+```csharp
+builder.Services.AddResultProblemDetails(options =>
+    options.CustomizeProblemDetails = context => context.ProblemDetails.Extensions["tenant"] = "acme");
+
+var app = builder.Build();
+app.UseExceptionHandler(); // skip if your own middleware already handles exceptions
+app.UseStatusCodePages();  // bodyless 4xx/5xx responses get a Problem Details body
 ```
 
 ---
@@ -257,16 +302,21 @@ app.Run();
 **Documenting the error responses.** A result-returning endpoint can fail with Problem Details, but
 OpenAPI generators only see what the endpoint declares. `ProducesResultProblems()` declares the
 common failures for a whole route group in one call: `500` always, `401`/`403` when the endpoint
-requires authorization, and `422` when it reads a request body. Status codes an endpoint already
-declares are left alone, and it works with both `Microsoft.AspNetCore.OpenApi` and Swashbuckle
-(it only adds standard endpoint metadata, no extra package):
+requires authorization, and `400`/`422` when it reads a request body. `ProducesResultProblem(...)`
+adds endpoint-specific statuses such as `404` or `409`. Status codes an endpoint already declares are
+left alone, and it works with both `Microsoft.AspNetCore.OpenApi` and Swashbuckle (it only adds
+standard endpoint metadata, no extra package):
 
 ```csharp
 var api = app.MapGroup("/api").ProducesResultProblems();
 
 api.MapGet("/products/{id:int}", (int id, ProductService products) => products.GetById(id).ToResult())
-    .ProducesProblem(StatusCodes.Status404NotFound); // endpoint-specific statuses stay explicit
+    .ProducesResultProblem(StatusCodes.Status404NotFound);
 ```
+
+The responses are described with two schemas, so Scalar, Swagger UI and generated clients show the
+real body: `ResultProblemDetails` (RFC 9457 members plus `code` and `traceId`) and, for `400`/`422`,
+`ResultValidationProblemDetails`, which adds the `errors` map (`ResultHandler.AspNetCore.OpenApi`).
 
 **Documenting the success body.** `ToEnvelopedResult()` writes the whole envelope on success, but an
 endpoint returning `IResult` gives OpenAPI no type to describe it. `ProducesEnveloped<T>()` declares it as
@@ -653,19 +703,23 @@ public class FieldValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator
 failure into a different result type, same as they carry `Title`/`Status`/`Detail`/`Errors`;
 `Result.Combine` (§8) merges `FieldErrors` from every combined failure instead.
 
-`ResultHandler.AspNetCore`'s `ToProblemDetails()` (§5/§6) adds a failed result's `FieldErrors` to the
-Problem Details body as a `"fieldErrors"` extension when non-empty:
+`ResultHandler.AspNetCore`'s `ToProblemDetails()` (§5/§6) writes a failure that has `FieldErrors` or
+`Errors` as an `HttpValidationProblemDetails`, the same shape ASP.NET Core uses for its own validation
+responses: `"errors"` maps each field to its messages. Messages in `Errors` that don't belong to a field
+(a flat `Result.Invalid(...)`, or the non-field part of a `Result.Combine`) go under the `""` key, like
+ASP.NET Core's model-level errors. `Errors` repeats the field messages in memory, but they are written
+only once:
 
 ```json
 {
   "type": "https://tools.ietf.org/html/rfc9110#section-15.5.21",
   "title": "Validation Failed",
   "status": 422,
-  "errors": ["Name is required.", "Price must be greater than zero."],
-  "fieldErrors": {
+  "errors": {
     "Name": ["Name is required."],
     "Price": ["Price must be greater than zero."]
-  }
+  },
+  "traceId": "00-3f1c...-01"
 }
 ```
 
@@ -691,8 +745,10 @@ JsonSerializer.Serialize(Result.NotFound<ProductDto>("Product 42 does not exist.
 }
 ```
 
-`Detail` is omitted entirely when `null`; `errors` and `fieldErrors` are always present, empty
-(`[]`/`{}`) when the failure doesn't carry any (see §11).
+`Detail` and `code` (§5) are omitted entirely when `null`; `errors` and `fieldErrors` are always
+present, empty (`[]`/`{}`) when the failure doesn't carry any (see §11). This is the shape of the result
+object itself (and of the `ToEnvelopedResult` success body); failed HTTP responses are Problem Details
+(§5/§6).
 
 ---
 ## 13. Equality & debugging

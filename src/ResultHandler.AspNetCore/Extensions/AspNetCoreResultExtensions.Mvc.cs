@@ -65,8 +65,5 @@ public static partial class AspNetCoreResultExtensions
     }
 
     private static ObjectResult ToProblemActionResult(IOperationResult result, HttpContext? httpContext)
-        => new(result.ToProblemDetails(httpContext))
-        {
-            StatusCode = (int)result.Status.ToHttpStatusCode(),
-        };
+        => new ProblemDetailsObjectResult(result.ToProblemDetails(httpContext));
 }

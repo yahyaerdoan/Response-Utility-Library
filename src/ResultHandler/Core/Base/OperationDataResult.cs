@@ -18,11 +18,18 @@ public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, Resul
     : OperationResult(isSuccessful, status, title, detail, errors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
 {
     /// <summary>Sets <paramref name="errors"/> and <paramref name="fieldErrors"/> independently — see the matching constructor on <see cref="OperationResult"/>.</summary>
-    [JsonConstructor]
     public OperationDataResult([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
         : this(data, isSuccessful, status, title, detail, errors)
     {
         FieldErrors = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
+    }
+
+    /// <summary>Sets every member, including <paramref name="code"/>; see the matching constructor on <see cref="OperationResult"/>.</summary>
+    [JsonConstructor]
+    public OperationDataResult([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors, string? code)
+        : this(data, isSuccessful, status, title, detail, errors, fieldErrors)
+    {
+        Code = code;
     }
 
     /// <inheritdoc cref="IOperationResult{T}.Data"/>
