@@ -18,6 +18,15 @@ namespace ResultHandler.Tests.Results;
 
 public class ResultExceptionHandlerTests
 {
+    public static TheoryData<Exception, string> BuiltInCodes() => new()
+    {
+        { new BadHttpRequestException("Failed to bind parameter \"Guid id\" from \"abc\"."), ResultErrorCodes.InvalidRequest },
+        { new HttpRequestException("Connection refused."), ResultErrorCodes.UpstreamFailed },
+        { new TimeoutException(), ResultErrorCodes.UpstreamTimeout },
+        { new TaskCanceledException("Timed out.", new TimeoutException()), ResultErrorCodes.UpstreamTimeout },
+        { new InvalidOperationException(), ResultErrorCodes.ServerError },
+    };
+
     [Fact]
     public async Task UnmappedException_InProduction_Is500WithGenericDetail()
     {
@@ -130,6 +139,56 @@ public class ResultExceptionHandlerTests
         var error = Assert.Throws<InvalidOperationException>(() => options.Resolve(new InvalidOperationException(), new DefaultHttpContext()));
 
         Assert.Contains("must return a failure", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task BuiltInAnswers_HaveNoCode_ByDefault()
+    {
+        await using var app = await StartAsync(Environments.Production, _ => { }, () => throw new InvalidOperationException("Boom."));
+
+        var (_, body) = await GetAsync(app, "/throw");
+
+        Assert.False(body.TryGetProperty("code", out _));
+    }
+
+    [Fact]
+    public async Task BuiltInAnswers_CarryTheirCode_WhenIncludeErrorCodesIsOn()
+    {
+        await using var app = await StartAsync(Environments.Production, options => options.IncludeErrorCodes = true, () => throw new InvalidOperationException("Boom."));
+
+        var (status, body) = await GetAsync(app, "/throw");
+
+        Assert.Equal(HttpStatusCode.InternalServerError, status);
+        Assert.Equal(ResultErrorCodes.ServerError, body.GetProperty("code").GetString());
+    }
+
+    [Theory]
+    [MemberData(nameof(BuiltInCodes))]
+    public void EachBuiltInAnswer_HasItsCode(Exception exception, string code)
+    {
+        var options = new ResultExceptionHandlerOptions { IncludeErrorCodes = true };
+
+        Assert.Equal(code, options.Resolve(exception, new DefaultHttpContext()).Code);
+    }
+
+    [Fact]
+    public void UnreadableRequest_KeepsItsFieldErrors_WithTheCode()
+    {
+        var options = new ResultExceptionHandlerOptions { IncludeErrorCodes = true };
+
+        var result = options.Resolve(new BadHttpRequestException("Failed to bind parameter \"Guid id\" from \"abc\"."), new DefaultHttpContext());
+
+        Assert.Equal(ResultErrorCodes.InvalidRequest, result.Code);
+        Assert.True(result.Errors.ContainsKey("Id"));
+    }
+
+    [Fact]
+    public void MappedException_KeepsItsOwnCode_WhenIncludeErrorCodesIsOn()
+    {
+        var options = new ResultExceptionHandlerOptions { IncludeErrorCodes = true }
+            .Map<InvalidOperationException>(exception => Result.Conflict(exception.Message).WithCode("Order.Locked"));
+
+        Assert.Equal("Order.Locked", options.Resolve(new InvalidOperationException("Locked."), new DefaultHttpContext()).Code);
     }
 
     private static async Task<WebApplication> StartAsync(

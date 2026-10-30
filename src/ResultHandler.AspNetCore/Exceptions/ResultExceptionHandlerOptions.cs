@@ -17,6 +17,13 @@ public sealed class ResultExceptionHandlerOptions
     /// <summary>Whether unmapped exceptions put <see cref="Exception.Message"/> in <c>detail</c>. Defaults to <see langword="true"/> only in the Development environment; elsewhere a generic message is used so internals never reach clients.</summary>
     public bool ExposeExceptionMessages { get; set; }
 
+    /// <summary>
+    /// Whether the built-in answers carry a <see cref="ResultErrorCodes"/> code (<c>"Request.Invalid"</c>, <c>"Upstream.Failed"</c>,
+    /// <c>"Upstream.Timeout"</c>, <c>"Server.Error"</c>), written as the Problem Details <c>"code"</c>. Off by default, so existing responses stay the
+    /// same; mapped exceptions set their own code with <c>WithCode</c>.
+    /// </summary>
+    public bool IncludeErrorCodes { get; set; }
+
     /// <summary>Maps <typeparamref name="TException"/>, and any exception derived from it that has no closer mapping, to a failed result.</summary>
     /// <example>
     /// <code>
@@ -62,13 +69,16 @@ public sealed class ResultExceptionHandlerOptions
             }
         }
 
-        return exception switch
+        var (fallback, code) = exception switch
         {
-            BadHttpRequestException badRequest => FromBadRequest(badRequest),
-            HttpRequestException => ExposeExceptionMessages ? Result.BadGateway(exception.Message) : Result.BadGateway(),
-            TimeoutException or TaskCanceledException { InnerException: TimeoutException } => ExposeExceptionMessages ? Result.GatewayTimeout(exception.Message) : Result.GatewayTimeout(),
-            _ => ExposeExceptionMessages ? Result.InternalServerError(exception.Message) : Result.InternalServerError(),
+            BadHttpRequestException badRequest => (FromBadRequest(badRequest), ResultErrorCodes.InvalidRequest),
+            HttpRequestException => (ExposeExceptionMessages ? Result.BadGateway(exception.Message) : Result.BadGateway(), ResultErrorCodes.UpstreamFailed),
+            TimeoutException or TaskCanceledException { InnerException: TimeoutException } =>
+                (ExposeExceptionMessages ? Result.GatewayTimeout(exception.Message) : Result.GatewayTimeout(), ResultErrorCodes.UpstreamTimeout),
+            _ => (ExposeExceptionMessages ? Result.InternalServerError(exception.Message) : Result.InternalServerError(), ResultErrorCodes.ServerError),
         };
+
+        return IncludeErrorCodes ? fallback.WithCode(code) : fallback;
     }
 
     private OperationResult FromBadRequest(BadHttpRequestException exception)

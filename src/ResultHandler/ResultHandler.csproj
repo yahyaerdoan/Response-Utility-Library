@@ -5,13 +5,15 @@
     <PackageId>ResponseResultHandler</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler</Title>
-    <Version>16.1.0</Version>
+    <Version>16.2.0</Version>
     <Product>ResponseResultHandler</Product>
     <Description>The Result pattern for .NET: an immutable result with an HTTP-mappable status, a title and detail, errors keyed by field and optional data, plus Map, Bind, Ensure and Combine to chain them without exceptions. No dependencies.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>result result-pattern railway-oriented-programming functional error-handling validation</PackageTags>
-    <PackageReleaseNotes>v16.1 - Map, Bind, Ensure, Match, OnSuccess, OnFailure (sync and async) and Combine throw ArgumentNullException naming the parameter when given null; async methods throw before returning their task. See CHANGELOG.md.
+    <PackageReleaseNotes>v16.2 - No changes in this package. Versions move together; see CHANGELOG.md.
+
+v16.1 - Map, Bind, Ensure, Match, OnSuccess, OnFailure (sync and async) and Combine throw ArgumentNullException naming the parameter when given null; async methods throw before returning their task. See CHANGELOG.md.
 
 v16.0 - Breaking (serialization): a serialized result writes "errors" as the field-to-messages map Problem Details use ("" for messages without a field) and no longer writes "fieldErrors". Breaking (API): IOperationResult.Errors is the field-to-messages map ("" for messages without a field), replacing the flat Errors list, FieldErrors, IHasFieldErrors and GetFieldErrors(); the 1xx factories and UseProxy are removed. New: IOperationResult.Location, WithLocation(uri); redirect factories set Location. Versions move together; see CHANGELOG.md.
 
