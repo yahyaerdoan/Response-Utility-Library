@@ -47,7 +47,7 @@ v15.0 - First release: ValidationResult.ToFieldErrors()/ToOperationResult()/ToFa
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.401">
+    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.403">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -58,7 +58,7 @@ v15.0 - First release: ValidationResult.ToFieldErrors()/ToOperationResult()/ToFa
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.403" />
     <PackageReference Update="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
   </ItemGroup>
 
