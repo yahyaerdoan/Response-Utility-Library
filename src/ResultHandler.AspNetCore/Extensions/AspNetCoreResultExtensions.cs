@@ -7,7 +7,7 @@ using ResultHandler.Mapping;
 
 namespace ResultHandler.AspNetCore.Extensions;
 
-/// <summary>Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core response types. Split across <c>.Mvc.cs</c> (<see cref="IActionResult"/>), <c>.MinimalApi.cs</c> (<see cref="IResult"/>), and this file (shared RFC 9457 <see cref="ProblemDetails"/> and bodyless-status logic). Failures are written through <see cref="IProblemDetailsService"/> when one is registered (<c>AddProblemDetails</c>/<c>AddResultProblemDetails</c>), so <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/> applies to them too.</summary>
+/// <summary>Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core response types. Split across <c>.Mvc.cs</c> (<see cref="IActionResult"/>), <c>.MinimalApi.cs</c> (<see cref="IResult"/>), and this file (shared RFC 9457 <see cref="ProblemDetails"/> and bodyless-status logic). <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/> applies to failures too: Minimal API results are written through <see cref="IProblemDetailsService"/>, MVC results apply it and then use normal content negotiation.</summary>
 public static partial class AspNetCoreResultExtensions
 {
     /// <summary>The <c>"errors"</c> key for messages not tied to a field, matching ASP.NET Core's model-level <c>ModelState</c> key.</summary>
