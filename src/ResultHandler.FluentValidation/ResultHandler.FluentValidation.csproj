@@ -14,10 +14,6 @@
     <PackageReleaseNotes>v15.0 - First release: ValidationResult.ToFieldErrors()/ToOperationResult()/ToFailure&lt;TResult&gt;(), WithResultValidation() for Minimal API endpoints and groups, AddResultValidation() for MVC. See CHANGELOG.md.</PackageReleaseNotes>
   </PropertyGroup>
 
-  <!-- New package: nothing on nuget.org to validate against until its first stable release. -->
-  <PropertyGroup Condition="'$(IsPublishBuild)' == 'true'">
-    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
-  </PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
