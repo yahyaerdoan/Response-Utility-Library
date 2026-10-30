@@ -1,9 +1,26 @@
 # Changelog
 
-All notable changes to `ResponseResultHandler` and `ResponseResultHandler.AspNetCore` are documented
-here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project does not
-yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
-always called out explicitly below.
+All notable changes to `ResponseResultHandler`, `ResponseResultHandler.AspNetCore` and
+`ResponseResultHandler.FluentValidation` are documented here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+From 16.0.0 on, the packages follow [Semantic Versioning](https://semver.org/): breaking changes to the public
+API or to the JSON the packages write only come in a major version, each listed here with migration notes;
+minor versions add features and patch versions fix bugs. The three packages always share a version.
+
+## [16.1.0]
+
+### Changed
+- Every public method of `ResultExtensions` (`Map`, `Bind`, `Ensure`, `Match`, `OnSuccess`, `OnFailure` and their async
+  forms), `Result.Combine`, the `ToResult`/`ToActionResult` family and `ResultStatusJsonConverter` throws
+  `ArgumentNullException` naming the parameter when given `null`, instead of a `NullReferenceException` from deep
+  inside. Async methods throw before returning their task, so the mistake shows at the call, not at the `await`.
+  `HttpContext? httpContext` stays optional.
+
+### Documentation
+- Package descriptions and tags describe each package; `PackageProjectUrl` points to the repository.
+- The packages follow Semantic Versioning (see the top of this file); added `SECURITY.md`, `CONTRIBUTING.md`,
+  issue and pull request templates.
 
 ## [16.0.0]
 

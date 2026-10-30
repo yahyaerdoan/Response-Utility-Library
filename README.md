@@ -1,10 +1,12 @@
 ﻿# ResponseResultHandler
 
-A Result-Pattern library for .NET (net8.0–net10.0). Wraps the outcome of an
-operation — success or failure, an HTTP-mappable status, a title/detail, and optional data — in an
-immutable object instead of throwing exceptions or returning bare booleans.
+A Result-pattern library for .NET (net8.0 to net10.0). It wraps the outcome of an operation (success or
+failure, an HTTP-mappable status, a title and detail, errors keyed by field, and optional data) in an immutable
+object instead of throwing exceptions or returning bare booleans, and turns it into RFC 9457 Problem Details
+in ASP.NET Core. It needs no MediatR or other framework.
 
-This repository is two NuGet packages sharing this README:
+This repository is three NuGet packages sharing this README; the ASP.NET Core and FluentValidation packages are
+optional:
 
 | Package | Project | Purpose |
 |---|---|---|

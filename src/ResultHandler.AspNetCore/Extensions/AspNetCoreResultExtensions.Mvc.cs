@@ -12,6 +12,8 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>Maps to an HTTP response without a body on success — use for endpoints that don't return data (e.g. fire-and-forget commands). When <paramref name="httpContext"/> is provided, a failed result's <see cref="ProblemDetails.Instance"/> is set to the current request path.</summary>
     public static IActionResult ToActionResult(this IOperationResult result, HttpContext? httpContext = null)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccessful)
         {
             EnsureFinalStatus(result.Status);
@@ -29,6 +31,8 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>Maps to an HTTP response whose success body is the raw <typeparamref name="T"/> data. 1xx/3xx/NoContent/NotModified carry no body. When <paramref name="httpContext"/> is provided, a failed result's <see cref="ProblemDetails.Instance"/> is set to the current request path.</summary>
     public static IActionResult ToActionResult<T>(this IOperationResult<T> result, HttpContext? httpContext = null)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccessful)
         {
             EnsureFinalStatus(result.Status);
@@ -41,6 +45,8 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>Maps to an HTTP response whose success body is the full result envelope (data + metadata). 1xx/3xx/NoContent/NotModified carry no body. When <paramref name="httpContext"/> is provided, a failed result's <see cref="ProblemDetails.Instance"/> is set to the current request path.</summary>
     public static IActionResult ToEnvelopedActionResult(this IOperationResult result, HttpContext? httpContext = null)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccessful)
         {
             EnsureFinalStatus(result.Status);

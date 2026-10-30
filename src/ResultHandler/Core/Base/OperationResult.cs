@@ -52,6 +52,7 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
     public static OperationResult Failure(string title, string detail, ResultStatus status)
         => new ErrorResult(title, status, detail);
 
+    /// <summary>Whether <paramref name="obj"/> is a result of the same runtime type with equal members, comparing <see cref="IOperationResult.Errors"/> by content.</summary>
     public override bool Equals(object? obj)
     {
         if (obj is null || obj.GetType() != GetType())
@@ -69,6 +70,7 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
             && ErrorsEqual(other.Errors);
     }
 
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         var hash = default(HashCode);
@@ -96,6 +98,7 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
         return hash.ToHashCode();
     }
 
+    /// <summary>The status, its HTTP code and the title, for logs and debugging: <c>NotFound (404): Not Found</c>.</summary>
     public override string ToString()
         => $"{Status} ({(int)Status.ToHttpStatusCode()}): {Title}";
 
