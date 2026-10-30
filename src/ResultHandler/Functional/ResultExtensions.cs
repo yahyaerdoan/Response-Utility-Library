@@ -11,15 +11,28 @@ public static partial class ResultExtensions
 {
     /// <summary>Reduces a result into a single value depending on whether it succeeded.</summary>
     public static TOut Match<TOut>(this IOperationResult result, Func<IOperationResult, TOut> onSuccess, Func<IOperationResult, TOut> onFailure)
-        => result.IsSuccessful ? onSuccess(result) : onFailure(result);
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return result.IsSuccessful ? onSuccess(result) : onFailure(result);
+    }
 
     /// <summary>Reduces a data result into a single value, exposing <see cref="IOperationResult{T}.Data"/> directly on success.</summary>
     public static TOut Match<T, TOut>(this IOperationResult<T> result, Func<T, TOut> onSuccess, Func<IOperationResult<T>, TOut> onFailure)
-        => result.IsSuccessful ? onSuccess(result.Data) : onFailure(result);
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return result.IsSuccessful ? onSuccess(result.Data) : onFailure(result);
+    }
 
     /// <summary>Runs a side effect when <paramref name="result"/> is successful and returns it unchanged, for fluent chaining.</summary>
     public static IOperationResult OnSuccess(this IOperationResult result, Action<IOperationResult> action)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(action);
+
         if (result.IsSuccessful)
         {
             action(result);
@@ -31,6 +44,9 @@ public static partial class ResultExtensions
     /// <summary>Runs a side effect with the typed <see cref="IOperationResult{T}.Data"/> when <paramref name="result"/> is successful and returns it unchanged, for fluent chaining.</summary>
     public static IOperationResult<T> OnSuccess<T>(this IOperationResult<T> result, Action<T> action)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(action);
+
         if (result.IsSuccessful)
         {
             action(result.Data);
@@ -42,6 +58,9 @@ public static partial class ResultExtensions
     /// <summary>Runs a side effect when <paramref name="result"/> failed and returns it unchanged, for fluent chaining.</summary>
     public static IOperationResult OnFailure(this IOperationResult result, Action<IOperationResult> action)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(action);
+
         if (!result.IsSuccessful)
         {
             action(result);
@@ -52,33 +71,56 @@ public static partial class ResultExtensions
 
     /// <summary>Transforms the success payload, short-circuiting a failure into an equivalent <see cref="ErrorDataResult{T}"/>.</summary>
     public static IOperationResult<TOut> Map<T, TOut>(this IOperationResult<T> result, Func<T, TOut> mapper)
-        => result.IsSuccessful
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(mapper);
+        return result.IsSuccessful
             ? new SuccessDataResult<TOut>(mapper(result.Data), result.Title, result.Status)
             : Propagate<TOut>(result);
+    }
 
     /// <summary>Chains into another result-returning operation, short-circuiting on failure.</summary>
     public static IOperationResult<TOut> Bind<T, TOut>(this IOperationResult<T> result, Func<T, IOperationResult<TOut>> binder)
-        => result.IsSuccessful
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(binder);
+        return result.IsSuccessful
             ? binder(result.Data)
             : Propagate<TOut>(result);
+    }
 
     /// <summary>Chains into an operation that returns no data (for example a command), short-circuiting on failure.</summary>
     public static IOperationResult Bind<T>(this IOperationResult<T> result, Func<T, IOperationResult> binder)
-        => result.IsSuccessful
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(binder);
+        return result.IsSuccessful
             ? binder(result.Data)
             : Propagate(result);
+    }
 
     /// <summary>Turns a still-successful result into a validation failure when <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
     public static IOperationResult<T> Ensure<T>(this IOperationResult<T> result, Func<T, bool> predicate, string errorMessage)
-        => result.IsSuccessful && !predicate(result.Data)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(errorMessage);
+        return result.IsSuccessful && !predicate(result.Data)
             ? new ErrorDataResult<T>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errorMessage)
             : result;
+    }
 
     /// <summary>Turns a still-successful result into a failure with a custom title/status when <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
     public static IOperationResult<T> Ensure<T>(this IOperationResult<T> result, Func<T, bool> predicate, string title, string detail, ResultStatus status)
-        => result.IsSuccessful && !predicate(result.Data)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(title);
+        ArgumentNullException.ThrowIfNull(detail);
+        return result.IsSuccessful && !predicate(result.Data)
             ? new ErrorDataResult<T>(title, status, detail)
             : result;
+    }
 
     /// <summary>Re-projects a failed <see cref="IOperationResult"/> into the typed <see cref="ErrorDataResult{T}"/> a caller must return, carrying title/status/detail/errors/code over unchanged. Only call when <paramref name="failed"/> is not successful.</summary>
     /// <example>
@@ -91,7 +133,10 @@ public static partial class ResultExtensions
     /// </code>
     /// </example>
     public static ErrorDataResult<T> ToErrorDataResult<T>(this IOperationResult failed)
-        => Propagate<T>(failed);
+    {
+        ArgumentNullException.ThrowIfNull(failed);
+        return Propagate<T>(failed);
+    }
 
     private static ErrorResult Propagate(IOperationResult failed)
     {

@@ -19,9 +19,12 @@ namespace ResultHandler.Core.Base;
 public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? errors = null, string? code = null)
     : OperationResult(isSuccessful, status, title, detail, errors, code), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
 {
+    [AllowNull]
+    private readonly T _data = data;
+
     /// <inheritdoc cref="IOperationResult{T}.Data"/>
     [MaybeNull]
-    public T Data { get; } = data!;
+    public T Data => _data;
 
     /// <inheritdoc cref="IOperationResult.IsSuccessful"/>
     [MemberNotNullWhen(true, nameof(Data))]
@@ -39,6 +42,7 @@ public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, Resul
     public static new OperationDataResult<T> Failure(string title, string detail, ResultStatus status)
         => new ErrorDataResult<T>(title, status, detail);
 
+    /// <summary>Whether <paramref name="obj"/> is a result of the same runtime type with equal members, comparing <see cref="IOperationResult.Errors"/> by content.</summary>
     public override bool Equals(object? obj)
     {
         if (obj is null || obj.GetType() != GetType())
@@ -51,6 +55,7 @@ public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, Resul
             && EqualityComparer<T>.Default.Equals(Data, other.Data);
     }
 
+    /// <inheritdoc />
     public override int GetHashCode()
         => HashCode.Combine(base.GetHashCode(), Data);
 }

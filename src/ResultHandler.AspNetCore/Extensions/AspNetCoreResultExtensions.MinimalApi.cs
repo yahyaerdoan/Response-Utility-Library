@@ -12,6 +12,8 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>Maps to a Minimal API <see cref="IResult"/> without a body on success. Prefer this over <see cref="ToActionResult(IOperationResult, HttpContext?)"/> in Minimal API delegates — returning <see cref="IActionResult"/> there triggers analyzer warning ASP0004 and is opaque to OpenAPI. <paramref name="httpContext"/>, if given, sets <see cref="ProblemDetails.Instance"/> on failure.</summary>
     public static IResult ToResult(this IOperationResult result, HttpContext? httpContext = null)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccessful)
         {
             EnsureFinalStatus(result.Status);
@@ -29,6 +31,8 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>Maps to a Minimal API <see cref="IResult"/> whose success body is the raw <typeparamref name="T"/> data (1xx/3xx/NoContent/NotModified carry no body). Prefer this over <see cref="ToActionResult{T}(IOperationResult{T}, HttpContext?)"/> in Minimal API delegates — see <see cref="ToResult(IOperationResult, HttpContext?)"/>.</summary>
     public static IResult ToResult<T>(this IOperationResult<T> result, HttpContext? httpContext = null)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccessful)
         {
             EnsureFinalStatus(result.Status);
@@ -41,6 +45,8 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>Maps to a Minimal API <see cref="IResult"/> whose success body is the full result envelope, data + metadata (1xx/3xx/NoContent/NotModified carry no body). Prefer this over <see cref="ToEnvelopedActionResult(IOperationResult, HttpContext?)"/> in Minimal API delegates — see <see cref="ToResult(IOperationResult, HttpContext?)"/>.</summary>
     public static IResult ToEnvelopedResult(this IOperationResult result, HttpContext? httpContext = null)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccessful)
         {
             EnsureFinalStatus(result.Status);
