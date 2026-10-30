@@ -127,7 +127,8 @@ public class HttpSemanticsTests
         Assert.Equal(201, httpContext.Response.StatusCode);
         Assert.Equal("/api/orders/5", httpContext.Response.Headers.Location.ToString());
         httpContext.Response.Body.Position = 0;
-        Assert.Equal("5", await new StreamReader(httpContext.Response.Body).ReadToEndAsync(TestContext.Current.CancellationToken));
+        using var reader = new StreamReader(httpContext.Response.Body);
+        Assert.Equal("5", await reader.ReadToEndAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -211,7 +212,7 @@ public class HttpSemanticsTests
         builder.Logging.ClearProviders();
         if (logs is not null)
         {
-            builder.Logging.AddProvider(new CapturingLoggerProvider(logs));
+            builder.Services.AddSingleton<ILoggerProvider>(_ => new CapturingLoggerProvider(logs));
         }
 
         builder.Services.AddResultExceptionHandler();
@@ -239,7 +240,13 @@ public class HttpSemanticsTests
 
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
         var text = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        return (response.StatusCode, text.Length == 0 ? default : JsonDocument.Parse(text).RootElement.Clone());
+        if (text.Length == 0)
+        {
+            return (response.StatusCode, default);
+        }
+
+        using var document = JsonDocument.Parse(text);
+        return (response.StatusCode, document.RootElement.Clone());
     }
 
     public sealed record OrderBody(Guid ServiceId, IReadOnlyList<OrderLine>? Lines);

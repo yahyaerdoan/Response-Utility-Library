@@ -82,7 +82,7 @@ public class ResultSuccessFactoryCoverageTests
 
         Assert.True(result.IsSuccessful);
         Assert.Equal(expectedStatus, result.Status);
-        Assert.Contains("https://example.com/target", result.Title);
+        Assert.Contains("https://example.com/target", result.Title, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -94,7 +94,7 @@ public class ResultSuccessFactoryCoverageTests
         Assert.True(result.IsSuccessful);
         Assert.Equal(expectedStatus, result.Status);
         Assert.Equal(42, result.Data);
-        Assert.Contains("https://example.com/target", result.Title);
+        Assert.Contains("https://example.com/target", result.Title, StringComparison.Ordinal);
     }
 
     [Fact]

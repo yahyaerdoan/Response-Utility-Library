@@ -167,6 +167,7 @@ public class ResultExceptionHandlerTests
         using var response = await client.GetAsync(path);
         var json = await response.Content.ReadAsStringAsync();
         Assert.StartsWith("application/problem+json", response.Content.Headers.ContentType?.ToString(), StringComparison.Ordinal);
-        return (response.StatusCode, JsonDocument.Parse(json).RootElement.Clone());
+        using var document = JsonDocument.Parse(json);
+        return (response.StatusCode, document.RootElement.Clone());
     }
 }
