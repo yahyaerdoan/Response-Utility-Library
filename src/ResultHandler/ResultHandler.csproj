@@ -92,7 +92,7 @@ v12 (breaking): Removed all members previously marked [Obsolete] — StatusMessa
 
   <ItemGroup>
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.403" />
-    <PackageReference Update="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
+    <PackageReference Update="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
   </ItemGroup>
 
 </Project>
