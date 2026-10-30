@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Routing;
+using ResultHandler.AspNetCore.Envelopes;
 using ResultHandler.AspNetCore.Extensions;
-using ResultHandler.Core.Base;
 using Xunit;
 
 namespace ResultHandler.Tests.Results;
@@ -19,7 +19,7 @@ public class EnvelopedResponseConventionTests
         var metadata = Assert.Single(ResponseMetadata(app, "/things/{id:int}"));
 
         Assert.Equal(StatusCodes.Status200OK, metadata.StatusCode);
-        Assert.Equal(typeof(OperationDataResult<ThingResponse>), metadata.Type);
+        Assert.Equal(typeof(ResultEnvelope<ThingResponse>), metadata.Type);
         Assert.Equal(["application/json"], metadata.ContentTypes);
     }
 
@@ -32,7 +32,7 @@ public class EnvelopedResponseConventionTests
         var metadata = Assert.Single(ResponseMetadata(app, "/things"));
 
         Assert.Equal(StatusCodes.Status201Created, metadata.StatusCode);
-        Assert.Equal(typeof(OperationDataResult<Guid>), metadata.Type);
+        Assert.Equal(typeof(ResultEnvelope<Guid>), metadata.Type);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class EnvelopedResponseConventionTests
         var metadata = Assert.Single(ResponseMetadata(app, "/things/{id:int}"));
 
         Assert.Equal(StatusCodes.Status200OK, metadata.StatusCode);
-        Assert.Equal(typeof(OperationResult), metadata.Type);
+        Assert.Equal(typeof(ResultEnvelope), metadata.Type);
     }
 
     [Fact]

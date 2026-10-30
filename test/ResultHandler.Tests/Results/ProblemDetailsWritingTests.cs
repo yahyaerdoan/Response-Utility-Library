@@ -126,6 +126,30 @@ public class ProblemDetailsWritingTests
         Assert.Equal("replaced", body.RootElement.GetProperty("traceId").GetString());
     }
 
+    [Fact]
+    public async Task ToEnvelopedResult_WritesOnlyTheEnvelopeMembers()
+    {
+        var httpContext = CreateHttpContext(services => { });
+
+        await Result.Created<string>("R-1").WithCode("Receipt.Created").ToEnvelopedResult().ExecuteAsync(httpContext);
+
+        using var body = await ReadBodyAsync(httpContext);
+        Assert.Equal(["resultData", "isSuccessful", "statusCode", "statusMessage", "code"], body.RootElement.EnumerateObject().Select(property => property.Name));
+        Assert.Equal(JsonValueKind.Number, body.RootElement.GetProperty("statusCode").ValueKind);
+        Assert.Equal(201, body.RootElement.GetProperty("statusCode").GetInt32());
+    }
+
+    [Fact]
+    public async Task ToEnvelopedResult_WithoutData_HasNoResultData()
+    {
+        var httpContext = CreateHttpContext(services => { });
+
+        await Result.Success().ToEnvelopedResult().ExecuteAsync(httpContext);
+
+        using var body = await ReadBodyAsync(httpContext);
+        Assert.Equal(["isSuccessful", "statusCode", "statusMessage"], body.RootElement.EnumerateObject().Select(property => property.Name));
+    }
+
     private static DefaultHttpContext CreateHttpContext(Action<IServiceCollection> configure)
     {
         var services = new ServiceCollection().AddLogging();
