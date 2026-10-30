@@ -36,7 +36,7 @@
   <PropertyGroup Condition="'$(IsPackable)' != 'false' AND '$(IsPublishBuild)' == 'true'">
     <EnablePackageValidation>true</EnablePackageValidation>
     <!-- Bump to each new stable release (not betas, prereleases aren't API-stable against each other). -->
-    <PackageValidationBaselineVersion>16.0.1</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>16.1.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsPackable)' != 'false'">
