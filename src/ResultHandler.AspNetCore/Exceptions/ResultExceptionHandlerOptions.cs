@@ -39,9 +39,18 @@ public sealed class ResultExceptionHandlerOptions
         return this;
     }
 
-    /// <summary>The closest mapping by type (the exception's own type first, then each base type), else the built-in fallback: <see cref="BadHttpRequestException"/> keeps its status code, everything else is a 500.</summary>
-    internal IOperationResult Resolve(Exception exception, HttpContext httpContext)
+    /// <summary>
+    /// The failed result <paramref name="exception"/> is answered with: the closest mapping by type (the exception's own type first, then each base
+    /// type), else the built-in fallback. <see cref="BadHttpRequestException"/> keeps its status code and names the offending field when it can;
+    /// <see cref="HttpRequestException"/> is a 502 and a timeout (<see cref="TimeoutException"/>, or an <c>HttpClient</c> timeout) a 504, since the
+    /// failure is in a service this one depends on; everything else is a 500. Mappings should be free of side effects: they may run more than once
+    /// per exception, for example when a logging handler asks for the status first.
+    /// </summary>
+    public IOperationResult Resolve(Exception exception, HttpContext httpContext)
     {
+        ArgumentNullException.ThrowIfNull(exception);
+        ArgumentNullException.ThrowIfNull(httpContext);
+
         for (var type = exception.GetType(); type is not null && type != typeof(object); type = type.BaseType)
         {
             if (_maps.TryGetValue(type, out var map))
@@ -53,19 +62,23 @@ public sealed class ResultExceptionHandlerOptions
             }
         }
 
-        if (exception is BadHttpRequestException badRequest)
+        return exception switch
         {
-            return FromBadRequest(badRequest);
-        }
-
-        return ExposeExceptionMessages ? Result.InternalServerError(exception.Message) : Result.InternalServerError();
+            BadHttpRequestException badRequest => FromBadRequest(badRequest),
+            HttpRequestException => ExposeExceptionMessages ? Result.BadGateway(exception.Message) : Result.BadGateway(),
+            TimeoutException or TaskCanceledException { InnerException: TimeoutException } => ExposeExceptionMessages ? Result.GatewayTimeout(exception.Message) : Result.GatewayTimeout(),
+            _ => ExposeExceptionMessages ? Result.InternalServerError(exception.Message) : Result.InternalServerError(),
+        };
     }
 
     private OperationResult FromBadRequest(BadHttpRequestException exception)
     {
         var status = exception.StatusCode.ToResultStatus();
-        var title = ReasonPhrases.GetReasonPhrase(exception.StatusCode);
+        var reasonPhrase = ReasonPhrases.GetReasonPhrase(exception.StatusCode);
+        var title = reasonPhrase.Length > 0 ? reasonPhrase : status.ToString();
         var detail = ExposeExceptionMessages ? exception.Message : _unreadableRequestMessage;
-        return OperationResult.Failure(title.Length > 0 ? title : status.ToString(), detail, status);
+        return RequestBindingErrors.From(exception) is { } fieldErrors
+            ? new OperationResult(false, status, title, detail, null, fieldErrors)
+            : OperationResult.Failure(title, detail, status);
     }
 }

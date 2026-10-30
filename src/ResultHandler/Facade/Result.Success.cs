@@ -1,4 +1,4 @@
-using ResultHandler.Core.Base;
+﻿using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
 using ResultHandler.Implementations.Success;
 
@@ -128,35 +128,35 @@ public static partial class Result
 
     /// <summary>Redirect (301 Moved Permanently); <paramref name="location"/> is interpolated into the title.</summary>
     public static OperationResult MovedPermanently(string location)
-        => new SuccessResult(string.Format(ResultTitles.MovedPermanentlyTemplate, location), ResultStatus.MovedPermanently);
+        => new SuccessResult(string.Format(ResultTitles.MovedPermanentlyTemplate, location), ResultStatus.MovedPermanently).WithLocation(location);
 
     /// <inheritdoc cref="MovedPermanently(string)"/>
     public static OperationDataResult<T> MovedPermanently<T>(T data, string location)
-        => new SuccessDataResult<T>(data, string.Format(ResultTitles.MovedPermanentlyTemplate, location), ResultStatus.MovedPermanently);
+        => new SuccessDataResult<T>(data, string.Format(ResultTitles.MovedPermanentlyTemplate, location), ResultStatus.MovedPermanently).WithLocation(location);
 
     /// <summary>Redirect (302 Found); <paramref name="location"/> is interpolated into the title.</summary>
     public static OperationResult Found(string location)
-        => new SuccessResult(string.Format(ResultTitles.FoundTemplate, location), ResultStatus.Found);
+        => new SuccessResult(string.Format(ResultTitles.FoundTemplate, location), ResultStatus.Found).WithLocation(location);
 
     /// <inheritdoc cref="Found(string)"/>
     public static OperationDataResult<T> Found<T>(T data, string location)
-        => new SuccessDataResult<T>(data, string.Format(ResultTitles.FoundTemplate, location), ResultStatus.Found);
+        => new SuccessDataResult<T>(data, string.Format(ResultTitles.FoundTemplate, location), ResultStatus.Found).WithLocation(location);
 
     /// <summary>Redirect (303 See Other); <paramref name="location"/> is interpolated into the title.</summary>
     public static OperationResult SeeOther(string location)
-        => new SuccessResult(string.Format(ResultTitles.SeeOtherTemplate, location), ResultStatus.SeeOther);
+        => new SuccessResult(string.Format(ResultTitles.SeeOtherTemplate, location), ResultStatus.SeeOther).WithLocation(location);
 
     /// <inheritdoc cref="SeeOther(string)"/>
     public static OperationDataResult<T> SeeOther<T>(T data, string location)
-        => new SuccessDataResult<T>(data, string.Format(ResultTitles.SeeOtherTemplate, location), ResultStatus.SeeOther);
+        => new SuccessDataResult<T>(data, string.Format(ResultTitles.SeeOtherTemplate, location), ResultStatus.SeeOther).WithLocation(location);
 
     /// <summary>Redirect (305 Use Proxy); <paramref name="proxy"/> is interpolated into the title.</summary>
     public static OperationResult UseProxy(string proxy)
-        => new SuccessResult(string.Format(ResultTitles.UseProxyTemplate, proxy), ResultStatus.UseProxy);
+        => new SuccessResult(string.Format(ResultTitles.UseProxyTemplate, proxy), ResultStatus.UseProxy).WithLocation(proxy);
 
     /// <inheritdoc cref="UseProxy(string)"/>
     public static OperationDataResult<T> UseProxy<T>(T data, string proxy)
-        => new SuccessDataResult<T>(data, string.Format(ResultTitles.UseProxyTemplate, proxy), ResultStatus.UseProxy);
+        => new SuccessDataResult<T>(data, string.Format(ResultTitles.UseProxyTemplate, proxy), ResultStatus.UseProxy).WithLocation(proxy);
 
     /// <summary>Success (304 Not Modified), no data.</summary>
     public static OperationResult NotModified()
@@ -168,17 +168,17 @@ public static partial class Result
 
     /// <summary>Redirect (307 Temporary Redirect); <paramref name="location"/> is interpolated into the title.</summary>
     public static OperationResult TemporaryRedirect(string location)
-        => new SuccessResult(string.Format(ResultTitles.TemporaryRedirectTemplate, location), ResultStatus.TemporaryRedirect);
+        => new SuccessResult(string.Format(ResultTitles.TemporaryRedirectTemplate, location), ResultStatus.TemporaryRedirect).WithLocation(location);
 
     /// <inheritdoc cref="TemporaryRedirect(string)"/>
     public static OperationDataResult<T> TemporaryRedirect<T>(T data, string location)
-        => new SuccessDataResult<T>(data, string.Format(ResultTitles.TemporaryRedirectTemplate, location), ResultStatus.TemporaryRedirect);
+        => new SuccessDataResult<T>(data, string.Format(ResultTitles.TemporaryRedirectTemplate, location), ResultStatus.TemporaryRedirect).WithLocation(location);
 
     /// <summary>Redirect (308 Permanent Redirect); <paramref name="location"/> is interpolated into the title.</summary>
     public static OperationResult PermanentRedirect(string location)
-        => new SuccessResult(string.Format(ResultTitles.PermanentRedirectTemplate, location), ResultStatus.PermanentRedirect);
+        => new SuccessResult(string.Format(ResultTitles.PermanentRedirectTemplate, location), ResultStatus.PermanentRedirect).WithLocation(location);
 
     /// <inheritdoc cref="PermanentRedirect(string)"/>
     public static OperationDataResult<T> PermanentRedirect<T>(T data, string location)
-        => new SuccessDataResult<T>(data, string.Format(ResultTitles.PermanentRedirectTemplate, location), ResultStatus.PermanentRedirect);
+        => new SuccessDataResult<T>(data, string.Format(ResultTitles.PermanentRedirectTemplate, location), ResultStatus.PermanentRedirect).WithLocation(location);
 }

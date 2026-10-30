@@ -186,6 +186,16 @@ public static partial class AspNetCoreResultExtensions
     }
 
     /// <summary>Maps a status to a bodyless response kind and HTTP code — shared by the MVC and Minimal API surfaces.</summary>
+    /// <summary>A 1xx status is an interim response: it can't end a request, and writing one leaves the client waiting, so mapping it fails fast instead.</summary>
+    private static void EnsureFinalStatus(ResultStatus status)
+    {
+        var httpCode = (int)status.ToHttpStatusCode();
+        if (httpCode is >= 100 and < 200)
+        {
+            throw new InvalidOperationException($"{status} ({httpCode}) is an interim response and can't be the final response of a request. Return a 2xx or 3xx result instead.");
+        }
+    }
+
     private static (BodylessKind Kind, int HttpCode) ClassifyBodyless(ResultStatus status)
     {
         var httpCode = (int)status.ToHttpStatusCode();

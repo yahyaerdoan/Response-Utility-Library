@@ -146,6 +146,18 @@ public OperationResult CustomFailure()
     => Result.Failure("Payment declined.", "The card was rejected by the issuer.", ResultStatus.PaymentRequired);
 ```
 
+**Location.** A 201 should say where the new resource is, a 202 where to follow the work, and a redirect where to go.
+`WithLocation(uri)` attaches it, and the redirect factories (`MovedPermanently`, `Found`, `SeeOther`, `TemporaryRedirect`,
+`PermanentRedirect`) set it from their argument; `ToResult`/`ToActionResult` and the enveloped variants write it as the
+`Location` header. It is HTTP metadata, so it is not part of the serialized result:
+
+```csharp
+return Result.Created(order.Id).WithLocation($"/api/v1/orders/{order.Id}");
+```
+
+`Result.Continue()`, `Processing()` and the other 1xx results are interim responses: they can't be the final response
+of a request, so mapping one to HTTP throws instead of leaving the client waiting.
+
 **`string` data needs the type argument.** A single string is the title: `Result.Success("Basket cleared.")`
 is a success with that title and no data. When the data itself is a string, say so explicitly with
 `Result.Success<string>("R-1")`, or pass both, `Result.Success("R-1", "Receipt found.")` (the same applies to
@@ -266,9 +278,18 @@ app.UseStatusCodePages(); // bodyless 4xx/5xx responses get a Problem Details bo
 **Exceptions in the same shape.** `AddResultExceptionHandler()` registers an `IExceptionHandler` for
 `app.UseExceptionHandler()` (it also calls `AddResultProblemDetails()`). Map the exceptions your code
 throws to failed results; the closest mapped base type wins, so a `Map<Exception>` catch-all and a more
-specific mapping can coexist. `BadHttpRequestException` keeps its status code, everything else is a `500`.
-Messages of unmapped exceptions reach the client only in Development (`ExposeExceptionMessages`), and
-logging stays with ASP.NET Core's exception handler middleware:
+specific mapping can coexist. Without a mapping:
+
+* `BadHttpRequestException` keeps its status code and names the field it could not read (below);
+* `HttpRequestException` is a `502` and a timeout (`TimeoutException`, or an `HttpClient` timeout) a `504`,
+  because the failure is in a service this one depends on;
+* everything else is a `500`.
+
+Messages of unmapped exceptions reach the client only in Development (`ExposeExceptionMessages`).
+`ResultExceptionHandlerOptions.Resolve(exception, httpContext)` returns the result an exception maps to, for
+tests or a logging handler. Logging stays with ASP.NET Core's exception handler middleware: on .NET 10, which
+stops logging exceptions an `IExceptionHandler` handles, server errors (5xx) are logged again and client errors
+(4xx) are not; on .NET 8 and 9 the middleware logs every exception:
 
 ```csharp
 builder.Services.AddResultExceptionHandler(options => options
@@ -279,6 +300,27 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 ```
+
+**Requests that can't be read.** When ASP.NET Core can't bind a request, the 400 names the field, keyed like
+FluentValidation property names, with fixed messages that never echo .NET type names:
+
+| Request | `errors` |
+| --- | --- |
+| `GET /orders/abc` for `{id}` bound to `Guid id` | `"Id": ["The value is missing or has an invalid format."]` |
+| `GET /orders?page=abc`, or no `page`, for `int page` | `"Page": [...]` / `"Page": ["This field is required."]` |
+| `{ "serviceId": "abc" }` for `Guid ServiceId` | `"ServiceId": ["The value is missing or has an invalid format."]` |
+| `{ "lines": [{ "quantity": "two" }] }` | `"Lines[0].Quantity": [...]` |
+| `{}` for a type with `required` members | one `"This field is required."` per missing member |
+| malformed JSON / no body | `"": ["The request body is not valid JSON."]` / `"": ["A request body is required."]` |
+
+Minimal APIs only throw for these in Development; to get the same response in every environment, set
+`builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true)`. Route parameters
+should not use type constraints for this (`{id:guid}`): a constraint that doesn't match makes the route not
+match, so the client gets a 404 instead of this 400. Keep constraints for telling similar routes apart.
+
+For MVC, `AddControllers().AddResultModelStateResponses()` gives `[ApiController]`'s automatic model-state
+response the same keys and messages: 400 when the request could not be read, 422 when it failed validation
+attributes.
 
 ---
 ## 6. Minimal APIs

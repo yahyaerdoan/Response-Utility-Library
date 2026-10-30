@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +16,9 @@ public static class ResultExceptionHandlerServiceCollectionExtensions
     /// Mapped exceptions become the failed result their mapping returns (the closest mapped base type wins); <see cref="Microsoft.AspNetCore.Http.BadHttpRequestException"/>
     /// keeps its status code; everything else is a 500. Exception messages of unmapped exceptions reach the client only in Development
     /// (<see cref="ResultExceptionHandlerOptions.ExposeExceptionMessages"/>). Requests the client aborted are left to the middleware, which answers 499.
+    /// Logging stays with the exception handler middleware: on .NET 10, which by default stops logging exceptions an <see cref="IExceptionHandler"/>
+    /// handles, server errors (5xx) are logged again and client errors (4xx) are not, unless the app sets
+    /// <see cref="ExceptionHandlerOptions"/>.<c>SuppressDiagnosticsCallback</c> itself. On .NET 8 and 9 the middleware logs every exception.
     /// </summary>
     /// <example>
     /// <code>
@@ -37,6 +42,10 @@ public static class ResultExceptionHandlerServiceCollectionExtensions
         }
 
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IExceptionHandler, ResultExceptionHandler>());
+#if NET10_0_OR_GREATER
+        services.Configure<ExceptionHandlerOptions>(options =>
+            options.SuppressDiagnosticsCallback ??= context => context.HttpContext.Response.StatusCode < StatusCodes.Status500InternalServerError);
+#endif
         return services;
     }
 }

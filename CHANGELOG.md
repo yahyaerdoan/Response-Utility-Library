@@ -5,6 +5,35 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [15.1.0]
+
+### Fixed
+- **.NET 10 lost the logs of handled exceptions.** .NET 10's exception handler middleware stops logging an exception
+  when an `IExceptionHandler` handles it, so with `AddResultExceptionHandler()` server errors went unlogged. It now
+  sets `SuppressDiagnosticsCallback` (unless the app already did) so 5xx are logged and 4xx are not. .NET 8 and 9
+  are unchanged: the middleware logs every exception.
+- 1xx results (`Result.Continue()`, `Processing()`, `EarlyHints()`, `SwitchingProtocols()`) mapped to HTTP left the
+  request hanging, because an interim response can't end it. `ToResult`/`ToActionResult` and the enveloped variants
+  now throw `InvalidOperationException` for them.
+- Redirects carried their target only in the title: `Result.MovedPermanently(url).ToResult()` was a 301 with no
+  `Location` header. The redirect factories now set `Location` and the response writes it.
+
+### Added
+- `BadHttpRequestException` answers name the field: route, query and header binding failures, JSON values that can't
+  be converted (`"Items[0].Quantity"`), missing `required` members, malformed JSON and a missing body each produce
+  `errors` with fixed messages. Anything not recognized is still a plain 400.
+- `HttpRequestException` is answered with 502 and timeouts (`TimeoutException`, `HttpClient` timeouts) with 504
+  when no mapping covers them; they were 500.
+- `IHasLocation`, `OperationResult.Location` and `WithLocation(uri)`: the URI a 201, 202 or 3xx points at, written as
+  the `Location` header and not serialized.
+- `ResultExceptionHandlerOptions.Resolve(exception, httpContext)` is public, for tests and logging handlers.
+- `AddResultModelStateResponses()` for MVC: `[ApiController]` model-state responses with the same field keys and
+  messages, 400 for unreadable requests and 422 for validation attributes.
+
+### Migration
+- Nothing breaks at compile time. Clients may now see 502/504 where they saw 500, `errors` on 400 responses, and
+  `Location` headers.
+
 ## [15.0.0]
 
 Everything an ASP.NET Core API needs around results, without MediatR: exceptions, async endpoints,

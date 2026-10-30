@@ -15,7 +15,7 @@ namespace ResultHandler.Core.Base;
 /// <param name="detail">Optional additional context.</param>
 /// <param name="errors">Optional list of individual error messages.</param>
 public class OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
-    : IOperationResult, IResultFailureFactory<OperationResult>, IHasFieldErrors
+    : IOperationResult, IResultFailureFactory<OperationResult>, IHasFieldErrors, IHasLocation
 {
     /// <summary>Sets <paramref name="errors"/> and <paramref name="fieldErrors"/> independently; prefer <see cref="Failure(IReadOnlyDictionary{string, IReadOnlyList{string}})"/> for everyday use.</summary>
     public OperationResult(bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
@@ -63,6 +63,11 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Code { get; private protected set; }
 
+    /// <inheritdoc cref="IHasLocation.Location"/>
+    /// <remarks>HTTP metadata, written as the <c>Location</c> header rather than in the body, so it is not serialized.</remarks>
+    [JsonIgnore]
+    public string? Location { get; private set; }
+
     /// <inheritdoc />
     public static OperationResult Failure(IReadOnlyList<string> errors)
         => new ErrorResult(OperationResultDefaults.ValidationFailedTitle, ResultStatus.UnprocessableContent, errors);
@@ -88,6 +93,7 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
             && Title == other.Title
             && Detail == other.Detail
             && Code == other.Code
+            && Location == other.Location
             && (ReferenceEquals(Errors, other.Errors) || Errors.SequenceEqual(other.Errors))
             && FieldErrorsEqual(other.FieldErrors);
     }
@@ -100,6 +106,7 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
         hash.Add(Title);
         hash.Add(Detail);
         hash.Add(Code);
+        hash.Add(Location);
         foreach (var error in Errors)
         {
             hash.Add(error);
@@ -127,6 +134,14 @@ public class OperationResult(bool isSuccessful, ResultStatus status, string titl
         => $"{Status} ({(int)Status.ToHttpStatusCode()}): {Title}";
 
     /// <summary>A shallow copy of this result, same runtime type, with <see cref="Code"/> replaced. Backs <c>WithCode</c> and failure re-projection.</summary>
+    /// <summary>A shallow copy of this result, same runtime type, with <see cref="Location"/> replaced. Backs <c>WithLocation</c>.</summary>
+    internal OperationResult CloneWithLocation(string location)
+    {
+        var copy = (OperationResult)MemberwiseClone();
+        copy.Location = location;
+        return copy;
+    }
+
     internal OperationResult CloneWithCode(string? code)
     {
         var copy = (OperationResult)MemberwiseClone();
