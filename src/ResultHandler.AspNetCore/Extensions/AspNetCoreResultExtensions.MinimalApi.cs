@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ResultHandler.AspNetCore.Envelopes;
 using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Enums;
 using ResultHandler.Mapping;
@@ -40,7 +41,7 @@ public static partial class AspNetCoreResultExtensions
         if (result.IsSuccessful)
         {
             return ToBodylessSuccessResult(result.Status)
-                ?? Results.Json(result, statusCode: (int)result.Status.ToHttpStatusCode());
+                ?? Results.Json(ResultEnvelopeFactory.Create(result), statusCode: (int)result.Status.ToHttpStatusCode());
         }
 
         return ToProblemResult(result, httpContext);

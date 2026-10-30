@@ -10,10 +10,12 @@ This repository is two NuGet packages sharing this README:
 |---|---|---|
 | [`ResponseResultHandler`](https://www.nuget.org/packages/ResponseResultHandler) | `src/ResultHandler` | Core library — framework-agnostic |
 | [`ResponseResultHandler.AspNetCore`](https://www.nuget.org/packages/ResponseResultHandler.AspNetCore) | `src/ResultHandler.AspNetCore` | Converts results to `IActionResult` / RFC 9457 Problem Details |
+| [`ResponseResultHandler.FluentValidation`](https://www.nuget.org/packages/ResponseResultHandler.FluentValidation) | `src/ResultHandler.FluentValidation` | FluentValidation to field-keyed failures; request validation for Minimal APIs and MVC |
 
 ```
 dotnet add package ResponseResultHandler
 dotnet add package ResponseResultHandler.AspNetCore   # optional: IActionResult / RFC 9457 adapter
+dotnet add package ResponseResultHandler.FluentValidation   # optional: FluentValidation integration
 ```
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what changed between versions.
@@ -29,7 +31,7 @@ product by id, and a `ProductsController` that exposes it over HTTP.
 [10. Generic short-circuiting](#10-generic-short-circuiting--iresultfailurefactorytself--resultfailurefactory) ·
 [11. Per-field validation errors](#11-per-field-validation-errors--ihasfielderrors--iresultfailurefactorytself) ·
 [12. Serialization](#12-serialization) · [13. Equality & debugging](#13-equality--debugging) ·
-[14. Migrating to v12](#14-migrating-to-v12)
+[14. Migrating to v12](#14-migrating-to-v12) · [15. Validation with FluentValidation](#15-validation-with-fluentvalidation)
 
 ---
 ## 1. The core contract
@@ -144,6 +146,11 @@ public OperationResult CustomFailure()
     => Result.Failure("Payment declined.", "The card was rejected by the issuer.", ResultStatus.PaymentRequired);
 ```
 
+**`string` data needs the type argument.** A single string is the title: `Result.Success("Basket cleared.")`
+is a success with that title and no data. When the data itself is a string, say so explicitly with
+`Result.Success<string>("R-1")`, or pass both, `Result.Success("R-1", "Receipt found.")` (the same applies to
+`Created`/`Accepted`).
+
 ---
 ## 5. `ResultHandler.AspNetCore` — converting to `IActionResult`
 
@@ -253,8 +260,24 @@ builder.Services.AddResultProblemDetails(options =>
     options.CustomizeProblemDetails = context => context.ProblemDetails.Extensions["tenant"] = "acme");
 
 var app = builder.Build();
-app.UseExceptionHandler(); // skip if your own middleware already handles exceptions
-app.UseStatusCodePages();  // bodyless 4xx/5xx responses get a Problem Details body
+app.UseStatusCodePages(); // bodyless 4xx/5xx responses get a Problem Details body
+```
+
+**Exceptions in the same shape.** `AddResultExceptionHandler()` registers an `IExceptionHandler` for
+`app.UseExceptionHandler()` (it also calls `AddResultProblemDetails()`). Map the exceptions your code
+throws to failed results; the closest mapped base type wins, so a `Map<Exception>` catch-all and a more
+specific mapping can coexist. `BadHttpRequestException` keeps its status code, everything else is a `500`.
+Messages of unmapped exceptions reach the client only in Development (`ExposeExceptionMessages`), and
+logging stays with ASP.NET Core's exception handler middleware:
+
+```csharp
+builder.Services.AddResultExceptionHandler(options => options
+    .Map<DbUpdateConcurrencyException>(_ => Result.Conflict("This record was changed by someone else.").WithCode("Concurrency"))
+    .Map<KeyNotFoundException>(exception => Result.NotFound(exception.Message)));
+
+var app = builder.Build();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 ```
 
 ---
@@ -274,8 +297,12 @@ native to Minimal APIs and fully visible to OpenAPI generation:
 * **`ToResult<T>(HttpContext? httpContext = null)`** — `IOperationResult<T>` → `IResult`. Success
   returns the raw payload as JSON with the result's actual status code (`201` for `Created`, `202` for
   `Accepted`, etc.); failure is the same `ProblemDetails` JSON body.
-* **`ToEnvelopedResult(HttpContext? httpContext = null)`** — success returns the *whole* result object
-  (status/title/data) as the JSON body instead of just the payload.
+* **`ToEnvelopedResult(HttpContext? httpContext = null)`**: success returns an envelope,
+  `{ "resultData", "isSuccessful", "statusCode", "statusMessage" }` plus `detail`/`code` when set, instead of
+  just the payload (`ResultEnvelope`/`ResultEnvelope<T>`, `ResultHandler.AspNetCore.Envelopes`).
+* **`ToResultAsync()` / `ToEnvelopedResultAsync()`** (and `ToActionResultAsync()` / `ToEnvelopedActionResultAsync()`
+  for MVC): the same mappings for a `Task` of a result, so an endpoint can return a service call directly:
+  `(int id, ProductService products, CancellationToken ct) => products.GetByIdAsync(id, ct).ToResultAsync()`.
 * **`ToProblemResult(HttpContext? httpContext = null)`** — maps a failed result straight to an
   `IResult` carrying RFC 9457 `ProblemDetails` JSON; the same building block `ToResult`/`ToResult<T>`/
   `ToEnvelopedResult` use internally for their failure branch.
@@ -320,10 +347,11 @@ The responses are described with two schemas, so Scalar, Swagger UI and generate
 real body: `ResultProblemDetails` (RFC 9457 members plus `code` and `traceId`) and, for `400`/`422`,
 `ResultValidationProblemDetails`, which adds the `errors` map (`ResultHandler.AspNetCore.OpenApi`).
 
-**Documenting the success body.** `ToEnvelopedResult()` writes the whole envelope on success, but an
-endpoint returning `IResult` gives OpenAPI no type to describe it. `ProducesEnveloped<T>()` declares it as
-`OperationDataResult<T>` (or `OperationResult` with `ProducesEnveloped()` when there is no data), so docs and
-generated clients see `resultData` with its real type next to the status fields:
+**Documenting the success body.** `ToEnvelopedResult()` writes an envelope on success, but an endpoint
+returning `IResult` gives OpenAPI no type to describe it. `ProducesEnveloped<T>()` declares it as
+`ResultEnvelope<T>` (or `ResultEnvelope` with `ProducesEnveloped()` when there is no data), the same type the
+body is written as, so docs and generated clients see `resultData` with its real type and `statusCode` as an
+integer:
 
 ```csharp
 api.MapGet("/products/{id:int}", (int id, ProductService products) => products.GetById(id).ToEnvelopedResult())
@@ -331,22 +359,6 @@ api.MapGet("/products/{id:int}", (int id, ProductService products) => products.G
 
 api.MapPost("/products", (CreateProduct command, ProductService products) => products.Create(command).ToEnvelopedResult())
     .ProducesEnveloped<Guid>(StatusCodes.Status201Created);
-```
-
-`statusCode` is written as a number by `ResultStatusJsonConverter`, which schema generators can't see through, so
-it shows up untyped. With `Microsoft.AspNetCore.OpenApi` (.NET 10), one schema transformer types it:
-
-```csharp
-builder.Services.AddOpenApi(options => options.AddSchemaTransformer((schema, context, _) =>
-{
-    if (context.JsonTypeInfo.Type == typeof(ResultStatus))
-    {
-        schema.Type = JsonSchemaType.Integer;
-        schema.Format = "int32";
-    }
-
-    return Task.CompletedTask;
-}));
 ```
 
 ---
@@ -749,8 +761,8 @@ JsonSerializer.Serialize(Result.NotFound<ProductDto>("Product 42 does not exist.
 
 `Detail` and `code` (§5) are omitted entirely when `null`; `errors` and `fieldErrors` are always
 present, empty (`[]`/`{}`) when the failure doesn't carry any (see §11). This is the shape of the result
-object itself (and of the `ToEnvelopedResult` success body); failed HTTP responses are Problem Details
-(§5/§6).
+object itself, for example when you cache or queue results. Over HTTP, the success envelope is the smaller
+`ResultEnvelope` (§6) and failures are Problem Details (§5/§6).
 
 ---
 ## 13. Equality & debugging
@@ -791,3 +803,42 @@ used to hardcode a `200` status code for any successful result that carried a bo
 discarding the result's actual `Status` (so `Result.Created(...)` came back as `200`, not `201`).
 Both now honor `Status` correctly. If you were relying on the old (incorrect) `200`-always behavior,
 check call sites that use non-`Ok` success statuses with `ToActionResult<T>`/`ToEnvelopedActionResult`.
+
+---
+## 15. Validation with FluentValidation
+
+`ResponseResultHandler.FluentValidation` connects FluentValidation to results without MediatR. In a service,
+turn a `ValidationResult` into a result:
+
+```csharp
+public async Task<OperationDataResult<ReceiptResponse>> CreateAsync(CreateReceiptRequest request, CancellationToken ct)
+{
+    var validation = await validator.ValidateAsync(request, ct);
+    if (!validation.IsValid)
+    {
+        return validation.ToFailure<OperationDataResult<ReceiptResponse>>(); // 422, errors keyed by property
+    }
+
+    // ...
+}
+```
+
+`ToFieldErrors()` gives the map (`"Address.City"`, `"Items[0].Name"`, `""` for rules without a property),
+`ToOperationResult()` a success or a 422 failure, and `ToFailure<TResult>()` the failure as any result type.
+
+To validate requests before the handler runs, register validators as usual and turn validation on for an
+endpoint, a route group or all MVC actions. Every parameter whose type has an `IValidator<T>` is validated
+(all validators for that type, async rules included); an invalid request gets the same 422 validation Problem
+Details as a failed result and never reaches the handler. Endpoints without validated parameters get no filter:
+
+```csharp
+builder.Services.AddValidatorsFromAssemblyContaining<CreateReceiptRequestValidator>();
+
+// Minimal APIs
+var api = app.MapGroup("/api").WithResultValidation().ProducesResultProblems();
+api.MapPost("/receipts", (CreateReceiptRequest request, ReceiptService receipts, CancellationToken ct)
+    => receipts.CreateAsync(request, ct).ToResultAsync());
+
+// MVC
+builder.Services.AddControllers().AddResultValidation();
+```

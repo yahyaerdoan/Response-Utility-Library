@@ -5,6 +5,44 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [15.0.0]
+
+Everything an ASP.NET Core API needs around results, without MediatR: exceptions, async endpoints,
+request validation and accurate OpenAPI documents.
+
+### Changed
+- **Breaking (wire):** the `ToEnvelopedResult`/`ToEnvelopedActionResult` success body no longer contains
+  `errors` and `fieldErrors`. They were always empty on success. The body is now
+  `{ "resultData", "isSuccessful", "statusCode", "statusMessage" }`, plus `detail` and `code` when set,
+  written as `ResultEnvelope<T>`/`ResultEnvelope` (`ResultHandler.AspNetCore.Envelopes`). Failures are
+  unchanged (Problem Details). Serializing a result object yourself is unchanged.
+- `ProducesEnveloped<T>()`/`ProducesEnveloped()` declare `ResultEnvelope<T>`/`ResultEnvelope`, the type the
+  body is written as, so `statusCode` is documented as an integer. The schema transformer the README used
+  to suggest for it is no longer needed.
+- `AddResultProblemDetails()` adds its customization as a post-configure step: it wraps any
+  `CustomizeProblemDetails`, wherever it is set, and is safe to call more than once.
+
+### Added
+- `AddResultExceptionHandler(options => options.Map<TException>(...))`: an `IExceptionHandler` for
+  `app.UseExceptionHandler()` that writes exceptions as the Problem Details of the failed result they map
+  to. The closest mapped base type wins; `BadHttpRequestException` keeps its status code; everything else
+  is a 500 whose message reaches the client only in Development (`ExposeExceptionMessages`). A mapping that
+  returns a success is rejected.
+- `ToResultAsync()`, `ToEnvelopedResultAsync()`, `ToActionResultAsync()` and `ToEnvelopedActionResultAsync()`
+  for `Task<IOperationResult>`, `Task<OperationResult>`, `Task<IOperationResult<T>>` and
+  `Task<OperationDataResult<T>>`.
+- New package `ResponseResultHandler.FluentValidation`: `ValidationResult.ToFieldErrors()`,
+  `ToOperationResult()` and `ToFailure<TResult>()`; `WithResultValidation()` validates Minimal API
+  arguments for an endpoint or a route group; `AddResultValidation()` does the same for MVC actions. Invalid
+  requests get 422 validation Problem Details. Depends on FluentValidation 12.0.0 or later.
+
+### Migration
+- Clients that read `errors`/`fieldErrors` from a success envelope can drop them; they were always empty.
+- Tests that assert `JsonHttpResult<IOperationResult>` or `Assert.Same(result, objectResult.Value)` for an
+  enveloped success should assert `JsonHttpResult<ResultEnvelope>` and read `ResultEnvelope<T>.ResultData`.
+- If you added a schema transformer for `ResultStatus` only for the envelope, you can remove it.
+- Package validation compares against 14.0.1; no public API was removed.
+
 ## [14.0.1]
 
 ### Fixed
