@@ -1,9 +1,1 @@
 #nullable enable
-ResultHandler.FluentValidation.ResultValidationEndpointConventionExtensions
-ResultHandler.FluentValidation.ResultValidationMvcBuilderExtensions
-ResultHandler.FluentValidation.ValidationResultExtensions
-static ResultHandler.FluentValidation.ResultValidationEndpointConventionExtensions.WithResultValidation<TBuilder>(this TBuilder builder) -> TBuilder
-static ResultHandler.FluentValidation.ResultValidationMvcBuilderExtensions.AddResultValidation(this Microsoft.Extensions.DependencyInjection.IMvcBuilder! builder) -> Microsoft.Extensions.DependencyInjection.IMvcBuilder!
-static ResultHandler.FluentValidation.ValidationResultExtensions.ToFailure<TResult>(this FluentValidation.Results.ValidationResult! validationResult) -> TResult
-static ResultHandler.FluentValidation.ValidationResultExtensions.ToFieldErrors(this FluentValidation.Results.ValidationResult! validationResult) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
-static ResultHandler.FluentValidation.ValidationResultExtensions.ToOperationResult(this FluentValidation.Results.ValidationResult! validationResult) -> ResultHandler.Core.Base.OperationResult!

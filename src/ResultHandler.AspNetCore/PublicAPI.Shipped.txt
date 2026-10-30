@@ -1,10 +1,73 @@
 #nullable enable
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.Code.get -> string?
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.Code.init -> void
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.Detail.get -> string?
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.Detail.init -> void
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.IsSuccessful.get -> bool
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.IsSuccessful.init -> void
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.ResultEnvelope() -> void
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.StatusCode.get -> int
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.StatusCode.init -> void
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.StatusMessage.get -> string!
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope.StatusMessage.init -> void
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultData.get -> TData?
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultData.init -> void
+ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultEnvelope() -> void
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.ExposeExceptionMessages.get -> bool
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.ExposeExceptionMessages.set -> void
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.Map<TException>(System.Func<TException!, Microsoft.AspNetCore.Http.HttpContext!, ResultHandler.Core.Abstractions.IOperationResult!>! map) -> ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions!
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.Map<TException>(System.Func<TException!, ResultHandler.Core.Abstractions.IOperationResult!>! map) -> ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions!
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.Resolve(System.Exception! exception, Microsoft.AspNetCore.Http.HttpContext! httpContext) -> ResultHandler.Core.Abstractions.IOperationResult!
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.ResultExceptionHandlerOptions() -> void
 ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions
+ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions
+ResultHandler.AspNetCore.Extensions.ResultExceptionHandlerServiceCollectionExtensions
+ResultHandler.AspNetCore.Extensions.ResultModelStateMvcBuilderExtensions
+ResultHandler.AspNetCore.Extensions.ResultProblemDetailsServiceCollectionExtensions
+ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.Code.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.Code.set -> void
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.ResultProblemDetails() -> void
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.TraceId.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultProblemDetails.TraceId.set -> void
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.Code.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.Code.set -> void
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.ResultValidationProblemDetails() -> void
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.TraceId.get -> string?
+ResultHandler.AspNetCore.OpenApi.ResultValidationProblemDetails.TraceId.set -> void
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToActionResult(this ResultHandler.Core.Abstractions.IOperationResult! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Mvc.IActionResult!
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToActionResult<T>(this ResultHandler.Core.Abstractions.IOperationResult<T>! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Mvc.IActionResult!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToActionResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToActionResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToActionResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToActionResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedActionResult(this ResultHandler.Core.Abstractions.IOperationResult! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Mvc.IActionResult!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedActionResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedActionResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedActionResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedActionResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedResult(this ResultHandler.Core.Abstractions.IOperationResult! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Http.IResult!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToEnvelopedResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToProblemDetails(this ResultHandler.Core.Abstractions.IOperationResult! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Mvc.ProblemDetails!
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToProblemResult(this ResultHandler.Core.Abstractions.IOperationResult! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Http.IResult!
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToResult(this ResultHandler.Core.Abstractions.IOperationResult! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Http.IResult!
 static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToResult<T>(this ResultHandler.Core.Abstractions.IOperationResult<T>! result, Microsoft.AspNetCore.Http.HttpContext? httpContext = null) -> Microsoft.AspNetCore.Http.IResult!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToResultAsync(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationResult!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static ResultHandler.AspNetCore.Extensions.AspNetCoreResultExtensions.ToResultAsync<T>(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions.ProducesEnveloped(this Microsoft.AspNetCore.Builder.RouteHandlerBuilder! builder, int statusCode = 200) -> Microsoft.AspNetCore.Builder.RouteHandlerBuilder!
+static ResultHandler.AspNetCore.Extensions.EnvelopedResponseConventionExtensions.ProducesEnveloped<TData>(this Microsoft.AspNetCore.Builder.RouteHandlerBuilder! builder, int statusCode = 200) -> Microsoft.AspNetCore.Builder.RouteHandlerBuilder!
+static ResultHandler.AspNetCore.Extensions.ResultExceptionHandlerServiceCollectionExtensions.AddResultExceptionHandler(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ResultHandler.AspNetCore.Extensions.ResultModelStateMvcBuilderExtensions.AddResultModelStateResponses(this Microsoft.Extensions.DependencyInjection.IMvcBuilder! builder) -> Microsoft.Extensions.DependencyInjection.IMvcBuilder!
+static ResultHandler.AspNetCore.Extensions.ResultProblemDetailsServiceCollectionExtensions.AddResultProblemDetails(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Microsoft.AspNetCore.Http.ProblemDetailsOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions.ProducesResultProblem<TBuilder>(this TBuilder builder, params int[]! statusCodes) -> TBuilder
+static ResultHandler.AspNetCore.Extensions.ResultProblemsConventionExtensions.ProducesResultProblems<TBuilder>(this TBuilder builder) -> TBuilder
