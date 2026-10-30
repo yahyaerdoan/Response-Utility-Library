@@ -1,7 +1,8 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using ResultHandler.AspNetCore.Envelopes;
 using ResultHandler.AspNetCore.Extensions;
 using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Base;
@@ -33,7 +34,7 @@ public class AspNetCoreExtensionTests
 
         var actionResult = Assert.IsType<ObjectResult>(result.ToEnvelopedActionResult());
 
-        Assert.Same(result, actionResult.Value);
+        Assert.Equal(42, Assert.IsType<ResultEnvelope<int>>(actionResult.Value).ResultData);
         Assert.Equal(202, actionResult.StatusCode);
     }
 
@@ -61,9 +62,9 @@ public class AspNetCoreExtensionTests
     {
         var result = new SuccessDataResult<int>(42, "Accepted.", ResultStatus.Accepted);
 
-        var httpResult = Assert.IsType<JsonHttpResult<IOperationResult>>(result.ToEnvelopedResult());
+        var httpResult = Assert.IsType<JsonHttpResult<ResultEnvelope>>(result.ToEnvelopedResult());
 
-        Assert.Same(result, httpResult.Value);
+        Assert.Equal(42, Assert.IsType<ResultEnvelope<int>>(httpResult.Value).ResultData);
         Assert.Equal(202, httpResult.StatusCode);
     }
 
@@ -228,7 +229,10 @@ public class AspNetCoreExtensionTests
 
         var actionResult = Assert.IsType<ObjectResult>(result.ToEnvelopedActionResult());
 
-        Assert.Same(result, actionResult.Value);
+        var envelope = Assert.IsType<ResultEnvelope<int>>(actionResult.Value);
+        Assert.Equal(42, envelope.ResultData);
+        Assert.Equal(200, envelope.StatusCode);
+        Assert.Equal("Fetched.", envelope.StatusMessage);
         Assert.Equal(200, actionResult.StatusCode);
     }
 

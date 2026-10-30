@@ -5,13 +5,15 @@
     <PackageId>ResponseResultHandler.AspNetCore</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler - ASP.NET Core</Title>
-    <Version>14.0.1</Version>
+    <Version>15.0.0</Version>
     <Product>ResponseResultHandler.AspNetCore</Product>
     <Description>ASP.NET Core integration for ResponseResultHandler: converts IOperationResult/IOperationResult&lt;T&gt; into IActionResult and RFC 9457 Problem Details responses.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>AspNetCore ProblemDetails RFC9457 Response Result Handler CQRS MediatR OpenAPI</PackageTags>
-    <PackageReleaseNotes>v14.0.1 - Fix: MVC validation failures keep their "errors" map when Problem Details services are registered; MVC failures apply CustomizeProblemDetails and use normal content negotiation.
+    <PackageReleaseNotes>v15.0 - Breaking (wire): the enveloped success body drops the always-empty "errors"/"fieldErrors" and is written as ResultEnvelope&lt;T&gt;, which ProducesEnveloped also documents (statusCode as an integer). New: AddResultExceptionHandler() for UseExceptionHandler(), and ToResultAsync/ToEnvelopedResultAsync/ToActionResultAsync/ToEnvelopedActionResultAsync for Task results. See CHANGELOG.md.
+
+v14.0.1 - Fix: MVC validation failures keep their "errors" map when Problem Details services are registered; MVC failures apply CustomizeProblemDetails and use normal content negotiation.
 
 v14.0 - Breaking: validation failures use the ASP.NET Core shape ("errors" is a field-to-messages map, "fieldErrors" removed). Failures go through IProblemDetailsService (CustomizeProblemDetails applies) and always carry instance and traceId. New: "code" extension from WithCode, AddResultProblemDetails() for framework errors, ProducesResultProblem(...), and ResultProblemDetails/ResultValidationProblemDetails OpenAPI schemas. See CHANGELOG.md for migration.
 
