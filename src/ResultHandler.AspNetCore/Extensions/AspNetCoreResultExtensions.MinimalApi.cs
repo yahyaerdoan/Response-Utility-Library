@@ -46,12 +46,9 @@ public static partial class AspNetCoreResultExtensions
         return ToProblemResult(result, httpContext);
     }
 
-    /// <summary>Maps a failed result to a Minimal API <see cref="IResult"/> carrying RFC 9457 <see cref="ProblemDetails"/>. When <paramref name="httpContext"/> is provided, sets <see cref="ProblemDetails.Instance"/> to the current request path.</summary>
+    /// <summary>Maps a failed result to a Minimal API <see cref="IResult"/> carrying RFC 9457 <see cref="ProblemDetails"/> (see <see cref="ToProblemDetails"/>), written through <see cref="IProblemDetailsService"/> when one is registered. The request's instance and trace id are added when the response is written, so <paramref name="httpContext"/> is optional. The returned value implements <see cref="IValueHttpResult{TValue}"/> of <see cref="ProblemDetails"/> and <see cref="IStatusCodeHttpResult"/> for tests.</summary>
     public static IResult ToProblemResult(this IOperationResult result, HttpContext? httpContext = null)
-        => Results.Json(
-            result.ToProblemDetails(httpContext),
-            statusCode: (int)result.Status.ToHttpStatusCode(),
-            contentType: "application/problem+json");
+        => new ProblemDetailsHttpResult(result.ToProblemDetails(httpContext));
 
     private static IResult ToSuccessResult<T>(ResultStatus status, T data)
     {
