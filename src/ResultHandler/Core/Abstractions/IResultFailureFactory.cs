@@ -7,12 +7,12 @@ namespace ResultHandler.Core.Abstractions;
 public interface IResultFailureFactory<TSelf>
     where TSelf : IOperationResult
 {
-    /// <summary>Builds a failed <typeparamref name="TSelf"/> from a flat list of validation error messages.</summary>
+    /// <summary>Builds a failed <typeparamref name="TSelf"/> from validation messages that belong to no field (written under the <c>""</c> key).</summary>
     static abstract TSelf Failure(IReadOnlyList<string> errors);
 
     /// <summary>Builds a failed <typeparamref name="TSelf"/> with a custom title/detail/status. Prefer <see cref="ResultHandler.Functional.ResultFailureFactory"/>'s named shortcuts over calling this directly.</summary>
     static abstract TSelf Failure(string title, string detail, ResultStatus status);
 
-    /// <summary>Builds a failed <typeparamref name="TSelf"/> from per-field validation errors, keyed by property name. Also populates <see cref="IOperationResult.Errors"/> with the flattened messages.</summary>
-    static abstract TSelf Failure(IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors);
+    /// <summary>Builds a failed <typeparamref name="TSelf"/> from validation messages keyed by property name.</summary>
+    static abstract TSelf Failure(IReadOnlyDictionary<string, IReadOnlyList<string>> errors);
 }

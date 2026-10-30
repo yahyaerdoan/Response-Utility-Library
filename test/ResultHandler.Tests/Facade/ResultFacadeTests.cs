@@ -71,7 +71,7 @@ public class ResultFacadeTests
         var result = Result.Invalid("Name is required.", "Email is invalid.");
 
         Assert.Equal(ResultStatus.UnprocessableContent, result.Status);
-        Assert.Equal(2, result.Errors.Count);
+        Assert.Equal(["Name is required.", "Email is invalid."], result.Errors[string.Empty]);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class ResultFacadeTests
 
         var result = Result.Invalid(errors);
 
-        Assert.Equal(errors, result.Errors);
+        Assert.Equal(errors, result.Errors[string.Empty]);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class ResultFacadeTests
         Assert.Equal(ResultStatus.UnprocessableContent, result.Status);
         Assert.Equal(
             ["Name is required.", "Category 7 does not exist.", "Price must be greater than zero."],
-            result.Errors);
+            result.Errors[string.Empty]);
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class ResultFacadeTests
     {
         var result = Result.Combine(new ErrorResult("Something went wrong.", ResultStatus.Conflict));
 
-        Assert.Equal(["Something went wrong."], result.Errors);
+        Assert.Equal(["Something went wrong."], result.Errors[string.Empty]);
     }
 
     [Fact]
@@ -150,10 +150,9 @@ public class ResultFacadeTests
             OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Name"] = ["Name is required."] }),
             OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Price"] = ["Price must be greater than zero."] }));
 
-        var withFieldErrors = Assert.IsAssignableFrom<IHasFieldErrors>(result);
-        Assert.Equal(["Name is required."], withFieldErrors.FieldErrors["Name"]);
-        Assert.Equal(["Price must be greater than zero."], withFieldErrors.FieldErrors["Price"]);
-        Assert.Equal(["Name is required.", "Price must be greater than zero."], result.Errors);
+        Assert.Equal(["Name is required."], result.Errors["Name"]);
+        Assert.Equal(["Price must be greater than zero."], result.Errors["Price"]);
+        Assert.Equal(2, result.Errors.Count);
     }
 
     [Fact]
@@ -163,9 +162,8 @@ public class ResultFacadeTests
             OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Name"] = ["Name is required."] }),
             Result.NotFound("Category 7 does not exist."));
 
-        var withFieldErrors = Assert.IsAssignableFrom<IHasFieldErrors>(result);
-        Assert.Equal(["Name is required."], withFieldErrors.FieldErrors["Name"]);
-        Assert.Equal(["Name is required.", "Category 7 does not exist."], result.Errors);
+        Assert.Equal(["Name is required."], result.Errors["Name"]);
+        Assert.Equal(["Category 7 does not exist."], result.Errors[string.Empty]);
     }
 
     [Fact]
@@ -184,7 +182,7 @@ public class ResultFacadeTests
 
         Assert.False(result.IsSuccessful);
         Assert.Equal(ResultStatus.UnprocessableContent, result.Status);
-        Assert.Equal(["Name is required."], result.Errors);
+        Assert.Equal(["Name is required."], result.Errors[string.Empty]);
     }
 
     [Fact]

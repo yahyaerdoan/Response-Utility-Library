@@ -1,9 +1,12 @@
-﻿using ResultHandler.Core.Base;
+﻿using System.Text.Json.Serialization;
+using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
+using ResultHandler.Serialization;
 
 namespace ResultHandler.Implementations.Error;
 
 /// <summary>A failed <see cref="OperationResult"/> (<c>IsSuccessful</c> is always <see langword="false"/>).</summary>
+[JsonConverter(typeof(OperationResultJsonConverterFactory))]
 public class ErrorResult : OperationResult
 {
     /// <summary>Default error: status <see cref="ResultStatus.InternalServerError"/>, title "An error occurred.".</summary>
@@ -24,21 +27,21 @@ public class ErrorResult : OperationResult
     {
     }
 
-    /// <summary>Error with a title, status, and a flat list of individual error messages.</summary>
+    /// <summary>Error with a title, status, and messages that belong to no field.</summary>
     public ErrorResult(string title, ResultStatus status, IReadOnlyList<string> errors)
+        : base(false, status, title, null, OperationResultDefaults.General(errors))
+    {
+    }
+
+    /// <summary>Error with a title, status, and error messages by field (<c>""</c> for messages that belong to no field).</summary>
+    public ErrorResult(string title, ResultStatus status, IReadOnlyDictionary<string, IReadOnlyList<string>> errors)
         : base(false, status, title, null, errors)
     {
     }
 
-    /// <summary>Also flattens <paramref name="fieldErrors"/> into <see cref="OperationResult.Errors"/>, for callers that only read the flat list.</summary>
-    public ErrorResult(string title, ResultStatus status, IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
-        : base(false, status, title, null, OperationResultDefaults.FlattenFieldErrors(fieldErrors), fieldErrors)
-    {
-    }
-
-    /// <summary>Carries <paramref name="errors"/> and <paramref name="fieldErrors"/> independently, for re-projecting a failure that already has its own flat message list. Internal — used only by <c>ResultExtensions.Propagate</c>.</summary>
-    internal ErrorResult(string title, ResultStatus status, IReadOnlyList<string> errors, IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
-        : base(false, status, title, null, errors, fieldErrors)
+    /// <summary>Error carrying every part of another failure, for re-projecting it into this type. Internal: used only by <c>ResultExtensions.Propagate</c>.</summary>
+    internal ErrorResult(string title, ResultStatus status, string? detail, IReadOnlyDictionary<string, IReadOnlyList<string>> errors)
+        : base(false, status, title, detail, errors)
     {
     }
 }

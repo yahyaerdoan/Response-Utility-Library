@@ -78,7 +78,7 @@ public sealed class ResultExceptionHandlerOptions
         var title = reasonPhrase.Length > 0 ? reasonPhrase : status.ToString();
         var detail = ExposeExceptionMessages ? exception.Message : _unreadableRequestMessage;
         return RequestBindingErrors.From(exception) is { } fieldErrors
-            ? new OperationResult(false, status, title, detail, null, fieldErrors)
+            ? new OperationResult(false, status, title, detail, fieldErrors)
             : OperationResult.Failure(title, detail, status);
     }
 }

@@ -10,9 +10,6 @@ namespace ResultHandler.AspNetCore.Extensions;
 /// <summary>Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core response types. Split across <c>.Mvc.cs</c> (<see cref="IActionResult"/>), <c>.MinimalApi.cs</c> (<see cref="IResult"/>), and this file (shared RFC 9457 <see cref="ProblemDetails"/> and bodyless-status logic). <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/> applies to failures too: Minimal API results are written through <see cref="IProblemDetailsService"/>, MVC results apply it and then use normal content negotiation.</summary>
 public static partial class AspNetCoreResultExtensions
 {
-    /// <summary>The <c>"errors"</c> key for messages not tied to a field, matching ASP.NET Core's model-level <c>ModelState</c> key.</summary>
-    internal const string GeneralErrorKey = "";
-
     internal const string CodeExtension = "code";
     internal const string TraceIdExtension = "traceId";
 
@@ -109,8 +106,10 @@ public static partial class AspNetCoreResultExtensions
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        var validationErrors = ToValidationErrors(result);
-        var problem = validationErrors is null ? new ProblemDetails() : new HttpValidationProblemDetails(validationErrors);
+        var errorMap = result.Errors;
+        var problem = errorMap.Count == 0
+            ? new ProblemDetails()
+            : new HttpValidationProblemDetails(errorMap.ToDictionary(pair => pair.Key, pair => pair.Value.ToArray(), StringComparer.Ordinal));
         problem.Type = TypeFor(result.Status);
         problem.Title = result.Title;
         problem.Detail = result.Detail;
@@ -139,51 +138,6 @@ public static partial class AspNetCoreResultExtensions
     /// <summary>The RFC type URI for <paramref name="status"/>, or <c>about:blank</c>.</summary>
     internal static string TypeFor(ResultStatus status)
         => _problemTypes.TryGetValue(status, out var type) ? type : "about:blank";
-
-    private static Dictionary<string, string[]>? ToValidationErrors(IOperationResult result)
-    {
-        var fieldErrors = result.GetFieldErrors();
-        if (fieldErrors.Count == 0 && result.Errors.Count == 0)
-        {
-            return null;
-        }
-
-        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
-        var keyedMessages = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var pair in fieldErrors)
-        {
-            if (pair.Value is null)
-            {
-                continue;
-            }
-
-            errors[pair.Key] = [.. pair.Value];
-            foreach (var message in pair.Value)
-            {
-                keyedMessages[message] = keyedMessages.GetValueOrDefault(message) + 1;
-            }
-        }
-
-        var general = new List<string>();
-        foreach (var message in result.Errors)
-        {
-            if (keyedMessages.TryGetValue(message, out var remaining) && remaining > 0)
-            {
-                keyedMessages[message] = remaining - 1;
-            }
-            else
-            {
-                general.Add(message);
-            }
-        }
-
-        if (general.Count > 0)
-        {
-            errors[GeneralErrorKey] = errors.TryGetValue(GeneralErrorKey, out var existing) ? [.. existing, .. general] : [.. general];
-        }
-
-        return errors;
-    }
 
     /// <summary>Maps a status to a bodyless response kind and HTTP code — shared by the MVC and Minimal API surfaces.</summary>
     /// <summary>A 1xx status is an interim response: it can't end a request, and writing one leaves the client waiting, so mapping it fails fast instead.</summary>

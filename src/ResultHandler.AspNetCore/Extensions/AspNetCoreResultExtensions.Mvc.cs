@@ -53,7 +53,7 @@ public static partial class AspNetCoreResultExtensions
     }
 
     private static IActionResult WithLocation(IOperationResult result, IActionResult success)
-        => result is IHasLocation { Location: { } location } ? new LocationActionResult(success, location) : success;
+        => result.Location is { } location ? new LocationActionResult(success, location) : success;
 
     private static IActionResult ToSuccessActionResult<T>(ResultStatus status, T data)
     {

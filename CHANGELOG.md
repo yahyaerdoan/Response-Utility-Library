@@ -5,16 +5,35 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
-## [15.1.0]
+## [16.0.0]
+
+`errors` now means the same thing everywhere, in memory and in every JSON the library writes: a map from field to messages.
+
+### Changed
+- **Breaking (serialization):** a serialized result writes `errors` as the field-to-messages map that validation
+  Problem Details use, with messages that belong to no field under `""`, and no longer writes `fieldErrors`.
+  `errors` is omitted when there are none, so a success is
+  `{ "resultData", "isSuccessful", "statusCode", "statusMessage" }`. Unknown properties are ignored, so a success
+  cached before v16 still deserializes. Deserialize as `OperationResult` or `OperationDataResult<T>`; asking for a
+  subclass such as `SuccessResult` throws `NotSupportedException`.
+- **Breaking (API):** `IOperationResult.Errors` is the error map itself,
+  `IReadOnlyDictionary<string, IReadOnlyList<string>>`: messages by field, with messages that belong to no field under
+  `""`. It replaces both the flat `Errors` list, which repeated every field message, and `FieldErrors`; the
+  `IHasFieldErrors` interface and `GetFieldErrors()` are removed. The constructors take the map
+  (`OperationResult(isSuccessful, status, title, detail, errors, code)`), and the failure factories keep both a
+  messages overload and a map overload. Re-projecting a failure (`Map`, `Bind`, `ToErrorDataResult`) now keeps its
+  `Detail` next to its errors.
+- `IOperationResult.Location` is new (below).
+- **Breaking (API):** the 1xx factories (`Result.Continue`, `SwitchingProtocols`, `Processing`, `EarlyHints`) and
+  `Result.UseProxy` (305 is deprecated by RFC 9110) are removed. A 1xx result can't be the final response of a request.
 
 ### Fixed
 - **.NET 10 lost the logs of handled exceptions.** .NET 10's exception handler middleware stops logging an exception
   when an `IExceptionHandler` handles it, so with `AddResultExceptionHandler()` server errors went unlogged. It now
   sets `SuppressDiagnosticsCallback` (unless the app already did) so 5xx are logged and 4xx are not. .NET 8 and 9
   are unchanged: the middleware logs every exception.
-- 1xx results (`Result.Continue()`, `Processing()`, `EarlyHints()`, `SwitchingProtocols()`) mapped to HTTP left the
-  request hanging, because an interim response can't end it. `ToResult`/`ToActionResult` and the enveloped variants
-  now throw `InvalidOperationException` for them.
+- A 1xx result mapped to HTTP left the request hanging, because an interim response can't end it.
+  `ToResult`/`ToActionResult` and the enveloped variants now throw `InvalidOperationException` for one.
 - Redirects carried their target only in the title: `Result.MovedPermanently(url).ToResult()` was a 301 with no
   `Location` header. The redirect factories now set `Location` and the response writes it.
 
@@ -24,15 +43,23 @@ always called out explicitly below.
   `errors` with fixed messages. Anything not recognized is still a plain 400.
 - `HttpRequestException` is answered with 502 and timeouts (`TimeoutException`, `HttpClient` timeouts) with 504
   when no mapping covers them; they were 500.
-- `IHasLocation`, `OperationResult.Location` and `WithLocation(uri)`: the URI a 201, 202 or 3xx points at, written as
-  the `Location` header and not serialized.
+- `IOperationResult.Location` and `WithLocation(uri)`: the URI a 201, 202 or 3xx points at, written as the `Location`
+  header and not serialized.
 - `ResultExceptionHandlerOptions.Resolve(exception, httpContext)` is public, for tests and logging handlers.
 - `AddResultModelStateResponses()` for MVC: `[ApiController]` model-state responses with the same field keys and
   messages, 400 for unreadable requests and 422 for validation attributes.
 
 ### Migration
-- Nothing breaks at compile time. Clients may now see 502/504 where they saw 500, `errors` on 400 responses, and
-  `Location` headers.
+- Read field messages as `result.Errors["Name"]` (was `result.FieldErrors["Name"]` / `GetFieldErrors()`), and messages
+  without a field as `result.Errors[""]` (was the flat `result.Errors`); for one list of everything use
+  `result.Errors.Values.SelectMany(m => m)`. Constructors that took `errors` and `fieldErrors` take one map.
+  Code that implements `IOperationResult` itself must change `Errors` and add `Location`.
+- Remove calls to the 1xx factories and `Result.UseProxy`.
+- Clients may now see 502/504 where they saw 500, `errors` on 400 responses, and `Location` headers.
+- Code that reads serialized results (not HTTP responses) should read `errors` as a map instead of `errors` as a
+  list plus `fieldErrors`.
+- Binary: assemblies compiled against 15.x must be recompiled against 16.0. Package validation has no baseline during
+  16.0; set `PackageValidationBaselineVersion` to `16.0.0` once it is published.
 
 ## [15.0.0]
 

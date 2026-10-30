@@ -48,19 +48,6 @@ static ResultHandler.Functional.ResultExtensions.OnSuccessAsync<T>(this System.T
 *REMOVED*ResultHandler.Implementations.Error.ErrorResult.ErrorResult(string! statusMessage, System.Net.HttpStatusCode statusCode, string! detail) -> void
 *REMOVED*ResultHandler.Implementations.Success.SuccessDataResult<T>.SuccessDataResult(T data, string! statusMessage, System.Net.HttpStatusCode statusCode) -> void
 *REMOVED*ResultHandler.Implementations.Success.SuccessResult.SuccessResult(string! statusMessage, System.Net.HttpStatusCode statusCode) -> void
-ResultHandler.Implementations.Error.ErrorDataResult<T>.ErrorDataResult(string! title, ResultHandler.Core.Enums.ResultStatus status, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> void
-ResultHandler.Implementations.Error.ErrorResult.ErrorResult(string! title, ResultHandler.Core.Enums.ResultStatus status, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> void
-static ResultHandler.Core.Base.OperationDataResult<T>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> ResultHandler.Core.Base.OperationDataResult<T>!
-static ResultHandler.Core.Base.OperationResult.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> ResultHandler.Core.Base.OperationResult!
-ResultHandler.Core.Abstractions.IResultFailureFactory<TSelf>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! fieldErrors) -> TSelf
-ResultHandler.Core.Abstractions.IHasFieldErrors
-ResultHandler.Core.Abstractions.IHasFieldErrors.FieldErrors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
-ResultHandler.Core.Base.OperationResult.FieldErrors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
-ResultHandler.Core.Base.OperationResult.FieldErrors.set -> void
-ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail, System.Collections.Generic.IReadOnlyList<string!>? errors, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors) -> void
-ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail, System.Collections.Generic.IReadOnlyList<string!>? errors, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors) -> void
-ResultHandler.Core.Abstractions.FieldErrorsExtensions
-static ResultHandler.Core.Abstractions.FieldErrorsExtensions.GetFieldErrors(this ResultHandler.Core.Abstractions.IOperationResult! result) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
 static ResultHandler.Functional.ResultExtensions.MapAsync<T, TOut>(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<T>!>! resultTask, System.Func<T, TOut>! mapper) -> System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<TOut>!>!
 static ResultHandler.Functional.ResultExtensions.MapAsync<T, TOut>(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<T>!>! resultTask, System.Func<T, System.Threading.Tasks.Task<TOut>!>! mapper) -> System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<TOut>!>!
 static ResultHandler.Functional.ResultExtensions.BindAsync<T, TOut>(this System.Threading.Tasks.Task<ResultHandler.Core.Base.OperationDataResult<T>!>! resultTask, System.Func<T, ResultHandler.Core.Abstractions.IOperationResult<TOut>!>! binder) -> System.Threading.Tasks.Task<ResultHandler.Core.Abstractions.IOperationResult<TOut>!>!
@@ -109,7 +96,6 @@ static ResultHandler.Facade.Result.ContentTooLarge(string! detail) -> ResultHand
 *REMOVED*static ResultHandler.Facade.Result.ContentTooLarge<T>(string! detail) -> ResultHandler.Implementations.Error.ErrorDataResult<T>!
 static ResultHandler.Facade.Result.ContentTooLarge<T>(string! detail) -> ResultHandler.Core.Base.OperationDataResult<T>!
 *REMOVED*static ResultHandler.Facade.Result.Continue(string! title = "Continue.") -> ResultHandler.Implementations.Success.SuccessResult!
-static ResultHandler.Facade.Result.Continue(string! title = "Continue.") -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.Created(string! title = "Resource created successfully.") -> ResultHandler.Implementations.Success.SuccessResult!
 static ResultHandler.Facade.Result.Created() -> ResultHandler.Core.Base.OperationResult!
 static ResultHandler.Facade.Result.Created(string! title) -> ResultHandler.Core.Base.OperationResult!
@@ -117,7 +103,6 @@ static ResultHandler.Facade.Result.Created(string! title) -> ResultHandler.Core.
 static ResultHandler.Facade.Result.Created<T>(T data) -> ResultHandler.Core.Base.OperationDataResult<T>!
 static ResultHandler.Facade.Result.Created<T>(T data, string! title) -> ResultHandler.Core.Base.OperationDataResult<T>!
 *REMOVED*static ResultHandler.Facade.Result.EarlyHints(string! title = "Early hints.") -> ResultHandler.Implementations.Success.SuccessResult!
-static ResultHandler.Facade.Result.EarlyHints(string! title = "Early hints.") -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.ExpectationFailed(string! detail = "The expectation given in the Expect header could not be met.") -> ResultHandler.Implementations.Error.ErrorResult!
 static ResultHandler.Facade.Result.ExpectationFailed(string! detail = "The expectation given in the Expect header could not be met.") -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.ExpectationFailed<T>(string! detail = "The expectation given in the Expect header could not be met.") -> ResultHandler.Implementations.Error.ErrorDataResult<T>!
@@ -259,7 +244,6 @@ static ResultHandler.Facade.Result.PreconditionRequired(string! detail) -> Resul
 *REMOVED*static ResultHandler.Facade.Result.PreconditionRequired<T>(string! detail) -> ResultHandler.Implementations.Error.ErrorDataResult<T>!
 static ResultHandler.Facade.Result.PreconditionRequired<T>(string! detail) -> ResultHandler.Core.Base.OperationDataResult<T>!
 *REMOVED*static ResultHandler.Facade.Result.Processing(string! title = "Processing.") -> ResultHandler.Implementations.Success.SuccessResult!
-static ResultHandler.Facade.Result.Processing(string! title = "Processing.") -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.ProxyAuthenticationRequired(string! detail = "Proxy authentication is required to access this resource.") -> ResultHandler.Implementations.Error.ErrorResult!
 static ResultHandler.Facade.Result.ProxyAuthenticationRequired(string! detail = "Proxy authentication is required to access this resource.") -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.ProxyAuthenticationRequired<T>(string! detail = "Proxy authentication is required to access this resource.") -> ResultHandler.Implementations.Error.ErrorDataResult<T>!
@@ -295,7 +279,6 @@ static ResultHandler.Facade.Result.Success<T>(T data) -> ResultHandler.Core.Base
 *REMOVED*static ResultHandler.Facade.Result.Success<T>(T data, string! title) -> ResultHandler.Implementations.Success.SuccessDataResult<T>!
 static ResultHandler.Facade.Result.Success<T>(T data, string! title) -> ResultHandler.Core.Base.OperationDataResult<T>!
 *REMOVED*static ResultHandler.Facade.Result.SwitchingProtocols(string! title = "Switching protocols.") -> ResultHandler.Implementations.Success.SuccessResult!
-static ResultHandler.Facade.Result.SwitchingProtocols(string! title = "Switching protocols.") -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.TemporaryRedirect(string! location) -> ResultHandler.Implementations.Success.SuccessResult!
 static ResultHandler.Facade.Result.TemporaryRedirect(string! location) -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.TemporaryRedirect<T>(T data, string! location) -> ResultHandler.Implementations.Success.SuccessDataResult<T>!
@@ -333,9 +316,7 @@ static ResultHandler.Facade.Result.UriTooLong(string! detail = "The request URI 
 *REMOVED*static ResultHandler.Facade.Result.UriTooLong<T>(string! detail = "The request URI exceeds the maximum allowed length.") -> ResultHandler.Implementations.Error.ErrorDataResult<T>!
 static ResultHandler.Facade.Result.UriTooLong<T>(string! detail = "The request URI exceeds the maximum allowed length.") -> ResultHandler.Core.Base.OperationDataResult<T>!
 *REMOVED*static ResultHandler.Facade.Result.UseProxy(string! proxy) -> ResultHandler.Implementations.Success.SuccessResult!
-static ResultHandler.Facade.Result.UseProxy(string! proxy) -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.UseProxy<T>(T data, string! proxy) -> ResultHandler.Implementations.Success.SuccessDataResult<T>!
-static ResultHandler.Facade.Result.UseProxy<T>(T data, string! proxy) -> ResultHandler.Core.Base.OperationDataResult<T>!
 *REMOVED*static ResultHandler.Facade.Result.VariantAlsoNegotiates(string! detail = "The server has an internal configuration error.") -> ResultHandler.Implementations.Error.ErrorResult!
 static ResultHandler.Facade.Result.VariantAlsoNegotiates(string! detail = "The server has an internal configuration error.") -> ResultHandler.Core.Base.OperationResult!
 *REMOVED*static ResultHandler.Facade.Result.VariantAlsoNegotiates<T>(string! detail = "The server has an internal configuration error.") -> ResultHandler.Implementations.Error.ErrorDataResult<T>!
@@ -353,10 +334,20 @@ ResultHandler.Core.Abstractions.IOperationResult.Code.get -> string?
 ResultHandler.Facade.ErrorCodeExtensions
 static ResultHandler.Facade.ErrorCodeExtensions.WithCode<TResult>(this TResult! result, string! code) -> TResult!
 ResultHandler.Core.Base.OperationResult.Code.get -> string?
-ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail, System.Collections.Generic.IReadOnlyList<string!>? errors, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors, string? code) -> void
-ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail, System.Collections.Generic.IReadOnlyList<string!>? errors, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? fieldErrors, string? code) -> void
-ResultHandler.Core.Abstractions.IHasLocation
-ResultHandler.Core.Abstractions.IHasLocation.Location.get -> string?
 ResultHandler.Core.Base.OperationResult.Location.get -> string?
 ResultHandler.Facade.LocationExtensions
 static ResultHandler.Facade.LocationExtensions.WithLocation<TResult>(this TResult! result, string! location) -> TResult!
+ResultHandler.Core.Abstractions.IOperationResult.Location.get -> string?
+ResultHandler.Core.Abstractions.IOperationResult.Errors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
+ResultHandler.Core.Abstractions.IResultFailureFactory<TSelf>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! errors) -> TSelf
+ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? errors = null, string? code = null) -> void
+ResultHandler.Core.Base.OperationResult.Errors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
+ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>? errors = null, string? code = null) -> void
+ResultHandler.Implementations.Error.ErrorDataResult<T>.ErrorDataResult(string! title, ResultHandler.Core.Enums.ResultStatus status, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! errors) -> void
+ResultHandler.Implementations.Error.ErrorResult.ErrorResult(string! title, ResultHandler.Core.Enums.ResultStatus status, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! errors) -> void
+static ResultHandler.Core.Base.OperationDataResult<T>.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! errors) -> ResultHandler.Core.Base.OperationDataResult<T>!
+static ResultHandler.Core.Base.OperationResult.Failure(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! errors) -> ResultHandler.Core.Base.OperationResult!
+*REMOVED*ResultHandler.Core.Base.OperationResult.Errors.get -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*ResultHandler.Core.Base.OperationDataResult<T>.OperationDataResult(T data, bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null) -> void
+*REMOVED*ResultHandler.Core.Abstractions.IOperationResult.Errors.get -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*ResultHandler.Core.Base.OperationResult.OperationResult(bool isSuccessful, ResultHandler.Core.Enums.ResultStatus status, string! title, string? detail = null, System.Collections.Generic.IReadOnlyList<string!>? errors = null) -> void

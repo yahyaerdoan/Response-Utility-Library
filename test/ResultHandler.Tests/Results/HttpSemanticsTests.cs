@@ -16,6 +16,7 @@ using ResultHandler.AspNetCore.Extensions;
 using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
 using ResultHandler.Facade;
+using ResultHandler.Implementations.Success;
 using Xunit;
 
 namespace ResultHandler.Tests.Results;
@@ -111,9 +112,9 @@ public class HttpSemanticsTests
     [Fact]
     public void InterimStatuses_CannotBeTheFinalResponse()
     {
-        Assert.Throws<InvalidOperationException>(() => Result.Continue().ToResult());
-        Assert.Throws<InvalidOperationException>(() => Result.Processing().ToActionResult());
-        Assert.Throws<InvalidOperationException>(() => Result.EarlyHints().ToEnvelopedResult());
+        Assert.Throws<InvalidOperationException>(() => new SuccessResult("Continue.", ResultStatus.Continue).ToResult());
+        Assert.Throws<InvalidOperationException>(() => new SuccessResult("Processing.", ResultStatus.Processing).ToActionResult());
+        Assert.Throws<InvalidOperationException>(() => new SuccessResult("Early hints.", ResultStatus.EarlyHints).ToEnvelopedResult());
     }
 
     [Fact]

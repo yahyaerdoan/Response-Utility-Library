@@ -57,7 +57,7 @@ public static partial class AspNetCoreResultExtensions
         => new ProblemDetailsHttpResult(result.ToProblemDetails(httpContext));
 
     private static IResult WithLocation(IOperationResult result, IResult success)
-        => result is IHasLocation { Location: { } location } ? new LocationHttpResult(success, location) : success;
+        => result.Location is { } location ? new LocationHttpResult(success, location) : success;
 
     private static IResult ToSuccessResult<T>(ResultStatus status, T data)
     {

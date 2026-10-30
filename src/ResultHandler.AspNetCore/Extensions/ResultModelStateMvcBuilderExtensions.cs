@@ -48,7 +48,7 @@ public static class ResultModelStateMvcBuilderExtensions
 
         var unreadable = jsonEntries.Count > 0 || entries.Exists(entry => entry.Error.Exception is not null);
         return unreadable
-            ? new OperationResult(false, ResultStatus.BadRequest, ReasonPhrases.GetReasonPhrase(StatusCodes.Status400BadRequest), null, null, fieldErrors)
+            ? new OperationResult(false, ResultStatus.BadRequest, ReasonPhrases.GetReasonPhrase(StatusCodes.Status400BadRequest), null, fieldErrors)
             : OperationResult.Failure(fieldErrors);
     }
 }

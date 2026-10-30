@@ -1,9 +1,9 @@
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using ResultHandler.Core.Abstractions;
 using ResultHandler.Core.Enums;
 using ResultHandler.Implementations.Error;
+using ResultHandler.Serialization;
 
 namespace ResultHandler.Core.Base;
 
@@ -13,32 +13,17 @@ namespace ResultHandler.Core.Base;
 /// <param name="status">The outcome status.</param>
 /// <param name="title">A short summary of the result.</param>
 /// <param name="detail">Optional additional context.</param>
-/// <param name="errors">Optional list of individual error messages.</param>
-public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyList<string>? errors = null)
-    : OperationResult(isSuccessful, status, title, detail, errors), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
+/// <param name="errors">Optional error messages by field; <c>""</c> holds messages that belong to no field.</param>
+/// <param name="code">Optional machine-readable error code.</param>
+[JsonConverter(typeof(OperationResultJsonConverterFactory))]
+public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? errors = null, string? code = null)
+    : OperationResult(isSuccessful, status, title, detail, errors, code), IOperationResult<T>, IResultFailureFactory<OperationDataResult<T>>
 {
-    /// <summary>Sets <paramref name="errors"/> and <paramref name="fieldErrors"/> independently — see the matching constructor on <see cref="OperationResult"/>.</summary>
-    public OperationDataResult([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors)
-        : this(data, isSuccessful, status, title, detail, errors)
-    {
-        FieldErrors = fieldErrors ?? ImmutableDictionary<string, IReadOnlyList<string>>.Empty;
-    }
-
-    /// <summary>Sets every member, including <paramref name="code"/>; see the matching constructor on <see cref="OperationResult"/>.</summary>
-    [JsonConstructor]
-    public OperationDataResult([AllowNull] T data, bool isSuccessful, ResultStatus status, string title, string? detail, IReadOnlyList<string>? errors, IReadOnlyDictionary<string, IReadOnlyList<string>>? fieldErrors, string? code)
-        : this(data, isSuccessful, status, title, detail, errors, fieldErrors)
-    {
-        Code = code;
-    }
-
     /// <inheritdoc cref="IOperationResult{T}.Data"/>
     [MaybeNull]
-    [JsonPropertyName("resultData")]
     public T Data { get; } = data!;
 
     /// <inheritdoc cref="IOperationResult.IsSuccessful"/>
-    [JsonPropertyName("isSuccessful")]
     [MemberNotNullWhen(true, nameof(Data))]
     public override bool IsSuccessful => base.IsSuccessful;
 
@@ -47,8 +32,8 @@ public class OperationDataResult<T>([AllowNull] T data, bool isSuccessful, Resul
         => new ErrorDataResult<T>(OperationResultDefaults.ValidationFailedTitle, ResultStatus.UnprocessableContent, errors);
 
     /// <inheritdoc />
-    public static new OperationDataResult<T> Failure(IReadOnlyDictionary<string, IReadOnlyList<string>> fieldErrors)
-        => new ErrorDataResult<T>(OperationResultDefaults.ValidationFailedTitle, ResultStatus.UnprocessableContent, fieldErrors);
+    public static new OperationDataResult<T> Failure(IReadOnlyDictionary<string, IReadOnlyList<string>> errors)
+        => new ErrorDataResult<T>(OperationResultDefaults.ValidationFailedTitle, ResultStatus.UnprocessableContent, errors);
 
     /// <inheritdoc />
     public static new OperationDataResult<T> Failure(string title, string detail, ResultStatus status)

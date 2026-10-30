@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using ResultHandler.Core.Abstractions;
 using ResultHandler.Facade;
 using ResultHandler.Implementations.Success;
 using Xunit;
@@ -40,8 +39,6 @@ public class LocationTests
         Assert.Equal("/c", Result.SeeOther("/c").Location);
         Assert.Equal("/d", Result.TemporaryRedirect("/d").Location);
         Assert.Equal("/e", Result.PermanentRedirect("/e").Location);
-        Assert.Equal("http://proxy:8080", Result.UseProxy("http://proxy:8080").Location);
-        Assert.IsAssignableFrom<IHasLocation>(Result.Found("/f"));
     }
 
     [Fact]

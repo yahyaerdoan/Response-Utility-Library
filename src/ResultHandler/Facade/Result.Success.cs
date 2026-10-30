@@ -6,22 +6,6 @@ namespace ResultHandler.Facade;
 
 public static partial class Result
 {
-    /// <summary>Success (100 Continue).</summary>
-    public static OperationResult Continue(string title = ResultTitles.Continue)
-        => new SuccessResult(title, ResultStatus.Continue);
-
-    /// <summary>Success (101 Switching Protocols).</summary>
-    public static OperationResult SwitchingProtocols(string title = ResultTitles.SwitchingProtocols)
-        => new SuccessResult(title, ResultStatus.SwitchingProtocols);
-
-    /// <summary>Success (102 Processing).</summary>
-    public static OperationResult Processing(string title = ResultTitles.Processing)
-        => new SuccessResult(title, ResultStatus.Processing);
-
-    /// <summary>Success (103 Early Hints).</summary>
-    public static OperationResult EarlyHints(string title = ResultTitles.EarlyHints)
-        => new SuccessResult(title, ResultStatus.EarlyHints);
-
     /// <summary>Success (200 Ok) with the default title, no data.</summary>
     public static OperationResult Success()
         => new SuccessResult();
@@ -149,14 +133,6 @@ public static partial class Result
     /// <inheritdoc cref="SeeOther(string)"/>
     public static OperationDataResult<T> SeeOther<T>(T data, string location)
         => new SuccessDataResult<T>(data, string.Format(ResultTitles.SeeOtherTemplate, location), ResultStatus.SeeOther).WithLocation(location);
-
-    /// <summary>Redirect (305 Use Proxy); <paramref name="proxy"/> is interpolated into the title.</summary>
-    public static OperationResult UseProxy(string proxy)
-        => new SuccessResult(string.Format(ResultTitles.UseProxyTemplate, proxy), ResultStatus.UseProxy).WithLocation(proxy);
-
-    /// <inheritdoc cref="UseProxy(string)"/>
-    public static OperationDataResult<T> UseProxy<T>(T data, string proxy)
-        => new SuccessDataResult<T>(data, string.Format(ResultTitles.UseProxyTemplate, proxy), ResultStatus.UseProxy).WithLocation(proxy);
 
     /// <summary>Success (304 Not Modified), no data.</summary>
     public static OperationResult NotModified()
