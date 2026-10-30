@@ -80,7 +80,7 @@ v12 (breaking): Removed all members previously marked [Obsolete] — StatusMessa
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.401">
+    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.403">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

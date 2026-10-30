@@ -50,7 +50,7 @@ v13.2 - ProducesResultProblems(): one call on a route group documents the Proble
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.401">
+    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.403">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
