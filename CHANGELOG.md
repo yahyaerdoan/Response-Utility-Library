@@ -8,6 +8,14 @@ From 16.0.0 on, the packages follow [Semantic Versioning](https://semver.org/): 
 API or to the JSON the packages write only come in a major version, each listed here with migration notes;
 minor versions add features and patch versions fix bugs. The three packages always share a version.
 
+## [16.2.0]
+
+### Added
+- `ResultExceptionHandlerOptions.IncludeErrorCodes`: the exception handler's built-in answers carry a `code`
+  (`Request.Invalid` for a request that could not be read, `Upstream.Failed` for 502, `Upstream.Timeout` for 504,
+  `Server.Error` for 500), so clients can branch on every failure. The codes are constants on the new
+  `ResultErrorCodes`. Off by default, so existing responses do not change; mapped exceptions keep their own code.
+
 ## [16.1.0]
 
 ### Changed
