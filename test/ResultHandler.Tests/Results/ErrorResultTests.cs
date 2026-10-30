@@ -35,7 +35,7 @@ public class ErrorResultTests
         var errors = new[] { "Field A is required.", "Field B is invalid." };
         var result = new ErrorResult("Validation failed.", ResultStatus.UnprocessableContent, errors);
 
-        Assert.Equal(errors, result.Errors);
+        Assert.Equal(errors, result.Errors[string.Empty]);
         Assert.Null(result.Detail);
     }
 

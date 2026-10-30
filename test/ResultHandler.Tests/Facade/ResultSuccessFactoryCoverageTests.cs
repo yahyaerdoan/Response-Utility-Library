@@ -11,10 +11,6 @@ public class ResultSuccessFactoryCoverageTests
 {
     public static TheoryData<Func<OperationResult>, ResultStatus> ParameterlessFactories() => new()
     {
-        { () => Result.Continue(), ResultStatus.Continue },
-        { () => Result.SwitchingProtocols(), ResultStatus.SwitchingProtocols },
-        { () => Result.Processing(), ResultStatus.Processing },
-        { () => Result.EarlyHints(), ResultStatus.EarlyHints },
         { () => Result.Created(), ResultStatus.Created },
         { () => Result.Accepted(), ResultStatus.Accepted },
         { Result.NoContent, ResultStatus.NoContent },
@@ -44,7 +40,6 @@ public class ResultSuccessFactoryCoverageTests
         { Result.MovedPermanently, ResultStatus.MovedPermanently },
         { Result.Found, ResultStatus.Found },
         { Result.SeeOther, ResultStatus.SeeOther },
-        { Result.UseProxy, ResultStatus.UseProxy },
         { Result.TemporaryRedirect, ResultStatus.TemporaryRedirect },
         { Result.PermanentRedirect, ResultStatus.PermanentRedirect },
     };
@@ -54,7 +49,6 @@ public class ResultSuccessFactoryCoverageTests
         { Result.MovedPermanently, ResultStatus.MovedPermanently },
         { Result.Found, ResultStatus.Found },
         { Result.SeeOther, ResultStatus.SeeOther },
-        { Result.UseProxy, ResultStatus.UseProxy },
         { Result.TemporaryRedirect, ResultStatus.TemporaryRedirect },
         { Result.PermanentRedirect, ResultStatus.PermanentRedirect },
     };

@@ -29,9 +29,9 @@ product by id, and a `ProductsController` that exposes it over HTTP.
 [6. Minimal APIs](#6-minimal-apis) · [7. Functional composition](#7-functional-composition) ·
 [8. `Result.Combine`](#8-combining-independent-checks--resultcombine) · [9. Async composition](#9-async-composition) ·
 [10. Generic short-circuiting](#10-generic-short-circuiting--iresultfailurefactorytself--resultfailurefactory) ·
-[11. Per-field validation errors](#11-per-field-validation-errors--ihasfielderrors--iresultfailurefactorytself) ·
+[11. Errors by field](#11-errors-by-field-errors--iresultfailurefactorytself) ·
 [12. Serialization](#12-serialization) · [13. Equality & debugging](#13-equality--debugging) ·
-[14. Migrating to v12](#14-migrating-to-v12) · [15. Validation with FluentValidation](#15-validation-with-fluentvalidation)
+[14. Validation with FluentValidation](#14-validation-with-fluentvalidation)
 
 ---
 ## 1. The core contract
@@ -44,7 +44,7 @@ Every result implements `IOperationResult` (`ResultHandler.Core.Abstractions`):
 | `ResultStatus Status` | outcome status — an enum, not `HttpStatusCode`, see §2 |
 | `string Title` | short summary, e.g. `"Not Found"` |
 | `string? Detail` | optional extra context, e.g. `"Product 42 does not exist."` |
-| `IReadOnlyList<string> Errors` | optional list of individual error messages (validation, etc.) |
+| `IReadOnlyDictionary<string, IReadOnlyList<string>> Errors` | error messages by field; `""` holds messages that belong to no field (§11) |
 
 `IOperationResult<T> : IOperationResult` adds `T Data` — guaranteed non-null when `IsSuccessful` is `true`
 (the compiler enforces this via `[MemberNotNullWhen]`, so `result.Data` is safe to use right after
@@ -146,6 +146,19 @@ public OperationResult CustomFailure()
     => Result.Failure("Payment declined.", "The card was rejected by the issuer.", ResultStatus.PaymentRequired);
 ```
 
+**Location.** A 201 should say where the new resource is, a 202 where to follow the work, and a redirect where to go.
+`WithLocation(uri)` attaches it, and the redirect factories (`MovedPermanently`, `Found`, `SeeOther`, `TemporaryRedirect`,
+`PermanentRedirect`) set it from their argument; `ToResult`/`ToActionResult` and the enveloped variants write it as the
+`Location` header. It is HTTP metadata, so it is not part of the serialized result:
+
+```csharp
+return Result.Created(order.Id).WithLocation($"/api/v1/orders/{order.Id}");
+```
+
+There are no factories for 1xx statuses: they are interim responses and can't be the final response of a request, so
+mapping one to HTTP (built by hand, `new SuccessResult(title, ResultStatus.Continue)`) throws instead of leaving the client
+waiting.
+
 **`string` data needs the type argument.** A single string is the title: `Result.Success("Basket cleared.")`
 is a success with that title and no data. When the data itself is a string, say so explicitly with
 `Result.Success<string>("R-1")`, or pass both, `Result.Success("R-1", "Receipt found.")` (the same applies to
@@ -190,7 +203,7 @@ public class ProductsController : ControllerBase
   `ProblemDetails` body.
 * **`ToActionResult<T>()`** — for `IOperationResult<T>`. Success returns the raw `T` payload with the
   result's actual status code (`201 { ... }` for `Created`, `202 { ... }` for `Accepted`, etc. — not
-  hardcoded to `200`), or a bodyless status for `NoContent`/1xx/3xx; failure is the same
+  hardcoded to `200`), or a bodyless status for `NoContent`/3xx; failure is the same
   `ProblemDetails` body.
 * **`ToEnvelopedActionResult()`** — success returns the *whole* result object (status/title/data) as
   the body instead of just the payload, with the same status-code-preserving behavior — useful when
@@ -266,9 +279,18 @@ app.UseStatusCodePages(); // bodyless 4xx/5xx responses get a Problem Details bo
 **Exceptions in the same shape.** `AddResultExceptionHandler()` registers an `IExceptionHandler` for
 `app.UseExceptionHandler()` (it also calls `AddResultProblemDetails()`). Map the exceptions your code
 throws to failed results; the closest mapped base type wins, so a `Map<Exception>` catch-all and a more
-specific mapping can coexist. `BadHttpRequestException` keeps its status code, everything else is a `500`.
-Messages of unmapped exceptions reach the client only in Development (`ExposeExceptionMessages`), and
-logging stays with ASP.NET Core's exception handler middleware:
+specific mapping can coexist. Without a mapping:
+
+* `BadHttpRequestException` keeps its status code and names the field it could not read (below);
+* `HttpRequestException` is a `502` and a timeout (`TimeoutException`, or an `HttpClient` timeout) a `504`,
+  because the failure is in a service this one depends on;
+* everything else is a `500`.
+
+Messages of unmapped exceptions reach the client only in Development (`ExposeExceptionMessages`).
+`ResultExceptionHandlerOptions.Resolve(exception, httpContext)` returns the result an exception maps to, for
+tests or a logging handler. Logging stays with ASP.NET Core's exception handler middleware: on .NET 10, which
+stops logging exceptions an `IExceptionHandler` handles, server errors (5xx) are logged again and client errors
+(4xx) are not; on .NET 8 and 9 the middleware logs every exception:
 
 ```csharp
 builder.Services.AddResultExceptionHandler(options => options
@@ -279,6 +301,27 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 ```
+
+**Requests that can't be read.** When ASP.NET Core can't bind a request, the 400 names the field, keyed like
+FluentValidation property names, with fixed messages that never echo .NET type names:
+
+| Request | `errors` |
+| --- | --- |
+| `GET /orders/abc` for `{id}` bound to `Guid id` | `"Id": ["The value is missing or has an invalid format."]` |
+| `GET /orders?page=abc`, or no `page`, for `int page` | `"Page": [...]` / `"Page": ["This field is required."]` |
+| `{ "serviceId": "abc" }` for `Guid ServiceId` | `"ServiceId": ["The value is missing or has an invalid format."]` |
+| `{ "lines": [{ "quantity": "two" }] }` | `"Lines[0].Quantity": [...]` |
+| `{}` for a type with `required` members | one `"This field is required."` per missing member |
+| malformed JSON / no body | `"": ["The request body is not valid JSON."]` / `"": ["A request body is required."]` |
+
+Minimal APIs only throw for these in Development; to get the same response in every environment, set
+`builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true)`. Route parameters
+should not use type constraints for this (`{id:guid}`): a constraint that doesn't match makes the route not
+match, so the client gets a 404 instead of this 400. Keep constraints for telling similar routes apart.
+
+For MVC, `AddControllers().AddResultModelStateResponses()` gives `[ApiController]`'s automatic model-state
+response the same keys and messages: 400 when the request could not be read, 422 when it failed validation
+attributes.
 
 ---
 ## 6. Minimal APIs
@@ -292,7 +335,7 @@ Use the `IResult`-returning siblings instead — same shapes, same status-code-p
 native to Minimal APIs and fully visible to OpenAPI generation:
 
 * **`ToResult(HttpContext? httpContext = null)`** — `IOperationResult` → `IResult`. Success returns a
-  bodyless status (`204` for `NoContent`, `304` for `NotModified`, plain status code for 1xx/3xx/`Ok`);
+  bodyless status (`204` for `NoContent`, `304` for `NotModified`, plain status code for 3xx/`Ok`);
   failure returns an RFC 9457 `ProblemDetails` JSON body via `ToProblemResult`.
 * **`ToResult<T>(HttpContext? httpContext = null)`** — `IOperationResult<T>` → `IResult`. Success
   returns the raw payload as JSON with the result's actual status code (`201` for `Created`, `202` for
@@ -426,12 +469,10 @@ IOperationResult? ValidateCreate(CreateProductRequest request)
 }
 ```
 
-If both checks fail, `combined.Errors` contains **both** messages — `["Name is required.", "Price must be greater than zero."]`
-— not just the first one. Every failed result's `Errors` (or `Detail`/`Title` when it carries none) are
-concatenated in order; if every result succeeds, `Combine` returns `Result.Success()`.
-
-When the combined results carry `FieldErrors` (§11), `Combine` merges them by key instead of dropping
-them — combining a `"Name"` failure and a `"Price"` failure gives you both keys back in one result.
+If both checks fail, `combined.Errors[""]` contains **both** messages, `["Name is required.", "Price must be greater than zero."]`,
+not just the first one. Every failed result's `Errors` are merged by field, and a failure without errors adds its
+`Detail` (or `Title`) under `""`; if every result succeeds, `Combine` returns `Result.Success()`. Combining a `"Name"`
+failure and a `"Price"` failure gives you both keys back in one result.
 
 When the independent checks each carry data you actually need afterward, the 2–4 arity generic
 overloads combine both the outcome *and* the payloads into a named tuple:
@@ -658,41 +699,36 @@ public async Task<IActionResult> Create(CreateProductCommand command)
 ```
 
 ---
-## 11. Per-field validation errors — `IHasFieldErrors` / `IResultFailureFactory<TSelf>`
+## 11. Errors by field: `Errors` / `IResultFailureFactory<TSelf>`
 
-§3's plain `IReadOnlyList<string> Errors` is a flat list — fine for "here are the problems" messages,
-but a form UI usually needs to know *which* input each message belongs to. `OperationResult`/
-`OperationDataResult<T>` (and therefore `ErrorResult`/`ErrorDataResult<T>`) also implement
-`IHasFieldErrors` (`ResultHandler.Core.Abstractions`):
+A form UI needs to know *which* input each message belongs to, so `Errors` is a map from property name to
+that property's messages. Messages that belong to no field (`Result.Invalid("...")`, `Failure(messages)`) are
+kept under the `""` key, the key ASP.NET Core uses for model-level errors:
 
 ```csharp
-public interface IHasFieldErrors
-{
-    IReadOnlyDictionary<string, IReadOnlyList<string>> FieldErrors { get; }
-}
+IReadOnlyDictionary<string, IReadOnlyList<string>> Errors { get; }
 ```
 
-Build one with `OperationResult.Failure(fieldErrors)` / `OperationDataResult<T>.Failure(fieldErrors)`,
-or the generic `IResultFailureFactory<TSelf>.Failure(fieldErrors)` (implemented by the same types, for
-the same CRTP reason as §10) — keyed by property name, valued by that property's messages:
+Build one with `OperationResult.Failure(errors)` / `OperationDataResult<T>.Failure(errors)`, or the generic
+`IResultFailureFactory<TSelf>.Failure(errors)` (implemented by the same types, for the same CRTP reason as §10):
 
 ```csharp
 using ResultHandler.Core.Base;
 
-var fieldErrors = new Dictionary<string, IReadOnlyList<string>>
+var errors = new Dictionary<string, IReadOnlyList<string>>
 {
     ["Name"] = ["Name is required."],
     ["Price"] = ["Price must be greater than zero."],
 };
 
-OperationResult validation = OperationResult.Failure(fieldErrors);
+OperationResult validation = OperationResult.Failure(errors);
 ```
 
-`FieldErrors` and the flattened `Errors` list are both populated from the same input — pick whichever
-shape a given caller needs; `Title`/`Status` default to `"Validation Failed"` /
-`422 Unprocessable Content`, same as the flat-list `Failure(errors)` overload.
+`Title`/`Status` default to `"Validation Failed"` / `422 Unprocessable Content`, the same as the
+`Failure(messages)` overload. Fields with no messages are dropped. When you need every message as one list,
+`result.Errors.Values.SelectMany(messages => messages)` gives it.
 
-A generic pipeline behavior (mirrors §10's `ValidationBehavior`, keyed per field instead of a flat list):
+A generic pipeline behavior (mirrors §10's `ValidationBehavior`, keyed per field):
 
 ```csharp
 public class FieldValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
@@ -702,27 +738,24 @@ public class FieldValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator
 {
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        var fieldErrors = validators
+        var errors = validators
             .Select(v => v.Validate(request))
             .SelectMany(r => r.Errors)
             .GroupBy(f => f.PropertyName)
             .ToDictionary(g => g.Key, IReadOnlyList<string> (g) => [.. g.Select(f => f.ErrorMessage)]);
 
-        return fieldErrors.Count > 0 ? TResponse.Failure(fieldErrors) : await next(ct);
+        return errors.Count > 0 ? TResponse.Failure(errors) : await next(ct);
     }
 }
 ```
 
-`ToErrorDataResult<T>()`, `Map`, and `Bind` (§7/§10) carry `FieldErrors` through when re-projecting a
-failure into a different result type, same as they carry `Title`/`Status`/`Detail`/`Errors`;
-`Result.Combine` (§8) merges `FieldErrors` from every combined failure instead.
+`ToErrorDataResult<T>()`, `Map`, and `Bind` (§7/§10) carry `Errors` through when re-projecting a
+failure into a different result type, together with `Title`/`Status`/`Detail`/`Code`; `Result.Combine` (§8)
+merges them by field.
 
-`ResultHandler.AspNetCore`'s `ToProblemDetails()` (§5/§6) writes a failure that has `FieldErrors` or
-`Errors` as an `HttpValidationProblemDetails`, the same shape ASP.NET Core uses for its own validation
-responses: `"errors"` maps each field to its messages. Messages in `Errors` that don't belong to a field
-(a flat `Result.Invalid(...)`, or the non-field part of a `Result.Combine`) go under the `""` key, like
-ASP.NET Core's model-level errors. `Errors` repeats the field messages in memory, but they are written
-only once:
+`ResultHandler.AspNetCore`'s `ToProblemDetails()` (§5/§6) writes a failure with errors as an
+`HttpValidationProblemDetails`, the same shape ASP.NET Core uses for its own validation responses, with
+`"errors"` exactly as the result holds it:
 
 ```json
 {
@@ -753,16 +786,27 @@ JsonSerializer.Serialize(Result.NotFound<ProductDto>("Product 42 does not exist.
   "isSuccessful": false,
   "statusCode": 404,
   "statusMessage": "Not Found",
-  "detail": "Product 42 does not exist.",
-  "errors": [],
-  "fieldErrors": {}
+  "detail": "Product 42 does not exist."
 }
 ```
 
-`Detail` and `code` (§5) are omitted entirely when `null`; `errors` and `fieldErrors` are always
-present, empty (`[]`/`{}`) when the failure doesn't carry any (see §11). This is the shape of the result
-object itself, for example when you cache or queue results. Over HTTP, the success envelope is the smaller
-`ResultEnvelope` (§6) and failures are Problem Details (§5/§6).
+`detail` and `code` (§5) appear only when set, and `errors` only when there are any. `errors` is the same
+map as in validation Problem Details and in memory: messages by field, and messages that belong to no field
+under `""`. So `errors` means one thing everywhere:
+
+```json
+{
+  "isSuccessful": false,
+  "statusCode": 422,
+  "statusMessage": "Validation Failed",
+  "errors": { "Name": ["Name is required."], "": ["The catalog is closed."] }
+}
+```
+
+This is the shape of the result object itself, for example when you cache or queue results; deserialize it
+as `OperationResult` or `OperationDataResult<T>`. Unknown properties are ignored, so a success cached before v16
+still reads. Over HTTP, the success envelope is
+the smaller `ResultEnvelope` (§6) and failures are Problem Details (§5/§6).
 
 ---
 ## 13. Equality & debugging
@@ -776,36 +820,7 @@ Result.NotFound("x").ToString(); // "NotFound (404): Not Found"
 ```
 
 ---
-## 14. Migrating to v12
-
-v12 **removes** every member that v11 marked `[Obsolete]` — they no longer compile, there's no
-forwarding shim. Replace them directly:
-
-| Removed in v12 | Use instead |
-| --- | --- |
-| `StatusMessage` | `Title` |
-| `StatusCode: HttpStatusCode` | `Status: ResultStatus` |
-| `ResultData` | `Data` |
-| `new ErrorResult(string statusMessage, HttpStatusCode statusCode)` and the equivalent `HttpStatusCode`-based constructors on `OperationResult`, `OperationDataResult<T>`, `SuccessResult`, `SuccessDataResult<T>`, `ErrorDataResult<T>` | The `ResultStatus`-based constructor, e.g. `new ErrorResult(title, status)`. If you only have an `HttpStatusCode` on hand, convert it first: `new ErrorResult(title, httpStatusCode.ToResultStatus())` (`HttpStatusCodeExtensions.ToResultStatus`). |
-
-```csharp
-// Before (v11, obsolete):
-var legacy = new ErrorResult("Not found.", HttpStatusCode.NotFound);
-Console.WriteLine(legacy.StatusMessage);
-
-// After (v12):
-var current = new ErrorResult("Not found.", HttpStatusCode.NotFound.ToResultStatus());
-Console.WriteLine(current.Title);
-```
-
-**`ResultHandler.AspNetCore` behavior fix (carried over from v11):** `ToActionResult<T>()` and `ToEnvelopedActionResult()`
-used to hardcode a `200` status code for any successful result that carried a body, silently
-discarding the result's actual `Status` (so `Result.Created(...)` came back as `200`, not `201`).
-Both now honor `Status` correctly. If you were relying on the old (incorrect) `200`-always behavior,
-check call sites that use non-`Ok` success statuses with `ToActionResult<T>`/`ToEnvelopedActionResult`.
-
----
-## 15. Validation with FluentValidation
+## 14. Validation with FluentValidation
 
 `ResponseResultHandler.FluentValidation` connects FluentValidation to results without MediatR. In a service,
 turn a `ValidationResult` into a result:

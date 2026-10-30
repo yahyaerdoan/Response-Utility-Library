@@ -213,7 +213,7 @@ public class ResultExtensionsAsyncTests
 
         var result = await source.BindAsync(SendGetUserName);
 
-        Assert.Equal(["Name is required."], result.FieldErrors["Name"]);
+        Assert.Equal(["Name is required."], result.Errors["Name"]);
     }
 
     [Fact]
@@ -469,7 +469,7 @@ public class ResultExtensionsAsyncTests
         Assert.False(invoked);
         Assert.IsType<ErrorResult>(result);
         Assert.Equal(ResultStatus.UnprocessableContent, result.Status);
-        Assert.Equal(["Email is required."], result.FieldErrors["Email"]);
+        Assert.Equal(["Email is required."], result.Errors["Email"]);
     }
 
     [Fact]

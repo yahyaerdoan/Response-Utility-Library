@@ -148,7 +148,7 @@ public class ResultExtensionsTests
         Assert.IsType<ErrorResult>(fromDetail);
         Assert.Equal(ResultStatus.NotFound, fromDetail.Status);
         Assert.Equal("Missing.", fromDetail.Detail);
-        Assert.Equal(["A is required.", "B is required."], fromErrors.Errors);
+        Assert.Equal(["A is required.", "B is required."], fromErrors.Errors[string.Empty]);
     }
 
     [Fact]
