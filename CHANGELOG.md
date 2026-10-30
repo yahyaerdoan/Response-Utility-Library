@@ -5,6 +5,16 @@ here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); t
 yet commit to strict [SemVer](https://semver.org/) pre-1.0-style guarantees, but breaking changes are
 always called out explicitly below.
 
+## [14.0.1]
+
+### Fixed
+- MVC: a validation failure returned with `ToActionResult`/`ToEnvelopedActionResult` from an
+  `[ApiController]` lost its `"errors"` map when Problem Details services were registered
+  (`AddProblemDetails`/`AddResultProblemDetails`), because MVC's `IProblemDetailsService` writer rebuilds
+  the body as a plain `ProblemDetails`. MVC failures now apply `CustomizeProblemDetails` and are written
+  through normal content negotiation, the same path as MVC's own `ValidationProblem()`. Minimal API
+  results are unchanged.
+
 ## [14.0.0]
 
 Failed responses now follow ASP.NET Core's own Problem Details conventions end to end, so clients,
