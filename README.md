@@ -304,6 +304,21 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 ```
 
+Set `IncludeErrorCodes` to give the built-in answers a `code` too, so clients can branch on every failure, not
+only the ones you map. The codes are constants on `ResultErrorCodes`; mapped exceptions keep the code their
+mapping sets:
+
+| Built-in answer | Status | `code` |
+| --- | --- | --- |
+| The request could not be read | `400` (or the exception's status) | `Request.Invalid` |
+| A dependency failed | `502` | `Upstream.Failed` |
+| A dependency timed out | `504` | `Upstream.Timeout` |
+| Anything else | `500` | `Server.Error` |
+
+```csharp
+builder.Services.AddResultExceptionHandler(options => options.IncludeErrorCodes = true);
+```
+
 **Requests that can't be read.** When ASP.NET Core can't bind a request, the 400 names the field, keyed like
 FluentValidation property names, with fixed messages that never echo .NET type names:
 
