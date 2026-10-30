@@ -11,353 +11,733 @@ namespace ResultHandler.Functional;
 public static partial class ResultExtensions
 {
     /// <summary>Awaits <paramref name="resultTask"/>, then reduces it into a single value.</summary>
-    public static async Task<TOut> MatchAsync<TOut>(this Task<IOperationResult> resultTask, Func<IOperationResult, TOut> onSuccess, Func<IOperationResult, TOut> onFailure)
-        => (await resultTask.ConfigureAwait(false)).Match(onSuccess, onFailure);
+    public static Task<TOut> MatchAsync<TOut>(this Task<IOperationResult> resultTask, Func<IOperationResult, TOut> onSuccess, Func<IOperationResult, TOut> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<IOperationResult> resultTask, Func<IOperationResult, TOut> onSuccess, Func<IOperationResult, TOut> onFailure)
+            => (await resultTask.ConfigureAwait(false)).Match(onSuccess, onFailure);
+    }
 
     /// <summary>Reduces <paramref name="result"/> into a single value using an async projection.</summary>
     public static Task<TOut> MatchAsync<TOut>(this IOperationResult result, Func<IOperationResult, Task<TOut>> onSuccess, Func<IOperationResult, Task<TOut>> onFailure)
-        => result.IsSuccessful ? onSuccess(result) : onFailure(result);
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return result.IsSuccessful ? onSuccess(result) : onFailure(result);
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then reduces it into a single value using an async projection.</summary>
-    public static async Task<TOut> MatchAsync<TOut>(this Task<IOperationResult> resultTask, Func<IOperationResult, Task<TOut>> onSuccess, Func<IOperationResult, Task<TOut>> onFailure)
-        => await (await resultTask.ConfigureAwait(false)).MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+    public static Task<TOut> MatchAsync<TOut>(this Task<IOperationResult> resultTask, Func<IOperationResult, Task<TOut>> onSuccess, Func<IOperationResult, Task<TOut>> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<IOperationResult> resultTask, Func<IOperationResult, Task<TOut>> onSuccess, Func<IOperationResult, Task<TOut>> onFailure)
+            => await (await resultTask.ConfigureAwait(false)).MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then reduces the data result into a single value.</summary>
-    public static async Task<TOut> MatchAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, TOut> onSuccess, Func<IOperationResult<T>, TOut> onFailure)
-        => (await resultTask.ConfigureAwait(false)).Match(onSuccess, onFailure);
+    public static Task<TOut> MatchAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, TOut> onSuccess, Func<IOperationResult<T>, TOut> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<IOperationResult<T>> resultTask, Func<T, TOut> onSuccess, Func<IOperationResult<T>, TOut> onFailure)
+            => (await resultTask.ConfigureAwait(false)).Match(onSuccess, onFailure);
+    }
 
     /// <summary>Reduces the data result <paramref name="result"/> into a single value using an async projection.</summary>
     public static Task<TOut> MatchAsync<T, TOut>(this IOperationResult<T> result, Func<T, Task<TOut>> onSuccess, Func<IOperationResult<T>, Task<TOut>> onFailure)
-        => result.IsSuccessful ? onSuccess(result.Data) : onFailure(result);
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return result.IsSuccessful ? onSuccess(result.Data) : onFailure(result);
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then reduces the data result into a single value using an async projection.</summary>
-    public static async Task<TOut> MatchAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<TOut>> onSuccess, Func<IOperationResult<T>, Task<TOut>> onFailure)
-        => await (await resultTask.ConfigureAwait(false)).MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+    public static Task<TOut> MatchAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<TOut>> onSuccess, Func<IOperationResult<T>, Task<TOut>> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<IOperationResult<T>> resultTask, Func<T, Task<TOut>> onSuccess, Func<IOperationResult<T>, Task<TOut>> onFailure)
+            => await (await resultTask.ConfigureAwait(false)).MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/> (for example a MediatR <c>Send</c>), then reduces it into a single value.</summary>
-    public static async Task<TOut> MatchAsync<TOut>(this Task<OperationResult> resultTask, Func<IOperationResult, TOut> onSuccess, Func<IOperationResult, TOut> onFailure)
+    public static Task<TOut> MatchAsync<TOut>(this Task<OperationResult> resultTask, Func<IOperationResult, TOut> onSuccess, Func<IOperationResult, TOut> onFailure)
     {
-        IOperationResult result = await resultTask.ConfigureAwait(false);
-        return result.Match(onSuccess, onFailure);
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<OperationResult> resultTask, Func<IOperationResult, TOut> onSuccess, Func<IOperationResult, TOut> onFailure)
+        {
+            IOperationResult result = await resultTask.ConfigureAwait(false);
+            return result.Match(onSuccess, onFailure);
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then reduces it into a single value using an async projection.</summary>
-    public static async Task<TOut> MatchAsync<TOut>(this Task<OperationResult> resultTask, Func<IOperationResult, Task<TOut>> onSuccess, Func<IOperationResult, Task<TOut>> onFailure)
+    public static Task<TOut> MatchAsync<TOut>(this Task<OperationResult> resultTask, Func<IOperationResult, Task<TOut>> onSuccess, Func<IOperationResult, Task<TOut>> onFailure)
     {
-        IOperationResult result = await resultTask.ConfigureAwait(false);
-        return await result.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<OperationResult> resultTask, Func<IOperationResult, Task<TOut>> onSuccess, Func<IOperationResult, Task<TOut>> onFailure)
+        {
+            IOperationResult result = await resultTask.ConfigureAwait(false);
+            return await result.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then reduces the data result into a single value.</summary>
-    public static async Task<TOut> MatchAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, TOut> onSuccess, Func<IOperationResult<T>, TOut> onFailure)
+    public static Task<TOut> MatchAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, TOut> onSuccess, Func<IOperationResult<T>, TOut> onFailure)
     {
-        IOperationResult<T> result = await resultTask.ConfigureAwait(false);
-        return result.Match(onSuccess, onFailure);
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<OperationDataResult<T>> resultTask, Func<T, TOut> onSuccess, Func<IOperationResult<T>, TOut> onFailure)
+        {
+            IOperationResult<T> result = await resultTask.ConfigureAwait(false);
+            return result.Match(onSuccess, onFailure);
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then reduces the data result into a single value using an async projection.</summary>
-    public static async Task<TOut> MatchAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<TOut>> onSuccess, Func<IOperationResult<T>, Task<TOut>> onFailure)
+    public static Task<TOut> MatchAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<TOut>> onSuccess, Func<IOperationResult<T>, Task<TOut>> onFailure)
     {
-        IOperationResult<T> result = await resultTask.ConfigureAwait(false);
-        return await result.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return Core(resultTask, onSuccess, onFailure);
+
+        static async Task<TOut> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task<TOut>> onSuccess, Func<IOperationResult<T>, Task<TOut>> onFailure)
+        {
+            IOperationResult<T> result = await resultTask.ConfigureAwait(false);
+            return await result.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, runs a side effect on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult> OnSuccessAsync(this Task<IOperationResult> resultTask, Action<IOperationResult> action)
-        => (await resultTask.ConfigureAwait(false)).OnSuccess(action);
+    public static Task<IOperationResult> OnSuccessAsync(this Task<IOperationResult> resultTask, Action<IOperationResult> action)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
+
+        static async Task<IOperationResult> Core(Task<IOperationResult> resultTask, Action<IOperationResult> action)
+            => (await resultTask.ConfigureAwait(false)).OnSuccess(action);
+    }
 
     /// <summary>Runs an async side effect on success and returns <paramref name="result"/> unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult> OnSuccessAsync(this IOperationResult result, Func<IOperationResult, Task> action)
+    public static Task<IOperationResult> OnSuccessAsync(this IOperationResult result, Func<IOperationResult, Task> action)
     {
-        if (result.IsSuccessful)
-        {
-            await action(result).ConfigureAwait(false);
-        }
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(result, action);
 
-        return result;
+        static async Task<IOperationResult> Core(IOperationResult result, Func<IOperationResult, Task> action)
+        {
+            if (result.IsSuccessful)
+            {
+                await action(result).ConfigureAwait(false);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then runs an async side effect on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult> OnSuccessAsync(this Task<IOperationResult> resultTask, Func<IOperationResult, Task> action)
-        => await (await resultTask.ConfigureAwait(false)).OnSuccessAsync(action).ConfigureAwait(false);
+    public static Task<IOperationResult> OnSuccessAsync(this Task<IOperationResult> resultTask, Func<IOperationResult, Task> action)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
+
+        static async Task<IOperationResult> Core(Task<IOperationResult> resultTask, Func<IOperationResult, Task> action)
+            => await (await resultTask.ConfigureAwait(false)).OnSuccessAsync(action).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, runs a side effect with the typed data on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult<T>> OnSuccessAsync<T>(this Task<IOperationResult<T>> resultTask, Action<T> action)
-        => (await resultTask.ConfigureAwait(false)).OnSuccess(action);
+    public static Task<IOperationResult<T>> OnSuccessAsync<T>(this Task<IOperationResult<T>> resultTask, Action<T> action)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
+
+        static async Task<IOperationResult<T>> Core(Task<IOperationResult<T>> resultTask, Action<T> action)
+            => (await resultTask.ConfigureAwait(false)).OnSuccess(action);
+    }
 
     /// <summary>Runs an async side effect with the typed data on success and returns <paramref name="result"/> unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult<T>> OnSuccessAsync<T>(this IOperationResult<T> result, Func<T, Task> action)
+    public static Task<IOperationResult<T>> OnSuccessAsync<T>(this IOperationResult<T> result, Func<T, Task> action)
     {
-        if (result.IsSuccessful)
-        {
-            await action(result.Data).ConfigureAwait(false);
-        }
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(result, action);
 
-        return result;
+        static async Task<IOperationResult<T>> Core(IOperationResult<T> result, Func<T, Task> action)
+        {
+            if (result.IsSuccessful)
+            {
+                await action(result.Data).ConfigureAwait(false);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then runs an async side effect with the typed data on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult<T>> OnSuccessAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task> action)
-        => await (await resultTask.ConfigureAwait(false)).OnSuccessAsync(action).ConfigureAwait(false);
+    public static Task<IOperationResult<T>> OnSuccessAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task> action)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
+
+        static async Task<IOperationResult<T>> Core(Task<IOperationResult<T>> resultTask, Func<T, Task> action)
+            => await (await resultTask.ConfigureAwait(false)).OnSuccessAsync(action).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, runs a side effect on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<OperationResult> OnSuccessAsync(this Task<OperationResult> resultTask, Action<IOperationResult> action)
+    public static Task<OperationResult> OnSuccessAsync(this Task<OperationResult> resultTask, Action<IOperationResult> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (result.IsSuccessful)
-        {
-            action(result);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationResult> Core(Task<OperationResult> resultTask, Action<IOperationResult> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (result.IsSuccessful)
+            {
+                action(result);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then runs an async side effect on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<OperationResult> OnSuccessAsync(this Task<OperationResult> resultTask, Func<IOperationResult, Task> action)
+    public static Task<OperationResult> OnSuccessAsync(this Task<OperationResult> resultTask, Func<IOperationResult, Task> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (result.IsSuccessful)
-        {
-            await action(result).ConfigureAwait(false);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationResult> Core(Task<OperationResult> resultTask, Func<IOperationResult, Task> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (result.IsSuccessful)
+            {
+                await action(result).ConfigureAwait(false);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, runs a side effect with the typed data on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<OperationDataResult<T>> OnSuccessAsync<T>(this Task<OperationDataResult<T>> resultTask, Action<T> action)
+    public static Task<OperationDataResult<T>> OnSuccessAsync<T>(this Task<OperationDataResult<T>> resultTask, Action<T> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (result.IsSuccessful)
-        {
-            action(result.Data);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationDataResult<T>> Core(Task<OperationDataResult<T>> resultTask, Action<T> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (result.IsSuccessful)
+            {
+                action(result.Data);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then runs an async side effect with the typed data on success and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<OperationDataResult<T>> OnSuccessAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task> action)
+    public static Task<OperationDataResult<T>> OnSuccessAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (result.IsSuccessful)
-        {
-            await action(result.Data).ConfigureAwait(false);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationDataResult<T>> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (result.IsSuccessful)
+            {
+                await action(result.Data).ConfigureAwait(false);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, runs a side effect on failure and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult> OnFailureAsync(this Task<IOperationResult> resultTask, Action<IOperationResult> action)
-        => (await resultTask.ConfigureAwait(false)).OnFailure(action);
+    public static Task<IOperationResult> OnFailureAsync(this Task<IOperationResult> resultTask, Action<IOperationResult> action)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
+
+        static async Task<IOperationResult> Core(Task<IOperationResult> resultTask, Action<IOperationResult> action)
+            => (await resultTask.ConfigureAwait(false)).OnFailure(action);
+    }
 
     /// <summary>Runs an async side effect on failure and returns <paramref name="result"/> unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult> OnFailureAsync(this IOperationResult result, Func<IOperationResult, Task> action)
+    public static Task<IOperationResult> OnFailureAsync(this IOperationResult result, Func<IOperationResult, Task> action)
     {
-        if (!result.IsSuccessful)
-        {
-            await action(result).ConfigureAwait(false);
-        }
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(result, action);
 
-        return result;
+        static async Task<IOperationResult> Core(IOperationResult result, Func<IOperationResult, Task> action)
+        {
+            if (!result.IsSuccessful)
+            {
+                await action(result).ConfigureAwait(false);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then runs an async side effect on failure and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<IOperationResult> OnFailureAsync(this Task<IOperationResult> resultTask, Func<IOperationResult, Task> action)
-        => await (await resultTask.ConfigureAwait(false)).OnFailureAsync(action).ConfigureAwait(false);
+    public static Task<IOperationResult> OnFailureAsync(this Task<IOperationResult> resultTask, Func<IOperationResult, Task> action)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
+
+        static async Task<IOperationResult> Core(Task<IOperationResult> resultTask, Func<IOperationResult, Task> action)
+            => await (await resultTask.ConfigureAwait(false)).OnFailureAsync(action).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, runs a side effect on failure and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<OperationResult> OnFailureAsync(this Task<OperationResult> resultTask, Action<IOperationResult> action)
+    public static Task<OperationResult> OnFailureAsync(this Task<OperationResult> resultTask, Action<IOperationResult> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (!result.IsSuccessful)
-        {
-            action(result);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationResult> Core(Task<OperationResult> resultTask, Action<IOperationResult> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (!result.IsSuccessful)
+            {
+                action(result);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then runs an async side effect on failure and returns it unchanged, for fluent chaining.</summary>
-    public static async Task<OperationResult> OnFailureAsync(this Task<OperationResult> resultTask, Func<IOperationResult, Task> action)
+    public static Task<OperationResult> OnFailureAsync(this Task<OperationResult> resultTask, Func<IOperationResult, Task> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (!result.IsSuccessful)
-        {
-            await action(result).ConfigureAwait(false);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationResult> Core(Task<OperationResult> resultTask, Func<IOperationResult, Task> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (!result.IsSuccessful)
+            {
+                await action(result).ConfigureAwait(false);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits a concrete data <paramref name="resultTask"/>, runs a side effect on failure and returns it unchanged with its data type intact, for fluent chaining.</summary>
-    public static async Task<OperationDataResult<T>> OnFailureAsync<T>(this Task<OperationDataResult<T>> resultTask, Action<IOperationResult> action)
+    public static Task<OperationDataResult<T>> OnFailureAsync<T>(this Task<OperationDataResult<T>> resultTask, Action<IOperationResult> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (!result.IsSuccessful)
-        {
-            action(result);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationDataResult<T>> Core(Task<OperationDataResult<T>> resultTask, Action<IOperationResult> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (!result.IsSuccessful)
+            {
+                action(result);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits a concrete data <paramref name="resultTask"/>, then runs an async side effect on failure and returns it unchanged with its data type intact, for fluent chaining.</summary>
-    public static async Task<OperationDataResult<T>> OnFailureAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<IOperationResult, Task> action)
+    public static Task<OperationDataResult<T>> OnFailureAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<IOperationResult, Task> action)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        if (!result.IsSuccessful)
-        {
-            await action(result).ConfigureAwait(false);
-        }
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(action);
+        return Core(resultTask, action);
 
-        return result;
+        static async Task<OperationDataResult<T>> Core(Task<OperationDataResult<T>> resultTask, Func<IOperationResult, Task> action)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            if (!result.IsSuccessful)
+            {
+                await action(result).ConfigureAwait(false);
+            }
+
+            return result;
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then transforms the success payload, short-circuiting a failure unchanged.</summary>
-    public static async Task<IOperationResult<TOut>> MapAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, TOut> mapper)
-        => (await resultTask.ConfigureAwait(false)).Map(mapper);
+    public static Task<IOperationResult<TOut>> MapAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, TOut> mapper)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(mapper);
+        return Core(resultTask, mapper);
+
+        static async Task<IOperationResult<TOut>> Core(Task<IOperationResult<T>> resultTask, Func<T, TOut> mapper)
+            => (await resultTask.ConfigureAwait(false)).Map(mapper);
+    }
 
     /// <summary>Transforms the success payload of <paramref name="result"/> using an async mapper, short-circuiting a failure unchanged.</summary>
-    public static async Task<IOperationResult<TOut>> MapAsync<T, TOut>(this IOperationResult<T> result, Func<T, Task<TOut>> mapper)
-        => result.IsSuccessful
-            ? new Implementations.Success.SuccessDataResult<TOut>(await mapper(result.Data).ConfigureAwait(false), result.Title, result.Status)
-            : result.ToErrorDataResult<TOut>();
+    public static Task<IOperationResult<TOut>> MapAsync<T, TOut>(this IOperationResult<T> result, Func<T, Task<TOut>> mapper)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(mapper);
+        return Core(result, mapper);
+
+        static async Task<IOperationResult<TOut>> Core(IOperationResult<T> result, Func<T, Task<TOut>> mapper)
+            => result.IsSuccessful
+                ? new Implementations.Success.SuccessDataResult<TOut>(await mapper(result.Data).ConfigureAwait(false), result.Title, result.Status)
+                : result.ToErrorDataResult<TOut>();
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then transforms the success payload using an async mapper, short-circuiting a failure unchanged.</summary>
-    public static async Task<IOperationResult<TOut>> MapAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<TOut>> mapper)
-        => await (await resultTask.ConfigureAwait(false)).MapAsync(mapper).ConfigureAwait(false);
+    public static Task<IOperationResult<TOut>> MapAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<TOut>> mapper)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(mapper);
+        return Core(resultTask, mapper);
+
+        static async Task<IOperationResult<TOut>> Core(Task<IOperationResult<T>> resultTask, Func<T, Task<TOut>> mapper)
+            => await (await resultTask.ConfigureAwait(false)).MapAsync(mapper).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/> (for example a MediatR <c>Send</c>), then transforms the success payload, short-circuiting a failure unchanged.</summary>
-    public static async Task<OperationDataResult<TOut>> MapAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, TOut> mapper)
+    public static Task<OperationDataResult<TOut>> MapAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, TOut> mapper)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        return result.IsSuccessful
-            ? new SuccessDataResult<TOut>(mapper(result.Data), result.Title, result.Status)
-            : result.ToErrorDataResult<TOut>();
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(mapper);
+        return Core(resultTask, mapper);
+
+        static async Task<OperationDataResult<TOut>> Core(Task<OperationDataResult<T>> resultTask, Func<T, TOut> mapper)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            return result.IsSuccessful
+                ? new SuccessDataResult<TOut>(mapper(result.Data), result.Title, result.Status)
+                : result.ToErrorDataResult<TOut>();
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then transforms the success payload using an async mapper, short-circuiting a failure unchanged.</summary>
-    public static async Task<OperationDataResult<TOut>> MapAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<TOut>> mapper)
+    public static Task<OperationDataResult<TOut>> MapAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<TOut>> mapper)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        return result.IsSuccessful
-            ? new SuccessDataResult<TOut>(await mapper(result.Data).ConfigureAwait(false), result.Title, result.Status)
-            : result.ToErrorDataResult<TOut>();
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(mapper);
+        return Core(resultTask, mapper);
+
+        static async Task<OperationDataResult<TOut>> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task<TOut>> mapper)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            return result.IsSuccessful
+                ? new SuccessDataResult<TOut>(await mapper(result.Data).ConfigureAwait(false), result.Title, result.Status)
+                : result.ToErrorDataResult<TOut>();
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then chains into another result-returning operation, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, IOperationResult<TOut>> binder)
-        => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    public static Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, IOperationResult<TOut>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult<TOut>> Core(Task<IOperationResult<T>> resultTask, Func<T, IOperationResult<TOut>> binder)
+            => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    }
 
     /// <summary>Chains <paramref name="result"/> into another async result-returning operation, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this IOperationResult<T> result, Func<T, Task<IOperationResult<TOut>>> binder)
-        => result.IsSuccessful
-            ? await binder(result.Data).ConfigureAwait(false)
-            : result.ToErrorDataResult<TOut>();
+    public static Task<IOperationResult<TOut>> BindAsync<T, TOut>(this IOperationResult<T> result, Func<T, Task<IOperationResult<TOut>>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(result, binder);
+
+        static async Task<IOperationResult<TOut>> Core(IOperationResult<T> result, Func<T, Task<IOperationResult<TOut>>> binder)
+            => result.IsSuccessful
+                ? await binder(result.Data).ConfigureAwait(false)
+                : result.ToErrorDataResult<TOut>();
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then chains into another async result-returning operation, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<IOperationResult<TOut>>> binder)
-        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    public static Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<IOperationResult<TOut>>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult<TOut>> Core(Task<IOperationResult<T>> resultTask, Func<T, Task<IOperationResult<TOut>>> binder)
+            => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into another result-returning operation, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, IOperationResult<TOut>> binder)
-        => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    public static Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, IOperationResult<TOut>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult<TOut>> Core(Task<OperationDataResult<T>> resultTask, Func<T, IOperationResult<TOut>> binder)
+            => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into another async result-returning operation, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<IOperationResult<TOut>>> binder)
-        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    public static Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<IOperationResult<TOut>>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult<TOut>> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task<IOperationResult<TOut>>> binder)
+            => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into another operation returning a concrete result (for example a second MediatR <c>Send</c>), short-circuiting on failure.</summary>
-    public static async Task<OperationDataResult<TOut>> BindAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<OperationDataResult<TOut>>> binder)
+    public static Task<OperationDataResult<TOut>> BindAsync<T, TOut>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<OperationDataResult<TOut>>> binder)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        return result.IsSuccessful
-            ? await binder(result.Data).ConfigureAwait(false)
-            : result.ToErrorDataResult<TOut>();
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<OperationDataResult<TOut>> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task<OperationDataResult<TOut>>> binder)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            return result.IsSuccessful
+                ? await binder(result.Data).ConfigureAwait(false)
+                : result.ToErrorDataResult<TOut>();
+        }
     }
 
     /// <summary>Chains <paramref name="result"/> into an async operation returning a concrete result (for example a MediatR <c>Send</c>), short-circuiting on failure.</summary>
-    public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this IOperationResult<T> result, Func<T, Task<OperationDataResult<TOut>>> binder)
-        => result.IsSuccessful
-            ? await binder(result.Data).ConfigureAwait(false)
-            : result.ToErrorDataResult<TOut>();
+    public static Task<IOperationResult<TOut>> BindAsync<T, TOut>(this IOperationResult<T> result, Func<T, Task<OperationDataResult<TOut>>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(result, binder);
+
+        static async Task<IOperationResult<TOut>> Core(IOperationResult<T> result, Func<T, Task<OperationDataResult<TOut>>> binder)
+            => result.IsSuccessful
+                ? await binder(result.Data).ConfigureAwait(false)
+                : result.ToErrorDataResult<TOut>();
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then chains into an async operation returning a concrete result, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<OperationDataResult<TOut>>> binder)
-        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    public static Task<IOperationResult<TOut>> BindAsync<T, TOut>(this Task<IOperationResult<T>> resultTask, Func<T, Task<OperationDataResult<TOut>>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult<TOut>> Core(Task<IOperationResult<T>> resultTask, Func<T, Task<OperationDataResult<TOut>>> binder)
+            => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then chains into an operation that returns no data, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, IOperationResult> binder)
-        => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    public static Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, IOperationResult> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult> Core(Task<IOperationResult<T>> resultTask, Func<T, IOperationResult> binder)
+            => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    }
 
     /// <summary>Chains <paramref name="result"/> into an async operation that returns no data, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult> BindAsync<T>(this IOperationResult<T> result, Func<T, Task<IOperationResult>> binder)
-        => result.IsSuccessful
-            ? await binder(result.Data).ConfigureAwait(false)
-            : Propagate(result);
+    public static Task<IOperationResult> BindAsync<T>(this IOperationResult<T> result, Func<T, Task<IOperationResult>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(result, binder);
+
+        static async Task<IOperationResult> Core(IOperationResult<T> result, Func<T, Task<IOperationResult>> binder)
+            => result.IsSuccessful
+                ? await binder(result.Data).ConfigureAwait(false)
+                : Propagate(result);
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then chains into an async operation that returns no data, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
-        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    public static Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult> Core(Task<IOperationResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
+            => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    }
 
     /// <summary>Chains <paramref name="result"/> into an async operation returning a concrete result with no data (for example a MediatR command <c>Send</c>), short-circuiting on failure.</summary>
-    public static async Task<IOperationResult> BindAsync<T>(this IOperationResult<T> result, Func<T, Task<OperationResult>> binder)
-        => result.IsSuccessful
-            ? await binder(result.Data).ConfigureAwait(false)
-            : Propagate(result);
+    public static Task<IOperationResult> BindAsync<T>(this IOperationResult<T> result, Func<T, Task<OperationResult>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(result, binder);
+
+        static async Task<IOperationResult> Core(IOperationResult<T> result, Func<T, Task<OperationResult>> binder)
+            => result.IsSuccessful
+                ? await binder(result.Data).ConfigureAwait(false)
+                : Propagate(result);
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then chains into an async operation returning a concrete result with no data, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
-        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    public static Task<IOperationResult> BindAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult> Core(Task<IOperationResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
+            => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into an operation that returns no data, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, IOperationResult> binder)
-        => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    public static Task<IOperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, IOperationResult> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult> Core(Task<OperationDataResult<T>> resultTask, Func<T, IOperationResult> binder)
+            => (await resultTask.ConfigureAwait(false)).Bind(binder);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into an async operation that returns no data, short-circuiting on failure.</summary>
-    public static async Task<IOperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
-        => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    public static Task<IOperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<IOperationResult> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task<IOperationResult>> binder)
+            => await (await resultTask.ConfigureAwait(false)).BindAsync(binder).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then chains into an operation returning a concrete result with no data (for example a MediatR command <c>Send</c>), short-circuiting on failure.</summary>
-    public static async Task<OperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
+    public static Task<OperationResult> BindAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        return result.IsSuccessful
-            ? await binder(result.Data).ConfigureAwait(false)
-            : Propagate(result);
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(binder);
+        return Core(resultTask, binder);
+
+        static async Task<OperationResult> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task<OperationResult>> binder)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            return result.IsSuccessful
+                ? await binder(result.Data).ConfigureAwait(false)
+                : Propagate(result);
+        }
     }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then turns it into a validation failure when <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
-    public static async Task<IOperationResult<T>> EnsureAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, bool> predicate, string errorMessage)
-        => (await resultTask.ConfigureAwait(false)).Ensure(predicate, errorMessage);
+    public static Task<IOperationResult<T>> EnsureAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, bool> predicate, string errorMessage)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(errorMessage);
+        return Core(resultTask, predicate, errorMessage);
+
+        static async Task<IOperationResult<T>> Core(Task<IOperationResult<T>> resultTask, Func<T, bool> predicate, string errorMessage)
+            => (await resultTask.ConfigureAwait(false)).Ensure(predicate, errorMessage);
+    }
 
     /// <summary>Turns <paramref name="result"/> into a validation failure when an async <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
-    public static async Task<IOperationResult<T>> EnsureAsync<T>(this IOperationResult<T> result, Func<T, Task<bool>> predicate, string errorMessage)
-        => result.IsSuccessful && !await predicate(result.Data).ConfigureAwait(false)
-            ? new ErrorDataResult<T>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errorMessage)
-            : result;
+    public static Task<IOperationResult<T>> EnsureAsync<T>(this IOperationResult<T> result, Func<T, Task<bool>> predicate, string errorMessage)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(errorMessage);
+        return Core(result, predicate, errorMessage);
+
+        static async Task<IOperationResult<T>> Core(IOperationResult<T> result, Func<T, Task<bool>> predicate, string errorMessage)
+            => result.IsSuccessful && !await predicate(result.Data).ConfigureAwait(false)
+                ? new ErrorDataResult<T>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errorMessage)
+                : result;
+    }
 
     /// <summary>Awaits <paramref name="resultTask"/>, then turns it into a validation failure when an async <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
-    public static async Task<IOperationResult<T>> EnsureAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<bool>> predicate, string errorMessage)
-        => await (await resultTask.ConfigureAwait(false)).EnsureAsync(predicate, errorMessage).ConfigureAwait(false);
+    public static Task<IOperationResult<T>> EnsureAsync<T>(this Task<IOperationResult<T>> resultTask, Func<T, Task<bool>> predicate, string errorMessage)
+    {
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(errorMessage);
+        return Core(resultTask, predicate, errorMessage);
+
+        static async Task<IOperationResult<T>> Core(Task<IOperationResult<T>> resultTask, Func<T, Task<bool>> predicate, string errorMessage)
+            => await (await resultTask.ConfigureAwait(false)).EnsureAsync(predicate, errorMessage).ConfigureAwait(false);
+    }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then turns it into a validation failure when <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
-    public static async Task<OperationDataResult<T>> EnsureAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, bool> predicate, string errorMessage)
+    public static Task<OperationDataResult<T>> EnsureAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, bool> predicate, string errorMessage)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        return result.IsSuccessful && !predicate(result.Data)
-            ? new ErrorDataResult<T>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errorMessage)
-            : result;
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(errorMessage);
+        return Core(resultTask, predicate, errorMessage);
+
+        static async Task<OperationDataResult<T>> Core(Task<OperationDataResult<T>> resultTask, Func<T, bool> predicate, string errorMessage)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            return result.IsSuccessful && !predicate(result.Data)
+                ? new ErrorDataResult<T>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errorMessage)
+                : result;
+        }
     }
 
     /// <summary>Awaits a concrete <paramref name="resultTask"/>, then turns it into a validation failure when an async <paramref name="predicate"/> rejects the data, for guard-clause-style chaining.</summary>
-    public static async Task<OperationDataResult<T>> EnsureAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<bool>> predicate, string errorMessage)
+    public static Task<OperationDataResult<T>> EnsureAsync<T>(this Task<OperationDataResult<T>> resultTask, Func<T, Task<bool>> predicate, string errorMessage)
     {
-        var result = await resultTask.ConfigureAwait(false);
-        return result.IsSuccessful && !await predicate(result.Data).ConfigureAwait(false)
-            ? new ErrorDataResult<T>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errorMessage)
-            : result;
+        ArgumentNullException.ThrowIfNull(resultTask);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(errorMessage);
+        return Core(resultTask, predicate, errorMessage);
+
+        static async Task<OperationDataResult<T>> Core(Task<OperationDataResult<T>> resultTask, Func<T, Task<bool>> predicate, string errorMessage)
+        {
+            var result = await resultTask.ConfigureAwait(false);
+            return result.IsSuccessful && !await predicate(result.Data).ConfigureAwait(false)
+                ? new ErrorDataResult<T>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errorMessage)
+                : result;
+        }
     }
 }

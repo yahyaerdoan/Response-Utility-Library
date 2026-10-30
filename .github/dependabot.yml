@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    target-branch: beta
+    schedule:
+      interval: weekly
+    groups:
+      analyzers:
+        patterns: ["StyleCop.*", "SonarAnalyzer.*", "Microsoft.CodeAnalysis.*"]
+      test:
+        patterns: ["xunit*", "Microsoft.NET.Test.Sdk", "FluentValidation*"]
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: beta
+    schedule:
+      interval: weekly

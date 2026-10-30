@@ -6,7 +6,6 @@
     <LangVersion>latest</LangVersion>
     <Deterministic>true</Deterministic>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <Authors>Yahya Erdogan</Authors>
     <CopyrightStartYear>2024</CopyrightStartYear>
@@ -15,6 +14,7 @@
     <CopyrightYears Condition="'$(CopyrightCurrentYear)' != '$(CopyrightStartYear)'">$(CopyrightStartYear)-$(CopyrightCurrentYear)</CopyrightYears>
     <Copyright>Copyright © $(Authors) $(CopyrightYears)</Copyright>
     <RepositoryUrl>https://github.com/yahyaerdoan/Response-Utility-Library</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/yahyaerdoan/Response-Utility-Library</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
@@ -35,9 +35,8 @@
        `dotnet build` (build.yml/codeql.yml) has no real -p:Version to compare against the baseline. -->
   <PropertyGroup Condition="'$(IsPackable)' != 'false' AND '$(IsPublishBuild)' == 'true'">
     <EnablePackageValidation>true</EnablePackageValidation>
-    <!-- No baseline during 16.0: it intentionally breaks 15.x (IOperationResult members, removed 1xx factories).
-         Set this to 16.0.0 once that stable version is on nuget.org, then bump to each new stable release
-         (not betas, prereleases aren't API-stable against each other). -->
+    <!-- Bump to each new stable release (not betas, prereleases aren't API-stable against each other). -->
+    <PackageValidationBaselineVersion>16.0.1</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsPackable)' != 'false'">

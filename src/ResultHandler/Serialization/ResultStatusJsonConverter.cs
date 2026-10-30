@@ -27,6 +27,9 @@ public sealed class ResultStatusJsonConverter : JsonConverter<ResultStatus>
     /// <summary>Writes <paramref name="value"/> as its numeric HTTP status code.</summary>
     public override void Write(Utf8JsonWriter writer, ResultStatus value, JsonSerializerOptions options)
     {
+        ArgumentNullException.ThrowIfNull(writer);
+        ArgumentNullException.ThrowIfNull(options);
+
         writer.WriteNumberValue((int)value.ToHttpStatusCode());
     }
 }
