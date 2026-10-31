@@ -1,8 +1,1 @@
 #nullable enable
-const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.InvalidRequest = "Request.Invalid" -> string!
-const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.ServerError = "Server.Error" -> string!
-const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.UpstreamFailed = "Upstream.Failed" -> string!
-const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.UpstreamTimeout = "Upstream.Timeout" -> string!
-ResultHandler.AspNetCore.Exceptions.ResultErrorCodes
-ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.IncludeErrorCodes.get -> bool
-ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.IncludeErrorCodes.set -> void

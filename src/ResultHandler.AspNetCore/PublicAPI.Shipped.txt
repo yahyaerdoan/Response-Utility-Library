@@ -1,4 +1,8 @@
 #nullable enable
+const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.InvalidRequest = "Request.Invalid" -> string!
+const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.ServerError = "Server.Error" -> string!
+const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.UpstreamFailed = "Upstream.Failed" -> string!
+const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.UpstreamTimeout = "Upstream.Timeout" -> string!
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope.Code.get -> string?
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope.Code.init -> void
@@ -15,9 +19,12 @@ ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultData.get -> TData?
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultData.init -> void
 ResultHandler.AspNetCore.Envelopes.ResultEnvelope<TData>.ResultEnvelope() -> void
+ResultHandler.AspNetCore.Exceptions.ResultErrorCodes
 ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions
 ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.ExposeExceptionMessages.get -> bool
 ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.ExposeExceptionMessages.set -> void
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.IncludeErrorCodes.get -> bool
+ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.IncludeErrorCodes.set -> void
 ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.Map<TException>(System.Func<TException!, Microsoft.AspNetCore.Http.HttpContext!, ResultHandler.Core.Abstractions.IOperationResult!>! map) -> ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions!
 ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.Map<TException>(System.Func<TException!, ResultHandler.Core.Abstractions.IOperationResult!>! map) -> ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions!
 ResultHandler.AspNetCore.Exceptions.ResultExceptionHandlerOptions.Resolve(System.Exception! exception, Microsoft.AspNetCore.Http.HttpContext! httpContext) -> ResultHandler.Core.Abstractions.IOperationResult!
