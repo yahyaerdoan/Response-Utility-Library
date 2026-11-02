@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>ResponseResultHandler.AspNetCore.OpenApi</PackageId>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Response Result Handler - OpenAPI</Title>
+    <Version>16.3.0</Version>
+    <Product>ResponseResultHandler.AspNetCore.OpenApi</Product>
+    <Description>Microsoft.AspNetCore.OpenApi integration for ResponseResultHandler: documents the success envelopes and Problem Details exactly as they are written (required members, nothing null, descriptions) and gives every documented failure a filled-in example with a code from the error code catalog.</Description>
+    <PackageIcon>ResultHandlerIcon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>aspnetcore openapi problem-details rfc9457 error-codes result-pattern</PackageTags>
+    <PackageReleaseNotes>v16.3 - First release: options.AddResultHandlerDocumentation() for Microsoft.AspNetCore.OpenApi. See CHANGELOG.md.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <!-- First released in 16.3.0, so there is no earlier version to validate against; remove once the baseline moves to 16.3.0. -->
+  <PropertyGroup>
+    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ResultHandler.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ResultHandler.AspNetCore\ResultHandler.AspNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\ResultHandler\ResultHandlerIcon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.403">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <PackageReference Update="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
+  </ItemGroup>
+
+</Project>

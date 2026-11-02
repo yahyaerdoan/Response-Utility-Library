@@ -5,19 +5,20 @@ failure, an HTTP-mappable status, a title and detail, errors keyed by field, and
 object instead of throwing exceptions or returning bare booleans, and turns it into RFC 9457 Problem Details
 in ASP.NET Core. It needs no MediatR or other framework.
 
-This repository is three NuGet packages sharing this README; the ASP.NET Core and FluentValidation packages are
-optional:
+This repository is four NuGet packages sharing this README; all but the core package are optional:
 
 | Package | Project | Purpose |
 |---|---|---|
 | [`ResponseResultHandler`](https://www.nuget.org/packages/ResponseResultHandler) | `src/ResultHandler` | Core library — framework-agnostic |
 | [`ResponseResultHandler.AspNetCore`](https://www.nuget.org/packages/ResponseResultHandler.AspNetCore) | `src/ResultHandler.AspNetCore` | Converts results to `IActionResult` / RFC 9457 Problem Details |
 | [`ResponseResultHandler.FluentValidation`](https://www.nuget.org/packages/ResponseResultHandler.FluentValidation) | `src/ResultHandler.FluentValidation` | FluentValidation to field-keyed failures; request validation for Minimal APIs and MVC |
+| [`ResponseResultHandler.AspNetCore.OpenApi`](https://www.nuget.org/packages/ResponseResultHandler.AspNetCore.OpenApi) | `src/ResultHandler.AspNetCore.OpenApi` | Documents envelopes, Problem Details and error codes in a Microsoft.AspNetCore.OpenApi document (.NET 10) |
 
 ```
 dotnet add package ResponseResultHandler
 dotnet add package ResponseResultHandler.AspNetCore   # optional: IActionResult / RFC 9457 adapter
 dotnet add package ResponseResultHandler.FluentValidation   # optional: FluentValidation integration
+dotnet add package ResponseResultHandler.AspNetCore.OpenApi   # optional: OpenAPI documentation (.NET 10)
 ```
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what changed between versions.
@@ -33,7 +34,8 @@ product by id, and a `ProductsController` that exposes it over HTTP.
 [10. Generic short-circuiting](#10-generic-short-circuiting--iresultfailurefactorytself--resultfailurefactory) ·
 [11. Errors by field](#11-errors-by-field-errors--iresultfailurefactorytself) ·
 [12. Serialization](#12-serialization) · [13. Equality & debugging](#13-equality--debugging) ·
-[14. Validation with FluentValidation](#14-validation-with-fluentvalidation)
+[14. Validation with FluentValidation](#14-validation-with-fluentvalidation) ·
+[15. Error code catalog](#15-error-code-catalog) · [16. OpenAPI documentation](#16-openapi-documentation)
 
 ---
 ## 1. The core contract
@@ -874,3 +876,50 @@ api.MapPost("/receipts", (CreateReceiptRequest request, ReceiptService receipts,
 // MVC
 builder.Services.AddControllers().AddResultValidation();
 ```
+
+---
+
+## 15. Error code catalog
+
+A code given with `WithCode` is a contract clients branch on. Document each one on the constant that defines it: the one status it
+comes with and what it tells a client. `General = true` marks codes any endpoint can return.
+
+```csharp
+public static class ProductErrorCodes
+{
+    [ErrorCode(ResultStatus.NotFound, "The product doesn't exist or was removed.")]
+    public const string NotFound = "Product.NotFound";
+}
+
+return Result.NotFound($"Product {id} was not found.").WithCode(ProductErrorCodes.NotFound);
+```
+
+Register the catalog with the assemblies that define codes, and serve it:
+
+```csharp
+builder.Services.AddResultProblemDetails();
+builder.Services.AddErrorCodeCatalog(options => options.AddAssemblyTree(typeof(Program).Assembly, "MyShop."));
+
+app.MapErrorCodes();   // GET /errors, GET /errors/{code}
+```
+
+`GET /errors/Product.NotFound` answers `{"code":"Product.NotFound","status":404,"title":"Not Found","description":"...","general":false}`,
+and an unknown code is a 404 with `ErrorCode.Unknown`. A failed response whose code is in the catalog links to it:
+`"type": "https://shop.example/errors/Product.NotFound"` (turn off with `LinkProblemTypes = false`). The step runs in
+`CustomizeProblemDetails`, so call `AddErrorCodeCatalog()` after anything that adds codes there. `ResultErrorCodes` are always included.
+
+## 16. OpenAPI documentation
+
+`ResponseResultHandler.AspNetCore.OpenApi` (.NET 10, Microsoft.AspNetCore.OpenApi) documents what this library writes:
+
+```csharp
+builder.Services.AddOpenApi(options => options.AddResultHandlerDocumentation(settings => settings.EveryProblemHasCode = true));
+```
+
+- Success envelopes and Problem Details are described as written: members always written are required, none is nullable (an empty
+  one is left out), every member has a description. `EveryProblemHasCode` makes `"code"` required.
+- `ResultStatus` is documented as an integer.
+- Every documented failure gets an example built the way a failed result is written. With the error code catalog registered, the
+  example carries a code (one of the operation's own subject when its tags name one, `Product.NotFound` under `"Products"`, else a
+  general code for the status) and its `"type"` links to the code's documentation.
+

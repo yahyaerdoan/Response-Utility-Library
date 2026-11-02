@@ -1,1 +1,43 @@
 #nullable enable
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalog
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalog.All.get -> System.Collections.Generic.IReadOnlyCollection<ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription!>!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalog.ErrorCodeCatalog(System.Collections.Generic.IEnumerable<System.Reflection.Assembly!>! assemblies) -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalog.Find(string! code) -> ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription?
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.AddAssembly(System.Reflection.Assembly! assembly) -> ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.AddAssemblyTree(System.Reflection.Assembly! root, params string![]! namePrefixes) -> ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.Assemblies.get -> System.Collections.Generic.IReadOnlyList<System.Reflection.Assembly!>!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.DocumentationUrl(Microsoft.AspNetCore.Http.HttpRequest! request, string! code) -> string!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.ErrorCodeCatalogOptions() -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.LinkProblemTypes.get -> bool
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.LinkProblemTypes.set -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.Path.get -> string!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions.Path.set -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogServiceCollectionExtensions
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.<Clone>$() -> ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Code.get -> string!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Code.init -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Deconstruct(out string! Code, out int Status, out string! Title, out string! Description, out bool General) -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Description.get -> string!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Description.init -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Equals(ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription? other) -> bool
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.ErrorCodeDescription(string! Code, int Status, string! Title, string! Description, bool General) -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.General.get -> bool
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.General.init -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Status.get -> int
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Status.init -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Title.get -> string!
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Title.init -> void
+ResultHandler.AspNetCore.ErrorCodes.ErrorCodeEndpointRouteBuilderExtensions
+ResultHandler.AspNetCore.Extensions.ResultProblemFields
+const ResultHandler.AspNetCore.Exceptions.ResultErrorCodes.UnknownErrorCode = "ErrorCode.Unknown" -> string!
+const ResultHandler.AspNetCore.Extensions.ResultProblemFields.Code = "code" -> string!
+const ResultHandler.AspNetCore.Extensions.ResultProblemFields.TraceId = "traceId" -> string!
+override ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.Equals(object? obj) -> bool
+override ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.GetHashCode() -> int
+override ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.ToString() -> string!
+static ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogServiceCollectionExtensions.AddErrorCodeCatalog(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<ResultHandler.AspNetCore.ErrorCodes.ErrorCodeCatalogOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.operator !=(ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription? left, ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription? right) -> bool
+static ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription.operator ==(ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription? left, ResultHandler.AspNetCore.ErrorCodes.ErrorCodeDescription? right) -> bool
+static ResultHandler.AspNetCore.ErrorCodes.ErrorCodeEndpointRouteBuilderExtensions.MapErrorCodes(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints) -> Microsoft.AspNetCore.Routing.RouteGroupBuilder!

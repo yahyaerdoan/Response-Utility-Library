@@ -10,9 +10,6 @@ namespace ResultHandler.AspNetCore.Extensions;
 /// <summary>Converts <see cref="IOperationResult"/>/<see cref="IOperationResult{T}"/> into ASP.NET Core response types. Split across <c>.Mvc.cs</c> (<see cref="IActionResult"/>), <c>.MinimalApi.cs</c> (<see cref="IResult"/>), and this file (shared RFC 9457 <see cref="ProblemDetails"/> and bodyless-status logic). <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/> applies to failures too: Minimal API results are written through <see cref="IProblemDetailsService"/>, MVC results apply it and then use normal content negotiation.</summary>
 public static partial class AspNetCoreResultExtensions
 {
-    internal const string CodeExtension = "code";
-    internal const string TraceIdExtension = "traceId";
-
     // RFC 9110 / RFC 6585 / RFC 4918 / RFC 7725 / RFC 8470 - canonical type URIs per RFC 9457 §4.2
     // internal (not private) so ResultHandler.Tests can assert every ResultStatus is covered.
     internal static readonly Dictionary<ResultStatus, string> _problemTypes =
@@ -117,7 +114,7 @@ public static partial class AspNetCoreResultExtensions
 
         if (result.Code is not null)
         {
-            problem.Extensions[CodeExtension] = result.Code;
+            problem.Extensions[ResultProblemFields.Code] = result.Code;
         }
 
         if (httpContext is not null)
@@ -132,7 +129,7 @@ public static partial class AspNetCoreResultExtensions
     internal static void Enrich(ProblemDetails problem, HttpContext httpContext)
     {
         problem.Instance ??= httpContext.Request.Path.Value;
-        problem.Extensions.TryAdd(TraceIdExtension, Activity.Current?.Id ?? httpContext.TraceIdentifier);
+        problem.Extensions.TryAdd(ResultProblemFields.TraceId, Activity.Current?.Id ?? httpContext.TraceIdentifier);
     }
 
     /// <summary>The RFC type URI for <paramref name="status"/>, or <c>about:blank</c>.</summary>

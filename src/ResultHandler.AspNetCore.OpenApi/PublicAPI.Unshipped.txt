@@ -1,0 +1,7 @@
+#nullable enable
+ResultHandler.AspNetCore.OpenApi.ResultHandlerOpenApiOptions
+ResultHandler.AspNetCore.OpenApi.ResultHandlerOpenApiOptions.EveryProblemHasCode.get -> bool
+ResultHandler.AspNetCore.OpenApi.ResultHandlerOpenApiOptions.EveryProblemHasCode.set -> void
+ResultHandler.AspNetCore.OpenApi.ResultHandlerOpenApiOptions.ResultHandlerOpenApiOptions() -> void
+ResultHandler.AspNetCore.OpenApi.ResultHandlerOpenApiOptionsExtensions
+static ResultHandler.AspNetCore.OpenApi.ResultHandlerOpenApiOptionsExtensions.AddResultHandlerDocumentation(this Microsoft.AspNetCore.OpenApi.OpenApiOptions! options, System.Action<ResultHandler.AspNetCore.OpenApi.ResultHandlerOpenApiOptions!>? configure = null) -> Microsoft.AspNetCore.OpenApi.OpenApiOptions!
