@@ -63,12 +63,15 @@ internal sealed class ResultBodySchemaTransformer(ResultHandlerOpenApiOptions op
     /// schema transformers ran, so a data envelope's resultData is unwrapped here.</summary>
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
-        foreach (var schema in document.Components?.Schemas?.Values.OfType<OpenApiSchema>() ?? [])
+        var dataEnvelopes = (document.Components?.Schemas?.Values.OfType<OpenApiSchema>() ?? [])
+            .Where(schema => schema.Required?.Contains(ResultData) == true)
+            .Select(schema => schema.Properties)
+            .OfType<IDictionary<string, IOpenApiSchema>>()
+            .Where(members => members.ContainsKey(ResultData));
+
+        foreach (var members in dataEnvelopes)
         {
-            if (schema.Required?.Contains(ResultData) == true && schema.Properties?.TryGetValue(ResultData, out var member) == true)
-            {
-                schema.Properties[ResultData] = Described(NonNull(member), EnvelopeDescriptions[ResultData]);
-            }
+            members[ResultData] = Described(NonNull(members[ResultData]), EnvelopeDescriptions[ResultData]);
         }
 
         return Task.CompletedTask;

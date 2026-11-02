@@ -43,12 +43,12 @@ public sealed class ErrorCodeCatalogOptions
         while (pending.TryDequeue(out var assembly))
         {
             _ = AddAssembly(assembly);
-            foreach (var reference in assembly.GetReferencedAssemblies())
+            var matching = assembly.GetReferencedAssemblies()
+                .Where(reference => reference.Name is { } name && namePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)) && seen.Add(name));
+
+            foreach (var reference in matching)
             {
-                if (reference.Name is { } name && namePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)) && seen.Add(name))
-                {
-                    pending.Enqueue(Assembly.Load(reference));
-                }
+                pending.Enqueue(Assembly.Load(reference));
             }
         }
 
