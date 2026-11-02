@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflow", "Workflow", "{1D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResultHandler.FluentValidation", "src\ResultHandler.FluentValidation\ResultHandler.FluentValidation.csproj", "{C85E6744-D2DA-4C4D-99E7-226BF38AC46A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResultHandler.AspNetCore.OpenApi", "src\ResultHandler.AspNetCore.OpenApi\ResultHandler.AspNetCore.OpenApi.csproj", "{CADDF148-8392-41D7-A03F-4F9BDC7F1463}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,18 @@ Global
 		{C85E6744-D2DA-4C4D-99E7-226BF38AC46A}.Release|x64.Build.0 = Release|Any CPU
 		{C85E6744-D2DA-4C4D-99E7-226BF38AC46A}.Release|x86.ActiveCfg = Release|Any CPU
 		{C85E6744-D2DA-4C4D-99E7-226BF38AC46A}.Release|x86.Build.0 = Release|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Debug|x64.Build.0 = Debug|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Debug|x86.Build.0 = Debug|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Release|x64.ActiveCfg = Release|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Release|x64.Build.0 = Release|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Release|x86.ActiveCfg = Release|Any CPU
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -88,6 +102,7 @@ Global
 		{05409F63-AE11-4F9D-B541-CDCC9A64CD01} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{AE6580CF-9185-435F-AF2A-2D606DA3E74B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{C85E6744-D2DA-4C4D-99E7-226BF38AC46A} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{CADDF148-8392-41D7-A03F-4F9BDC7F1463} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F3607D2D-AFAC-4E90-8E12-C95E3080FA5A}

@@ -27,6 +27,14 @@
     <ProjectReference Include="..\..\src\ResultHandler.FluentValidation\ResultHandler.FluentValidation.csproj" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <ProjectReference Include="..\..\src\ResultHandler.AspNetCore.OpenApi\ResultHandler.AspNetCore.OpenApi.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Update="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
   </ItemGroup>
