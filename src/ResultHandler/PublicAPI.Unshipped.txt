@@ -1,1 +1,7 @@
 #nullable enable
+ResultHandler.ErrorCodes.ErrorCodeAttribute
+ResultHandler.ErrorCodes.ErrorCodeAttribute.Description.get -> string!
+ResultHandler.ErrorCodes.ErrorCodeAttribute.ErrorCodeAttribute(ResultHandler.Core.Enums.ResultStatus status, string! description) -> void
+ResultHandler.ErrorCodes.ErrorCodeAttribute.General.get -> bool
+ResultHandler.ErrorCodes.ErrorCodeAttribute.General.set -> void
+ResultHandler.ErrorCodes.ErrorCodeAttribute.Status.get -> ResultHandler.Core.Enums.ResultStatus

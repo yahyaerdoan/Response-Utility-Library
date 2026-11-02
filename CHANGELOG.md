@@ -1,12 +1,31 @@
 # Changelog
 
-All notable changes to `ResponseResultHandler`, `ResponseResultHandler.AspNetCore` and
-`ResponseResultHandler.FluentValidation` are documented here. The format follows
+All notable changes to `ResponseResultHandler`, `ResponseResultHandler.AspNetCore`,
+`ResponseResultHandler.AspNetCore.OpenApi` and `ResponseResultHandler.FluentValidation` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 From 16.0.0 on, the packages follow [Semantic Versioning](https://semver.org/): breaking changes to the public
 API or to the JSON the packages write only come in a major version, each listed here with migration notes;
-minor versions add features and patch versions fix bugs. The three packages always share a version.
+minor versions add features and patch versions fix bugs. The packages always share a version.
+
+## [16.3.0]
+
+### Added
+- `ErrorCodeAttribute` (`ResultHandler.ErrorCodes`): documents an error code on the constant that defines it, with the one status
+  every failure carrying it has, a description for clients and whether any endpoint can return it (`General`). It has no
+  ASP.NET Core dependency, so application layers can use it.
+- `AddErrorCodeCatalog()` and `MapErrorCodes()`: `ErrorCodeCatalog` collects the documented constants of the assemblies you add
+  (`AddAssembly`, or `AddAssemblyTree` for an application split over many projects) and serves them at `GET /errors` and
+  `GET /errors/{code}` (path configurable; an unknown code is a 404 with `ErrorCode.Unknown`). With
+  `LinkProblemTypes` (default on) a failed response whose code is in the catalog gets its code's documentation URL as `"type"`
+  instead of the RFC section of its status. Nothing changes until you call `AddErrorCodeCatalog()`.
+- `ResultErrorCodes` carry `ErrorCodeAttribute` (general codes) and gain `UnknownErrorCode`.
+- `ResultProblemFields.Code` and `ResultProblemFields.TraceId`: the names of the Problem Details extension members.
+- New package `ResponseResultHandler.AspNetCore.OpenApi` (.NET 10, Microsoft.AspNetCore.OpenApi):
+  `options.AddResultHandlerDocumentation()` documents the success envelopes and Problem Details as they are written (always-written
+  members required, no member nullable, every member described; `"code"` required with `EveryProblemHasCode`), `ResultStatus` as an
+  integer, and gives every documented failure a filled-in example. With the error code catalog registered, the example carries a
+  code (the operation's own subject when its tags name one, else a general code for the status) and links its `"type"`.
 
 ## [16.2.0]
 
