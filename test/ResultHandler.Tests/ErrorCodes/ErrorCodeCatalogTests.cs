@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using ResultHandler.AspNetCore.ErrorCodes;
 using ResultHandler.AspNetCore.Exceptions;
 using ResultHandler.AspNetCore.Extensions;
+using ResultHandler.ErrorCodes;
 using ResultHandler.Facade;
 using Xunit;
 
@@ -30,6 +31,18 @@ public class ErrorCodeCatalogTests
         Assert.Null(catalog.Find(TestErrorCodes.Undocumented));
         Assert.True(catalog.Find(ResultErrorCodes.ServerError)?.General);
         Assert.Equal(catalog.All.Select(entry => entry.Code).Order(StringComparer.Ordinal), catalog.All.Select(entry => entry.Code));
+    }
+
+    [Fact]
+    public void Catalog_HasTheValidationCode_AndAnApplicationsOwnDefinitionReplacesIt()
+    {
+        var builtIn = new ErrorCodeCatalog(new ErrorCodeCatalogOptions().Assemblies).Find(ValidationErrorCodes.Failed);
+        var replaced = new ErrorCodeCatalog(new ErrorCodeCatalogOptions().AddAssembly(typeof(TestValidationErrorCodes).Assembly).Assemblies).Find(ValidationErrorCodes.Failed);
+
+        Assert.NotNull(builtIn);
+        Assert.Equal(422, builtIn.Status);
+        Assert.True(builtIn.General);
+        Assert.Equal("The widget form has invalid fields.", replaced?.Description);
     }
 
     [Fact]
