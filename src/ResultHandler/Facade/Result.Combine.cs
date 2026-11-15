@@ -8,7 +8,8 @@ namespace ResultHandler.Facade;
 public static partial class Result
 {
     /// <summary>Runs every result to completion and merges their outcomes, instead of stopping at the first failure like <c>Ensure</c>/<c>Bind</c> — reports every invalid field at once.</summary>
-    /// <returns>Success if every result succeeded, otherwise a 422 whose <see cref="IOperationResult.Errors"/> merges every failure's errors by field; a failure without errors contributes its detail (or title) under the <c>""</c> key.</returns>
+    /// <returns>Success if every result succeeded, otherwise a 422 whose <see cref="IOperationResult.Errors"/> merges every failure's errors by field; a failure without errors contributes its detail (or title) under the <c>""</c> key. Repeated messages appear once;
+    /// if every failure is a 422 with the same code, that code is kept.</returns>
     public static IOperationResult Combine(params IOperationResult[] results)
     {
         ArgumentNullException.ThrowIfNull(results);
@@ -20,10 +21,10 @@ public static partial class Result
     {
         ArgumentNullException.ThrowIfNull(results);
 
-        var errors = CollectErrors(results);
-        return errors.Count == 0
+        var failures = Failures(results);
+        return failures.Count == 0
             ? Success()
-            : new ErrorResult(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errors);
+            : WithSharedCode(new ErrorResult(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, CollectErrors(failures)), failures);
     }
 
     /// <summary>Combines two data results into a tuple on success, or merges failures the same way <see cref="Combine(IOperationResult[])"/> does.</summary>
@@ -37,7 +38,7 @@ public static partial class Result
             return Success((result1.Data, result2.Data));
         }
 
-        return CombineFailure<(T1 First, T2 Second)>(CollectErrors([result1, result2]));
+        return CombineFailure<(T1 First, T2 Second)>([result1, result2]);
     }
 
     /// <inheritdoc cref="Combine{T1, T2}(IOperationResult{T1}, IOperationResult{T2})"/>
@@ -52,7 +53,7 @@ public static partial class Result
             return Success((result1.Data, result2.Data, result3.Data));
         }
 
-        return CombineFailure<(T1 First, T2 Second, T3 Third)>(CollectErrors([result1, result2, result3]));
+        return CombineFailure<(T1 First, T2 Second, T3 Third)>([result1, result2, result3]);
     }
 
     /// <inheritdoc cref="Combine{T1, T2}(IOperationResult{T1}, IOperationResult{T2})"/>
@@ -68,22 +69,33 @@ public static partial class Result
             return Success((result1.Data, result2.Data, result3.Data, result4.Data));
         }
 
-        return CombineFailure<(T1 First, T2 Second, T3 Third, T4 Fourth)>(CollectErrors([result1, result2, result3, result4]));
+        return CombineFailure<(T1 First, T2 Second, T3 Third, T4 Fourth)>([result1, result2, result3, result4]);
     }
 
-    private static OperationDataResult<TData> CombineFailure<TData>(IReadOnlyDictionary<string, IReadOnlyList<string>> errors)
-        => new ErrorDataResult<TData>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, errors);
+    private static OperationDataResult<TData> CombineFailure<TData>(IOperationResult[] results)
+    {
+        var failures = Failures(results);
+        return WithSharedCode(new ErrorDataResult<TData>(ResultTitles.ValidationFailed, ResultStatus.UnprocessableContent, CollectErrors(failures)), failures);
+    }
 
-    private static Dictionary<string, IReadOnlyList<string>> CollectErrors(IEnumerable<IOperationResult> results)
+    private static List<IOperationResult> Failures(IEnumerable<IOperationResult> results)
+        => [.. results.Where(result => !result.IsSuccessful)];
+
+    /// <summary>Keeps the code all failures share, if they are all 422s.</summary>
+    private static TResult WithSharedCode<TResult>(TResult combined, List<IOperationResult> failures)
+        where TResult : OperationResult
+    {
+        var code = failures[0].Code;
+        return code is not null && failures.TrueForAll(failure => failure.Code == code && failure.Status == ResultStatus.UnprocessableContent)
+            ? (TResult)combined.CloneWithCode(code)
+            : combined;
+    }
+
+    private static Dictionary<string, IReadOnlyList<string>> CollectErrors(List<IOperationResult> failures)
     {
         var merged = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-        foreach (var result in results)
+        foreach (var result in failures)
         {
-            if (result.IsSuccessful)
-            {
-                continue;
-            }
-
             if (result.Errors.Count == 0)
             {
                 Add(merged, OperationResultDefaults.GeneralErrorKey, [result.Detail ?? result.Title]);
@@ -107,6 +119,6 @@ public static partial class Result
             merged[field] = existing;
         }
 
-        existing.AddRange(messages);
+        existing.AddRange(messages.Where(message => !existing.Contains(message)));
     }
 }

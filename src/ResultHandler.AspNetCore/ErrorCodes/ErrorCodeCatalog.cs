@@ -9,22 +9,20 @@ namespace ResultHandler.AspNetCore.ErrorCodes;
 /// singleton by <c>AddErrorCodeCatalog</c>.</summary>
 public sealed class ErrorCodeCatalog
 {
-    private readonly SortedDictionary<string, ErrorCodeDescription> _codes;
+    /// <summary>ResultHandler's assemblies; their codes are always listed.</summary>
+    internal static readonly Assembly[] BuiltInAssemblies = [typeof(ErrorCodeAttribute).Assembly, typeof(ErrorCodeCatalog).Assembly];
 
-    /// <summary>Reads the codes of <paramref name="assemblies"/>.</summary>
+    private readonly SortedDictionary<string, ErrorCodeDescription> _codes = new(StringComparer.Ordinal);
+
+    /// <summary>Reads the codes of <paramref name="assemblies"/>; an app's own definition of a built-in code replaces it.</summary>
     /// <exception cref="InvalidOperationException">Two constants define the same code.</exception>
     public ErrorCodeCatalog(IEnumerable<Assembly> assemblies)
     {
         ArgumentNullException.ThrowIfNull(assemblies);
-        _codes = new SortedDictionary<string, ErrorCodeDescription>(StringComparer.Ordinal);
-        foreach (var field in assemblies.Distinct().SelectMany(TypesOf).SelectMany(type => type.GetFields(BindingFlags.Public | BindingFlags.Static)))
-        {
-            if (field.IsLiteral && field.GetCustomAttribute<ErrorCodeAttribute>() is { } attribute && field.GetRawConstantValue() is string code
-                && !_codes.TryAdd(code, Describe(code, attribute)))
-            {
-                throw new InvalidOperationException($"The error code '{code}' is defined more than once; define each code in one place.");
-            }
-        }
+        var distinct = assemblies.Distinct().ToList();
+        AddCodes(distinct.Where(BuiltInAssemblies.Contains), replaceable: null);
+        var builtIn = _codes.Keys.ToHashSet(StringComparer.Ordinal);
+        AddCodes(distinct.Where(assembly => !BuiltInAssemblies.Contains(assembly)), replaceable: builtIn);
     }
 
     /// <summary>All codes, ordered by code.</summary>
@@ -52,6 +50,30 @@ public sealed class ErrorCodeCatalog
         catch (ReflectionTypeLoadException exception)
         {
             return exception.Types.OfType<Type>();
+        }
+    }
+
+    /// <summary>Adds documented codes; only a code in <paramref name="replaceable"/> may be redefined.</summary>
+    private void AddCodes(IEnumerable<Assembly> assemblies, HashSet<string>? replaceable)
+    {
+        foreach (var field in assemblies.SelectMany(TypesOf).SelectMany(type => type.GetFields(BindingFlags.Public | BindingFlags.Static)))
+        {
+            if (!field.IsLiteral || field.GetCustomAttribute<ErrorCodeAttribute>() is not { } attribute || field.GetRawConstantValue() is not string code)
+            {
+                continue;
+            }
+
+            if (_codes.TryAdd(code, Describe(code, attribute)))
+            {
+                continue;
+            }
+
+            if (replaceable?.Remove(code) != true)
+            {
+                throw new InvalidOperationException($"The error code '{code}' is defined more than once; define each code in one place.");
+            }
+
+            _codes[code] = Describe(code, attribute);
         }
     }
 }

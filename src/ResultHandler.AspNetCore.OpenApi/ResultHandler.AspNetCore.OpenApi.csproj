@@ -5,13 +5,15 @@
     <PackageId>ResponseResultHandler.AspNetCore.OpenApi</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler - OpenAPI</Title>
-    <Version>16.3.0</Version>
+    <Version>16.4.0</Version>
     <Product>ResponseResultHandler.AspNetCore.OpenApi</Product>
     <Description>Microsoft.AspNetCore.OpenApi integration for ResponseResultHandler: documents the success envelopes and Problem Details exactly as they are written (required members, nothing null, descriptions) and gives every documented failure a filled-in example with a code from the error code catalog.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>aspnetcore openapi problem-details rfc9457 error-codes result-pattern</PackageTags>
-    <PackageReleaseNotes>v16.3 - First release: options.AddResultHandlerDocumentation() for Microsoft.AspNetCore.OpenApi. See CHANGELOG.md.</PackageReleaseNotes>
+    <PackageReleaseNotes>v16.4 - No changes in this package. Versions move together; see CHANGELOG.md.
+
+v16.3 - First release: options.AddResultHandlerDocumentation() for Microsoft.AspNetCore.OpenApi. See CHANGELOG.md.</PackageReleaseNotes>
   </PropertyGroup>
 
   <!-- First released in 16.3.0, so there is no earlier version to validate against; remove once the baseline moves to 16.3.0. -->

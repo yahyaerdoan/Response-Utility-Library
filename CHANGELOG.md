@@ -8,6 +8,26 @@ From 16.0.0 on, the packages follow [Semantic Versioning](https://semver.org/): 
 API or to the JSON the packages write only come in a major version, each listed here with migration notes;
 minor versions add features and patch versions fix bugs. The packages always share a version.
 
+## [16.4.0]
+
+### Added
+- `ValidationErrorCodes.Failed` (`"Validation.Failed"`, 422, general; `ResultHandler.ErrorCodes`): the code of a validation
+  failure, documented in the error code catalog, so validation pipelines and handlers share one constant.
+
+### Changed
+- `WithCode` takes any `IOperationResult` (`where TResult : class, IOperationResult`), so generic code such as a pipeline's
+  `TResponse` and `Result.Combine`'s result can give a failure a code without casting. A result that isn't a ResultHandler
+  result throws `ArgumentException`.
+- The error code catalog always lists ResultHandler's own codes, now also `ValidationErrorCodes`. An application constant that
+  defines one of them again (e.g. its own `"Validation.Failed"`) replaces the built-in entry instead of failing; any other code
+  defined twice still throws.
+- `Result.Combine` (every overload) keeps the failures' `Code` when every failure is a 422 with the same code, so
+  merging validation checks no longer drops the code clients branch on. Mixed codes or other statuses still give no code.
+
+### Fixed
+- `Result.Combine` lists a message once per field when several failures report it (e.g. two checks that both validate
+  the same email).
+
 ## [16.3.0]
 
 ### Added
