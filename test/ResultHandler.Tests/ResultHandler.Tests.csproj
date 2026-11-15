@@ -35,8 +35,4 @@
     <ProjectReference Include="..\..\src\ResultHandler.AspNetCore.OpenApi\ResultHandler.AspNetCore.OpenApi.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="SonarAnalyzer.CSharp" Version="10.36.0.15337" />
-  </ItemGroup>
-
 </Project>
