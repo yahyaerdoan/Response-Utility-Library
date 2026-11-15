@@ -5,13 +5,15 @@
     <PackageId>ResponseResultHandler</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Response Result Handler</Title>
-    <Version>16.3.0</Version>
+    <Version>16.4.0</Version>
     <Product>ResponseResultHandler</Product>
     <Description>The Result pattern for .NET: an immutable result with an HTTP-mappable status, a title and detail, errors keyed by field and optional data, plus Map, Bind, Ensure and Combine to chain them without exceptions. No dependencies.</Description>
     <PackageIcon>ResultHandlerIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>result result-pattern railway-oriented-programming functional error-handling validation</PackageTags>
-    <PackageReleaseNotes>v16.3 - New: ErrorCodeAttribute documents an error code on its constant (status, description, General). See CHANGELOG.md.
+    <PackageReleaseNotes>v16.4 - New: ValidationErrorCodes.Failed ("Validation.Failed"). WithCode takes any IOperationResult. Result.Combine lists a repeated message once and keeps a code all its 422 failures share. See CHANGELOG.md.
+
+v16.3 - New: ErrorCodeAttribute documents an error code on its constant (status, description, General). See CHANGELOG.md.
 
 v16.2 - No changes in this package. Versions move together; see CHANGELOG.md.
 
@@ -84,19 +86,10 @@ v12 (breaking): Removed all members previously marked [Obsolete] — StatusMessa
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.403">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.401" />
-    <PackageReference Update="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
   </ItemGroup>
 
 </Project>

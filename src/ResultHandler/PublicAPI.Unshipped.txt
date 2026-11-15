@@ -5,3 +5,5 @@ ResultHandler.ErrorCodes.ErrorCodeAttribute.ErrorCodeAttribute(ResultHandler.Cor
 ResultHandler.ErrorCodes.ErrorCodeAttribute.General.get -> bool
 ResultHandler.ErrorCodes.ErrorCodeAttribute.General.set -> void
 ResultHandler.ErrorCodes.ErrorCodeAttribute.Status.get -> ResultHandler.Core.Enums.ResultStatus
+ResultHandler.ErrorCodes.ValidationErrorCodes
+const ResultHandler.ErrorCodes.ValidationErrorCodes.Failed = "Validation.Failed" -> string!

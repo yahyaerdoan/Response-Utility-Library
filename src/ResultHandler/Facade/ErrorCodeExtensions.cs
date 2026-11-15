@@ -1,4 +1,5 @@
-﻿using ResultHandler.Core.Base;
+﻿using ResultHandler.Core.Abstractions;
+using ResultHandler.Core.Base;
 
 namespace ResultHandler.Facade;
 
@@ -11,11 +12,14 @@ public static class ErrorCodeExtensions
     /// return Result.Conflict("That slug is already taken.").WithCode("Tenant.SlugTaken");
     /// </code>
     /// </example>
+    /// <remarks>Works on any result, including a pipeline's <c>TResponse</c> and <c>Result.Combine</c>'s result.</remarks>
     public static TResult WithCode<TResult>(this TResult result, string code)
-        where TResult : OperationResult
+        where TResult : class, IOperationResult
     {
         ArgumentNullException.ThrowIfNull(result);
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
-        return (TResult)result.CloneWithCode(code);
+        return result is OperationResult operationResult && operationResult.CloneWithCode(code) is TResult coded
+            ? coded
+            : throw new ArgumentException($"{result.GetType().Name} is not a ResultHandler result, so it can't carry a code.", nameof(result));
     }
 }

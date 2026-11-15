@@ -167,6 +167,49 @@ public class ResultFacadeTests
     }
 
     [Fact]
+    public void Combine_SameMessageFromSeveralFailures_AppearsOnce()
+    {
+        var result = Result.Combine(
+            OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Email"] = ["Email is already registered."] }),
+            OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Email"] = ["Email is already registered.", "Email is too long."] }));
+
+        Assert.Equal(["Email is already registered.", "Email is too long."], result.Errors["Email"]);
+    }
+
+    [Fact]
+    public void Combine_FailuresSharingAValidationCode_KeepTheCode()
+    {
+        var result = Result.Combine(
+            OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Name"] = ["Name is required."] }).WithCode("Validation.Failed"),
+            OperationResult.Failure(new Dictionary<string, IReadOnlyList<string>> { ["Price"] = ["Price must be greater than zero."] }).WithCode("Validation.Failed"));
+
+        Assert.Equal("Validation.Failed", result.Code);
+    }
+
+    [Fact]
+    public void Combine_FailuresWithDifferentCodesOrStatuses_HaveNoCode()
+    {
+        var differentCodes = Result.Combine(
+            Result.Invalid("Name is required.").WithCode("Validation.Failed"),
+            Result.Invalid("Price must be greater than zero.").WithCode("Price.Invalid"));
+        var notValidation = Result.Combine(
+            Result.NotFound("Category 7 does not exist.").WithCode("Category.NotFound"),
+            Result.NotFound("Category 8 does not exist.").WithCode("Category.NotFound"));
+
+        Assert.Null(differentCodes.Code);
+        Assert.Null(notValidation.Code);
+    }
+
+    [Fact]
+    public void CombineOfT_FailuresSharingAValidationCode_KeepTheCode()
+    {
+        var result = Result.Combine(Result.Invalid<string>("Name is required.").WithCode("Validation.Failed"), Result.Success(42));
+
+        Assert.Equal("Validation.Failed", result.Code);
+        Assert.Equal(["Name is required."], result.Errors[string.Empty]);
+    }
+
+    [Fact]
     public void CombineOfT_AllSucceed_ReturnsTupleOfData()
     {
         var result = Result.Combine(Result.Success<string>("Alice"), Result.Success(42));

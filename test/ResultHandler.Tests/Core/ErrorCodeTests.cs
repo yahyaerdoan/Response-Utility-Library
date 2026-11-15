@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using ResultHandler.Core.Base;
 using ResultHandler.Core.Enums;
+using ResultHandler.ErrorCodes;
 using ResultHandler.Facade;
 using ResultHandler.Functional;
 using ResultHandler.Implementations.Error;
@@ -28,6 +29,15 @@ public class ErrorCodeTests
         Assert.Equal(original.Detail, coded.Detail);
         Assert.Equal(original.Status, coded.Status);
         Assert.Null(original.Code);
+    }
+
+    [Fact]
+    public void WithCode_WorksOnTheInterface_ForGenericCodeAndCombine()
+    {
+        var coded = Result.Combine(Result.Invalid("Name is required.")).WithCode(ValidationErrorCodes.Failed);
+
+        Assert.Equal(ValidationErrorCodes.Failed, coded.Code);
+        Assert.IsType<ErrorResult>(coded);
     }
 
     [Fact]

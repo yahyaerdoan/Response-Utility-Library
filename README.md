@@ -249,7 +249,9 @@ a client can quote it and you can find the request in your logs.
 **Error codes.** Two failures can share a status (`409` for "slug taken" and "email taken") and differ
 only in `detail`, which is text for people. `WithCode` (`ResultHandler.Facade`) attaches a stable,
 machine-readable code that clients can switch on; it is written as the `"code"` extension and carried
-through `Map`/`Bind`/`ToErrorDataResult`:
+through `Map`/`Bind`/`ToErrorDataResult`. It takes any `IOperationResult`, so a pipeline's generic `TResponse` and
+`Result.Combine`'s result can carry a code too. A validation failure uses `ValidationErrorCodes.Failed` (`"Validation.Failed"`,
+`ResultHandler.ErrorCodes`):
 
 ```csharp
 return Result.Conflict("That slug is already taken.").WithCode("Tenant.SlugTaken");
@@ -492,6 +494,10 @@ If both checks fail, `combined.Errors[""]` contains **both** messages, `["Name i
 not just the first one. Every failed result's `Errors` are merged by field, and a failure without errors adds its
 `Detail` (or `Title`) under `""`; if every result succeeds, `Combine` returns `Result.Success()`. Combining a `"Name"`
 failure and a `"Price"` failure gives you both keys back in one result.
+
+A message that several checks report for the same field appears once. When every failure is a 422 with the same
+`Code` (for example each check's validation code), the merged failure keeps that code, so clients can still branch on it;
+otherwise it has no code.
 
 When the independent checks each carry data you actually need afterward, the 2–4 arity generic
 overloads combine both the outcome *and* the payloads into a named tuple:
@@ -906,7 +912,9 @@ app.MapErrorCodes();   // GET /errors, GET /errors/{code}
 `GET /errors/Product.NotFound` answers `{"code":"Product.NotFound","status":404,"title":"Not Found","description":"...","general":false}`,
 and an unknown code is a 404 with `ErrorCode.Unknown`. A failed response whose code is in the catalog links to it:
 `"type": "https://shop.example/errors/Product.NotFound"` (turn off with `LinkProblemTypes = false`). The step runs in
-`CustomizeProblemDetails`, so call `AddErrorCodeCatalog()` after anything that adds codes there. `ResultErrorCodes` are always included.
+`CustomizeProblemDetails`, so call `AddErrorCodeCatalog()` after anything that adds codes there. ResultHandler's own codes
+(`ResultErrorCodes`, `ValidationErrorCodes`) are always included; an application constant that defines one of them again replaces
+it, any other code defined twice is an error.
 
 ## 16. OpenAPI documentation
 

@@ -6,7 +6,7 @@ namespace ResultHandler.AspNetCore.ErrorCodes;
 /// <summary>Where <see cref="ErrorCodeCatalog"/> finds codes, where their documentation is served, and whether failed responses link to it.</summary>
 public sealed class ErrorCodeCatalogOptions
 {
-    private readonly List<Assembly> _assemblies = [typeof(ErrorCodeCatalogOptions).Assembly];
+    private readonly List<Assembly> _assemblies = [.. ErrorCodeCatalog.BuiltInAssemblies];
 
     /// <summary>The assemblies whose <see cref="ResultHandler.ErrorCodes.ErrorCodeAttribute"/> constants make up the catalog. ResultHandler's own
     /// codes are always included.</summary>
