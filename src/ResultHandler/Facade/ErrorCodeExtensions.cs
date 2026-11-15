@@ -18,8 +18,8 @@ public static class ErrorCodeExtensions
     {
         ArgumentNullException.ThrowIfNull(result);
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
-        return result is OperationResult operationResult
-            ? (TResult)(IOperationResult)operationResult.CloneWithCode(code)
+        return result is OperationResult operationResult && operationResult.CloneWithCode(code) is TResult coded
+            ? coded
             : throw new ArgumentException($"{result.GetType().Name} is not a ResultHandler result, so it can't carry a code.", nameof(result));
     }
 }
